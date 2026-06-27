@@ -1,0 +1,429 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Outfit:wght@100..900&display=swap');
+
+:root {
+  /* Palette officielle de Cookillers V2 */
+  --bg-global: #08080a;
+  --bg-card: #161320;
+  --border-color: #1c1929;
+  
+  --color-purple: #a855f7; /* Violet électrique néon */
+  --color-cyan: #22d3ee;   /* Cyan holographique */
+  --color-green: #22c55e;  /* Vert putride / Vitalité OK */
+  --color-orange: #f97316; /* Orange moyen */
+  --color-red: #ef4444;    /* Rouge sang / Danger */
+  --color-zombie: #4ade80; /* Vert zombie */
+  
+  /* Raretés RPG */
+  --rarity-common: #9ca3af;
+  --rarity-standard: #3b82f6;
+  --rarity-elite: #a855f7;
+  --rarity-legendary: #f59e0b;
+
+  --font-title: 'Fredoka', cursive, sans-serif;
+  --font-body: 'Outfit', sans-serif;
+}
+
+/* Reset et styles de base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--bg-global);
+  color: #f3f4f6;
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Arrière-plans thématiques PWA */
+.app-container {
+  min-height: 100vh;
+  position: relative;
+  background-image: radial-gradient(circle at 50% 10%, #17122a 0%, var(--bg-global) 70%);
+  background-attachment: fixed;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-container.zombie-mode {
+  background-image: radial-gradient(circle at 50% 10%, #132418 0%, var(--bg-global) 70%) !important;
+}
+
+/* Masque Glitch VHS pour l'état Zombie */
+.zombie-glitch {
+  position: relative;
+  animation: vhs-glitch 1s linear infinite;
+}
+
+@keyframes vhs-glitch {
+  0% { transform: translate(0) }
+  20% { transform: translate(-2px, 2px) }
+  40% { transform: translate(-2px, -2px) }
+  60% { transform: translate(2px, 2px) }
+  80% { transform: translate(2px, -2px) }
+  100% { transform: translate(0) }
+}
+
+/* Typographies Cartoon stickers */
+h1, h2, h3, .cartoon-title {
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transform: rotate(-1deg);
+  text-shadow: 3px 3px 0px #000;
+  display: inline-block;
+}
+
+.title-container {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+/* Ombre portée drop-shadow pour props 2D transparents */
+.prop-2d {
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5));
+  transition: transform 0.3s ease;
+}
+
+.prop-2d:hover {
+  transform: scale(1.05) rotate(1deg);
+}
+
+/* Boutons Cartoon */
+.btn-cartoon {
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  padding: 0.8rem 1.5rem;
+  border: 3px solid #000;
+  border-radius: 12px;
+  background-color: var(--color-purple);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px #000;
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-cartoon:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000;
+}
+
+.btn-cartoon.btn-cyan {
+  background-color: var(--color-cyan);
+  color: #08080a;
+}
+
+.btn-cartoon.btn-red {
+  background-color: var(--color-red);
+}
+
+.btn-cartoon.btn-green {
+  background-color: var(--color-green);
+  color: #08080a;
+}
+
+.btn-cartoon.btn-disabled {
+  background-color: #374151;
+  color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Cartes Cartoons avec Soft Glow néon */
+.card-cartoon {
+  background-color: var(--bg-card);
+  border: 3px solid #000;
+  border-radius: 16px;
+  box-shadow: 6px 6px 0px #000;
+  padding: 1.25rem;
+  margin: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-cartoon.glow-purple {
+  box-shadow: 6px 6px 0px #000, 0 0 15px rgba(168, 85, 247, 0.4);
+}
+
+.card-cartoon.glow-cyan {
+  box-shadow: 6px 6px 0px #000, 0 0 15px rgba(34, 211, 238, 0.4);
+}
+
+.card-cartoon.glow-zombie {
+  box-shadow: 6px 6px 0px #000, 0 0 15px rgba(74, 222, 128, 0.4);
+}
+
+/* Raretés de cartes RPG */
+.rarity-badge {
+  font-family: var(--font-title);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  border: 2px solid #000;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.card-common { border-color: var(--rarity-common); }
+.card-standard { border-color: var(--rarity-standard); }
+.card-elite { border-color: var(--rarity-elite); }
+.card-legendary { border-color: var(--rarity-legendary); }
+
+/* Animation d'onde ECG réactive */
+.ecg-container {
+  width: 100%;
+  height: 40px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.ecg-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M0,20 L40,20 L43,10 L46,30 L49,20 L52,20 L55,5 L58,35 L61,20 L100,20' stroke='%2322c55e' stroke-width='2' fill='none'/%3E%3C/svg%3E") repeat-x;
+  background-size: 50% 100%;
+  animation: ecg-scroll 2s linear infinite;
+}
+
+.ecg-line.ecg-medium {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M0,20 L35,20 L38,8 L41,32 L44,20 L47,20 L50,3 L53,37 L56,20 L100,20' stroke='%23f97316' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  animation-duration: 1.2s;
+}
+
+.ecg-line.ecg-danger {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M0,20 L30,20 L33,5 L36,35 L39,20 L42,20 L45,2 L48,38 L51,20 L100,20' stroke='%23ef4444' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  animation-duration: 0.6s;
+}
+
+.ecg-line.ecg-flatline {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M0,20 L100,20' stroke='%23a855f7' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  animation: none;
+}
+
+@keyframes ecg-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Crépitement du Feu de Camp */
+.fire-camp {
+  animation: fire-crackling 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes fire-crackling {
+  0% {
+    transform: scale(0.98) rotate(-1deg);
+    filter: drop-shadow(0 8px 15px rgba(245, 158, 11, 0.4));
+  }
+  100% {
+    transform: scale(1.03) rotate(1deg);
+    filter: drop-shadow(0 10px 25px rgba(239, 68, 68, 0.6));
+  }
+}
+
+/* Modale performances réduites (Low motion) */
+@media (prefers-reduced-motion: reduce) {
+  .ecg-line {
+    animation: none !important;
+  }
+  .fire-camp {
+    animation: none !important;
+  }
+  .prop-2d {
+    transition: none !important;
+  }
+}
+
+.low-perf-mode .ecg-line {
+  animation: none !important;
+}
+
+.low-perf-mode .fire-camp {
+  animation: none !important;
+}
+
+.low-perf-mode .prop-2d {
+  transition: none !important;
+}
+
+/* Pavé Numérique PIN style Cartoon */
+.pin-pad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 280px;
+  margin: 1.5rem auto;
+}
+
+.pin-key {
+  aspect-ratio: 1.2;
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  border: 3px solid #000;
+  border-radius: 12px;
+  background-color: var(--bg-card);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 3px 3px 0px #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+
+.pin-key:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000;
+}
+
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 1rem 0;
+}
+
+.pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #000;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.pin-dot.filled {
+  background-color: var(--color-purple);
+  box-shadow: 0 0 8px var(--color-purple);
+}
+
+/* Bottom Nav Bar */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 65px;
+  background-color: #12101e;
+  border-top: 3px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.bottom-nav-item.active {
+  color: var(--color-cyan);
+  transform: translateY(-4px) scale(1.1);
+}
+
+.bottom-nav-item svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* Spotlights de tutoriel */
+.tuto-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+  pointer-events: auto;
+}
+
+.tuto-spotlight {
+  position: absolute;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85);
+  transition: all 0.3s ease-in-out;
+  border: 3px solid var(--color-cyan);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.tuto-card {
+  position: absolute;
+  background-color: var(--bg-card);
+  border: 3px solid #000;
+  box-shadow: 5px 5px 0 #000;
+  border-radius: 16px;
+  padding: 1rem;
+  width: 280px;
+  z-index: 1001;
+  text-align: center;
+  animation: pop-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes pop-bounce {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Flottaison biscuit 🪙 */
+.floating-coin {
+  position: absolute;
+  color: #fbbf24;
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  animation: float-up-coin 1s ease-out forwards;
+  pointer-events: none;
+  z-index: 50;
+  text-shadow: 2px 2px 0 #000;
+}
+
+@keyframes float-up-coin {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
+}
+
+/* Masque de SCAN holographique */
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-cyan);
+  box-shadow: 0 0 8px var(--color-cyan);
+  animation: scan-move 3s linear infinite;
+  z-index: 10;
+}
+
+@keyframes scan-move {
+  0% { top: 0%; }
+  50% { top: 100%; }
+  100% { top: 0%; }
+}
