@@ -9,6 +9,7 @@ import { Loader2, AlertTriangle, LogIn } from "lucide-react";
 function MainAppContent() {
   const {
     gameCode,
+    setGameCode,
     currentUser,
     gameState,
     loading,

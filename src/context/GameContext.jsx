@@ -624,6 +624,7 @@ export const GameProvider = ({ children }) => {
     <GameContext.Provider
       value={{
         gameCode,
+        setGameCode,
         currentUser,
         gameState,
         loading,
