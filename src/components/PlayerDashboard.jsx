@@ -5,6 +5,25 @@ import { supabase } from "../services/supabaseClient";
 import Leaderboard, { getRank } from "./Leaderboard";
 import { AlertCircle, Eye, EyeOff, HelpCircle, Send, Plus, Minus, Camera, X, LogOut } from "lucide-react";
 
+const fountainPool = [
+  { tier: 1, title: "Jus de Chaussette 🧦", desc: "Boire une gorgée d'eau tiède récupérée au jet d'eau des douches.", gain: 0.5, type: "action" },
+  { tier: 1, title: "Confession humble 🤫", desc: "Confesser ton secret honteux le plus drôle à un festivalier.", gain: 0.5, type: "verite" },
+  { tier: 2, title: "Élixir du Barman 🥃", desc: "Boire un gobelet d'un breuvage surprise offert par ton voisin de tente.", gain: 1.5, type: "action" },
+  { tier: 2, title: "Question Vérité 🔮", desc: "Avouer quelle est la cible que tu as le plus détesté traquer.", gain: 1.5, type: "verite" },
+  { tier: 3, title: "Larmes de VIP 💎", desc: "Trouver de l'eau fraîche servie avec glaçons dans un gobelet propre.", gain: 3.0, type: "action" },
+  { tier: 3, title: "Révélation ultime 🧬", desc: "Révéler à ton voisin une triche que tu as faite dans un jeu précédent.", gain: 3.0, type: "verite" }
+];
+
+const getFountainCouple = (tier) => {
+  const actions = fountainPool.filter(p => p.tier === tier && p.type === "action");
+  const verites = fountainPool.filter(p => p.tier === tier && p.type === "verite");
+  
+  const action = actions[Math.floor(Math.random() * actions.length)];
+  const verite = verites[Math.floor(Math.random() * verites.length)];
+  
+  return { action, verite };
+};
+
 export default function PlayerDashboard() {
   const {
     currentUser,
@@ -64,6 +83,10 @@ export default function PlayerDashboard() {
   const [fountainTextProof, setFountainTextProof] = useState("");
   const [fountainPhotoProof, setFountainPhotoProof] = useState("");
   const [fountainChoice, setFountainChoice] = useState(null); // défi pioché
+  const [fountainCouple, setFountainCouple] = useState(() => {
+    const cached = localStorage.getItem(`cookillers_fountain_couple_${currentUser}`);
+    return cached ? JSON.parse(cached) : null;
+  });
 
   // Zombie victime selection
   const [zombieVictim, setZombieVictim] = useState("");
@@ -112,6 +135,31 @@ export default function PlayerDashboard() {
       setTargetPhoto(null);
     }
   }, [zombieVictim, player?.isZombie, getPlayerPhoto]);
+
+  // Initialiser le couple Action/Vérité si absent
+  useEffect(() => {
+    if (player && !fountainCouple) {
+      const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
+      const couple = getFountainCouple(tier);
+      setFountainCouple(couple);
+      localStorage.setItem(`cookillers_fountain_couple_${currentUser}`, JSON.stringify(couple));
+    }
+  }, [player, fountainCouple, currentUser]);
+
+  // Synchroniser le choix actif depuis la base de données
+  useEffect(() => {
+    if (player && player.fountainActiveTitle && !fountainChoice) {
+      setFountainChoice({
+        title: player.fountainActiveTitle,
+        desc: player.fountainActiveDescription,
+        type: player.fountainActiveType,
+        gain: player.fountainActiveTitle.includes("💎") || player.fountainActiveTitle.includes("🧬") ? 3.0 : (player.fountainActiveTitle.includes("🥃") || player.fountainActiveTitle.includes("🔮") ? 1.5 : 0.5)
+      });
+      setFountainType(player.fountainActiveType);
+    } else if (player && !player.fountainActiveTitle && fountainChoice) {
+      setFountainChoice(null);
+    }
+  }, [player?.fountainActiveTitle, player?.fountainActiveDescription, player?.fountainActiveType]);
 
   // Mascotte quotes
   const quotes = [
@@ -263,43 +311,56 @@ export default function PlayerDashboard() {
     showToast("Soins appliqués ! Preuve stockée pour audit public. ⛲");
   };
 
-  // Relance de défi de la fontaine
-  const handleFountainRefresh = () => {
+  // Sélectionner un défi de la fontaine
+  const handleSelectFountainChallenge = async (selectedChallenge) => {
+    try {
+      const { error } = await supabase
+        .from("players")
+        .update({
+          fountain_active_title: selectedChallenge.title,
+          fountain_active_description: selectedChallenge.desc,
+          fountain_active_type: selectedChallenge.type
+        })
+        .eq("game_code", gameCode)
+        .eq("name", player.name);
+
+      if (error) throw error;
+
+      setFountainChoice(selectedChallenge);
+      setFountainType(selectedChallenge.type);
+      manualRefresh();
+    } catch (err) {
+      showToast(`Erreur sélection : ${err.message}`);
+    }
+  };
+
+  // Relance de défi de la fontaine : piocher un nouveau couple Action & Vérité
+  const handleFountainRefresh = async () => {
     if (player.fountainRefreshesToday < 1) {
       showToast("Plus de jetons de relance 🌀 pour la Fontaine aujourd'hui.");
       return;
     }
-    // Génère un nouveau défi selon le niveau historique du joueur
-    // 0-2 utilisations: Niveau 1, 3-4: Niveau 2, >=5: Niveau 3
-    const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
-    const pool = [
-      { tier: 1, title: "Jus de Chaussette 🧦", desc: "Boire une gorgée d'eau tiède récupérée au jet d'eau des douches.", gain: 0.5, type: "action" },
-      { tier: 1, title: "Confession humble 🤫", desc: "Confesser ton secret honteux le plus drôle à un festivalier.", gain: 0.5, type: "verite" },
-      { tier: 2, title: "Élixir du Barman 🥃", desc: "Boire un gobelet d'un breuvage surprise offert par ton voisin de tente.", gain: 1.5, type: "action" },
-      { tier: 2, title: "Question Vérité 🔮", desc: "Avouer quelle est la cible que tu as le plus détesté traquer.", gain: 1.5, type: "verite" },
-      { tier: 3, title: "Larmes de VIP 💎", desc: "Trouver de l'eau fraîche servie avec glaçons dans un gobelet propre.", gain: 3.0, type: "action" },
-      { tier: 3, title: "Révélation ultime 🧬", desc: "Révéler à ton voisin une triche que tu as faite dans un jeu précédent.", gain: 3.0, type: "verite" }
-    ];
 
-    const available = pool.filter(p => p.tier === tier);
-    const selected = available[Math.floor(Math.random() * available.length)];
-    
-    // Déclencher le RPC sur Supabase
-    supabase.rpc("refresh_fountain_challenge_transaction", {
+    // Déclencher le RPC sur Supabase pour consommer 1 skip fontaine (on passe des chaînes vides)
+    const { error } = await supabase.rpc("refresh_fountain_challenge_transaction", {
       p_game_code: gameCode,
       p_name: player.name,
-      p_new_title: selected.title,
-      p_new_desc: selected.desc,
-      p_new_type: selected.type
-    }).then(({ error }) => {
-      if (error) {
-        showToast(`Erreur : ${error.message}`);
-      } else {
-        setFountainChoice(selected);
-        setFountainType(selected.type);
-        showToast("Défi de la Fontaine renouvelé ! 🌀");
-      }
+      p_new_title: "",
+      p_new_desc: "",
+      p_new_type: ""
     });
+
+    if (error) {
+      showToast(`Erreur : ${error.message}`);
+    } else {
+      // Générer le nouveau couple du tier correspondant
+      const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
+      const couple = getFountainCouple(tier);
+      setFountainCouple(couple);
+      localStorage.setItem(`cookillers_fountain_couple_${currentUser}`, JSON.stringify(couple));
+      manualRefresh();
+      showToast("Nouveau choix d'Action & Vérité disponible ! 🌀");
+    }
   };
 
   const handleSuggestSubmit = () => {
@@ -916,7 +977,24 @@ export default function PlayerDashboard() {
                         type="button"
                         className="btn-cartoon"
                         style={{ flex: 1, padding: "0.5rem", backgroundColor: "#4b5563" }}
-                        onClick={() => setFountainChoice(null)}
+                        onClick={async () => {
+                          try {
+                            await supabase
+                              .from("players")
+                              .update({
+                                fountain_active_title: null,
+                                fountain_active_description: null,
+                                fountain_active_type: null
+                              })
+                              .eq("game_code", gameCode)
+                              .eq("name", player.name);
+                            
+                            setFountainChoice(null);
+                            await manualRefresh();
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
                       >
                         Retour
                       </button>
@@ -925,46 +1003,42 @@ export default function PlayerDashboard() {
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <button
-                    type="button"
-                    className="btn-cartoon btn-cyan"
-                    onClick={() => {
-                      setFountainChoice({
-                        title: "Jus de Chaussette 🧦",
-                        desc: "Boire une gorgée d'eau tiède récupérée au jet d'eau des douches.",
-                        gain: 0.5,
-                        type: "action"
-                      });
-                      setFountainType("action");
-                    }}
-                  >
-                    Puiser une Action (+0.5 ❤️)
-                  </button>
+                  {fountainCouple && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn-cartoon btn-cyan"
+                        style={{ textAlign: "left", padding: "10px", height: "auto", display: "block" }}
+                        onClick={() => handleSelectFountainChallenge(fountainCouple.action)}
+                      >
+                        <div style={{ fontWeight: "bold", fontSize: "0.95rem" }}>🔥 Action : {fountainCouple.action.title}</div>
+                        <div style={{ fontSize: "0.8rem", color: "#d1d5db", marginTop: "2px", fontWeight: "normal", whiteSpace: "normal" }}>
+                          {fountainCouple.action.desc} (+{fountainCouple.action.gain} ❤️)
+                        </div>
+                      </button>
 
-                  <button
-                    type="button"
-                    className="btn-cartoon btn-cyan"
-                    onClick={() => {
-                      setFountainChoice({
-                        title: "Confession humble 🤫",
-                        desc: "Confesser ton secret honteux le plus drôle à un festivalier.",
-                        gain: 0.5,
-                        type: "verite"
-                      });
-                      setFountainType("verite");
-                    }}
-                  >
-                    Puiser une Vérité (+0.5 ❤️)
-                  </button>
+                      <button
+                        type="button"
+                        className="btn-cartoon btn-cyan"
+                        style={{ textAlign: "left", padding: "10px", height: "auto", display: "block" }}
+                        onClick={() => handleSelectFountainChallenge(fountainCouple.verite)}
+                      >
+                        <div style={{ fontWeight: "bold", fontSize: "0.95rem" }}>🤫 Vérité : {fountainCouple.verite.title}</div>
+                        <div style={{ fontSize: "0.8rem", color: "#d1d5db", marginTop: "2px", fontWeight: "normal", whiteSpace: "normal" }}>
+                          {fountainCouple.verite.desc} (+{fountainCouple.verite.gain} ❤️)
+                        </div>
+                      </button>
+                    </>
+                  )}
 
                   {player.fountainRefreshesToday > 0 && (
                     <button
                       type="button"
                       className="btn-cartoon"
-                      style={{ backgroundColor: "var(--color-purple)", border: "2px solid #000" }}
+                      style={{ backgroundColor: "var(--color-purple)", border: "2px solid #000", marginTop: "8px" }}
                       onClick={handleFountainRefresh}
                     >
-                      Piocher Niveau Supérieur 🌀
+                      Piocher une nouvelle 'Action & Vérité' 🌀
                     </button>
                   )}
                 </div>

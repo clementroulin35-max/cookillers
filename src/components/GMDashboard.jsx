@@ -38,6 +38,7 @@ export default function GMDashboard() {
 
   // Pool de défis - Ajout / Édition
   const [showAddDefiForm, setShowAddDefiForm] = useState(false);
+  const [editingDefi, setEditingDefi] = useState(null);
   const [defiTitle, setDefiTitle] = useState("");
   const [defiDesc, setDefiDesc] = useState("");
   const [defiReward, setDefiReward] = useState(100);
@@ -96,35 +97,75 @@ export default function GMDashboard() {
     }
   };
 
-  // Soumission Ajout Défi
+  // Démarrer l'édition d'un défi
+  const handleStartEditDefi = (defi) => {
+    setEditingDefi(defi.id);
+    setDefiTitle(defi.title);
+    setDefiDesc(defi.description);
+    setDefiReward(defi.scoreReward);
+    setDefiDamage(defi.damagePenalty);
+    setDefiZombieOnly(defi.isZombieOnly);
+    setShowAddDefiForm(true);
+  };
+
+  // Soumission Ajout ou Modification Défi
   const handleAddDefiSubmit = async (e) => {
     e.preventDefault();
     if (!defiTitle || !defiDesc) return;
 
-    const { error } = await supabase
-      .from("action_pools")
-      .insert([
-        {
-          game_code: gameCode,
+    if (editingDefi) {
+      // Modification de défi existant
+      const { error } = await supabase
+        .from("action_pools")
+        .update({
           title: defiTitle,
           description: defiDesc,
           score_reward: defiReward,
           damage_penalty: defiDamage,
           is_zombie_only: defiZombieOnly
-        }
-      ]);
+        })
+        .eq("id", editingDefi);
 
-    if (error) {
-      showToast(`Erreur : ${error.message}`);
+      if (error) {
+        showToast(`Erreur modification : ${error.message}`);
+      } else {
+        setEditingDefi(null);
+        setDefiTitle("");
+        setDefiDesc("");
+        setDefiReward(100);
+        setDefiDamage(1.5);
+        setDefiZombieOnly(false);
+        setShowAddDefiForm(false);
+        showToast("Défi mis à jour ! 📖");
+        await fetchGameState(gameCode);
+      }
     } else {
-      setDefiTitle("");
-      setDefiDesc("");
-      setDefiReward(100);
-      setDefiDamage(1.5);
-      setDefiZombieOnly(false);
-      setShowAddDefiForm(false);
-      showToast("Nouveau défi injecté dans la pool ! 📖");
-      manualRefresh();
+      // Ajout de nouveau défi
+      const { error } = await supabase
+        .from("action_pools")
+        .insert([
+          {
+            game_code: gameCode,
+            title: defiTitle,
+            description: defiDesc,
+            score_reward: defiReward,
+            damage_penalty: defiDamage,
+            is_zombie_only: defiZombieOnly
+          }
+        ]);
+
+      if (error) {
+        showToast(`Erreur insertion : ${error.message}`);
+      } else {
+        setDefiTitle("");
+        setDefiDesc("");
+        setDefiReward(100);
+        setDefiDamage(1.5);
+        setDefiZombieOnly(false);
+        setShowAddDefiForm(false);
+        showToast("Nouveau défi injecté dans la pool ! 📖");
+        await fetchGameState(gameCode);
+      }
     }
   };
 
@@ -151,33 +192,129 @@ export default function GMDashboard() {
     try {
       let finalLives = editLives;
       const finalZombie = editZombie;
+      const currentPlayer = gameState.players.find(p => p.name === editingPlayer);
 
       // Si on coche la case zombie, on force les PV à 0
       if (finalZombie) {
         finalLives = 0.0;
       } else {
         // Si on décoche la case zombie (résurrection), on force les PV à au moins 1.0 si le joueur était à <= 0
-        const currentPlayer = gameState.players.find(p => p.name === editingPlayer);
         if (currentPlayer && (currentPlayer.isZombie || finalLives <= 0)) {
           finalLives = Math.max(1.0, finalLives);
         }
       }
 
-      // Mettre à jour lives, score, isZombie en base
-      const { error } = await supabase
-        .from("players")
-        .update({
-          score: editScore,
-          lives: finalLives,
-          is_zombie: finalZombie
-        })
-        .eq("game_code", gameCode)
-        .eq("name", editingPlayer);
+      if (currentPlayer) {
+        if (currentPlayer.isZombie && !finalZombie) {
+          // RÉSURRECTION : Le joueur passe de zombie à vivant
+          // 1. Trouver un joueur actif vivant au hasard pour s'insérer dans sa cible
+          const { data: activePlayers, error: fetchErr } = await supabase
+            .from("players")
+            .select("name, target")
+            .eq("game_code", gameCode)
+            .eq("is_zombie", false)
+            .eq("is_frozen", false)
+            .neq("name", editingPlayer);
 
-      if (error) throw error;
+          if (!fetchErr && activePlayers && activePlayers.length > 0) {
+            const randomPlayer = activePlayers[Math.floor(Math.random() * activePlayers.length)];
+            const oldTarget = randomPlayer.target;
+
+            // randomPlayer cible le joueur ressuscité
+            await supabase
+              .from("players")
+              .update({ target: editingPlayer })
+              .eq("game_code", gameCode)
+              .eq("name", randomPlayer.name);
+
+            // Le joueur ressuscité cible l'ancienne cible de randomPlayer et reçoit un défi
+            const { data: poolActions } = await supabase
+              .from("action_pools")
+              .select("id")
+              .eq("game_code", gameCode)
+              .eq("is_zombie_only", false);
+
+            const randomActionId = poolActions && poolActions.length > 0 
+              ? poolActions[Math.floor(Math.random() * poolActions.length)].id 
+              : null;
+
+            const { error: upErr } = await supabase
+              .from("players")
+              .update({
+                score: editScore,
+                lives: finalLives,
+                is_zombie: false,
+                target: oldTarget,
+                action_id: randomActionId
+              })
+              .eq("game_code", gameCode)
+              .eq("name", editingPlayer);
+
+            if (upErr) throw upErr;
+          } else {
+            // Se cible lui-même s'il est tout seul
+            const { error: upErr } = await supabase
+              .from("players")
+              .update({
+                score: editScore,
+                lives: finalLives,
+                is_zombie: false,
+                target: editingPlayer
+              })
+              .eq("game_code", gameCode)
+              .eq("name", editingPlayer);
+
+            if (upErr) throw upErr;
+          }
+        } else if (!currentPlayer.isZombie && finalZombie) {
+          // DÉCÈS : Le joueur vivant passe zombie
+          // Trouver le tueur qui le ciblait
+          const { data: killer } = await supabase
+            .from("players")
+            .select("name")
+            .eq("game_code", gameCode)
+            .eq("target", editingPlayer)
+            .maybeSingle();
+
+          if (killer) {
+            // Refermer la boucle : le tueur cible la cible du mort
+            await supabase
+              .from("players")
+              .update({ target: currentPlayer.target })
+              .eq("game_code", gameCode)
+              .eq("name", killer.name);
+          }
+
+          const { error: upErr } = await supabase
+            .from("players")
+            .update({
+              score: editScore,
+              lives: 0.0,
+              is_zombie: true,
+              target: null,
+              action_id: null
+            })
+            .eq("game_code", gameCode)
+            .eq("name", editingPlayer);
+
+          if (upErr) throw upErr;
+        } else {
+          // Simple mise à jour des stats sans changement de statut zombie
+          const { error: upErr } = await supabase
+            .from("players")
+            .update({
+              score: editScore,
+              lives: finalLives,
+              is_zombie: finalZombie
+            })
+            .eq("game_code", gameCode)
+            .eq("name", editingPlayer);
+
+          if (upErr) throw upErr;
+        }
+      }
 
       // Gérer le gel/dégel si l'état change
-      const currentPlayer = gameState.players.find(p => p.name === editingPlayer);
       if (editFrozen !== currentPlayer.isFrozen) {
         if (editFrozen) {
           await freezePlayer(editingPlayer);
@@ -408,21 +545,102 @@ export default function GMDashboard() {
       {/* --- 2. ONGLET DÉFIS 📖 --- */}
       {gmTab === "defis" && (
         <div className="card-cartoon glow-purple" style={{ margin: "10px" }}>
+          
+          {/* Modération des suggestions des joueurs */}
+          {gameState.history.filter(h => h.type === "suggestion_pending" && h.status === "pending").length > 0 && (
+            <div style={{ border: "2px solid var(--color-purple)", borderRadius: "12px", padding: "12px", backgroundColor: "#1e1330", marginBottom: "1.5rem", textAlign: "left", boxShadow: "3px 3px 0 #000" }}>
+              <h3 style={{ fontSize: "0.95rem", color: "var(--color-purple)", margin: "0 0 8px 0", fontFamily: "var(--font-title)", textTransform: "uppercase" }}>
+                Modération Suggestions 💡 ({gameState.history.filter(h => h.type === "suggestion_pending" && h.status === "pending").length})
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {gameState.history.filter(h => h.type === "suggestion_pending" && h.status === "pending").map((s) => (
+                  <div key={s.id} style={{ border: "1px solid rgba(168, 85, 247, 0.4)", borderRadius: "8px", padding: "8px", backgroundColor: "#100a1c" }}>
+                    <div style={{ fontSize: "0.8rem", color: "#9ca3af", marginBottom: "4px" }}>
+                      Proposé par : <strong>{s.playerName}</strong>
+                    </div>
+                    <div style={{ fontWeight: "bold", fontSize: "0.9rem", color: "#fff" }}>{s.actionTitle}</div>
+                    <div style={{ fontSize: "0.8rem", color: "#d1d5db", marginTop: "2px" }}>{s.photoProof}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
+                      <span style={{ fontSize: "0.75rem", color: "var(--color-cyan)" }}>
+                        🪙 +{s.scoreReward} | ❤️ -{s.damagePenalty}
+                      </span>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                          type="button"
+                          className="btn-cartoon btn-green"
+                          style={{ padding: "2px 8px", fontSize: "0.7rem" }}
+                          onClick={async () => {
+                            // Valider : insérer dans action_pools
+                            const { error: insErr } = await supabase.from("action_pools").insert([
+                              {
+                                game_code: gameCode,
+                                title: s.actionTitle,
+                                description: s.photoProof,
+                                score_reward: s.scoreReward,
+                                damage_penalty: s.damagePenalty,
+                                is_zombie_only: false,
+                                created_by_player: s.playerName
+                              }
+                            ]);
+                            if (insErr) {
+                              showToast(`Erreur : ${insErr.message}`);
+                              return;
+                            }
+                            // Marquer history comme completed
+                            await supabase.from("history").update({ status: "completed" }).eq("id", s.id);
+                            showToast("Suggestion intégrée au catalogue de jeu ! ✓");
+                            await fetchGameState(gameCode);
+                          }}
+                        >
+                          Valider
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-cartoon btn-red"
+                          style={{ padding: "2px 8px", fontSize: "0.7rem" }}
+                          onClick={async () => {
+                            // Rejeter : marquer comme rejected dans history
+                            await supabase.from("history").update({ status: "rejected" }).eq("id", s.id);
+                            showToast("Suggestion rejetée.");
+                            await fetchGameState(gameCode);
+                          }}
+                        >
+                          Rejeter
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
             <h2 style={{ color: "var(--color-purple)", margin: 0 }}>Pool de Défis 📖</h2>
             <button
               type="button"
               className="btn-cartoon btn-cyan"
               style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}
-              onClick={() => setShowAddDefiForm(!showAddDefiForm)}
+              onClick={() => {
+                setEditingDefi(null);
+                setDefiTitle("");
+                setDefiDesc("");
+                setDefiReward(100);
+                setDefiDamage(1.5);
+                setDefiZombieOnly(false);
+                setShowAddDefiForm(!showAddDefiForm);
+              }}
             >
               {showAddDefiForm ? "Fermer" : "Ajouter +"}
             </button>
           </div>
 
-          {/* Formulaire ajout défi */}
+          {/* Formulaire ajout/édition défi */}
           {showAddDefiForm && (
             <form onSubmit={handleAddDefiSubmit} style={{ border: "2px solid #000", padding: "12px", borderRadius: "12px", marginBottom: "1.5rem", backgroundColor: "#1c192d" }}>
+              <h3 style={{ fontSize: "1rem", margin: "0 0 10px 0", color: "#fff", transform: "none", textShadow: "none", textAlign: "left" }}>
+                {editingDefi ? "Modifier le Défi" : "Ajouter un Défi"}
+              </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", textAlign: "left" }}>
                 <input
                   type="text"
@@ -440,21 +658,25 @@ export default function GMDashboard() {
                   required
                 />
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <input
-                    type="number"
-                    placeholder="🪙"
-                    value={defiReward}
-                    onChange={(e) => setDefiReward(Number(e.target.value))}
-                    style={{ flex: 1, padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
-                  />
-                  <input
-                    type="number"
-                    step="0.5"
-                    placeholder="❤️"
-                    value={defiDamage}
-                    onChange={(e) => setDefiDamage(Number(e.target.value))}
-                    style={{ flex: 1, padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
-                  />
+                  <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
+                    <span style={{ position: "absolute", left: "8px", fontSize: "1rem", pointerEvents: "none" }}>🪙</span>
+                    <input
+                      type="number"
+                      value={defiReward}
+                      onChange={(e) => setDefiReward(Number(e.target.value))}
+                      style={{ width: "100%", padding: "6px 6px 6px 30px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
+                    <span style={{ position: "absolute", left: "8px", fontSize: "1rem", pointerEvents: "none" }}>❤️</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={defiDamage}
+                      onChange={(e) => setDefiDamage(Number(e.target.value))}
+                      style={{ width: "100%", padding: "6px 6px 6px 30px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
+                    />
+                  </div>
                 </div>
                 <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", cursor: "pointer" }}>
                   <input
@@ -463,7 +685,29 @@ export default function GMDashboard() {
                     onChange={(e) => setDefiZombieOnly(e.target.checked)}
                   /> Defi Zombie uniquement 🧟
                 </label>
-                <button type="submit" className="btn-cartoon btn-green" style={{ padding: "0.5rem" }}>Injecter</button>
+                <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                  <button type="submit" className="btn-cartoon btn-green" style={{ flex: 1, padding: "0.5rem" }}>
+                    {editingDefi ? "Sauvegarder" : "Injecter"}
+                  </button>
+                  {editingDefi && (
+                    <button
+                      type="button"
+                      className="btn-cartoon btn-red"
+                      style={{ flex: 1, padding: "0.5rem" }}
+                      onClick={() => {
+                        setEditingDefi(null);
+                        setDefiTitle("");
+                        setDefiDesc("");
+                        setDefiReward(100);
+                        setDefiDamage(1.5);
+                        setDefiZombieOnly(false);
+                        setShowAddDefiForm(false);
+                      }}
+                    >
+                      Annuler
+                    </button>
+                  )}
+                </div>
               </div>
             </form>
           )}
@@ -483,7 +727,11 @@ export default function GMDashboard() {
                   alignItems: "center"
                 }}
               >
-                <div style={{ textAlign: "left", flex: 1, marginRight: "10px" }}>
+                <div 
+                  style={{ textAlign: "left", flex: 1, marginRight: "10px", cursor: "pointer" }}
+                  onClick={() => handleStartEditDefi(a)}
+                  title="Cliquer pour modifier ce défi"
+                >
                   <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>{a.title} {a.isZombieOnly && "🧟"}</div>
                   <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>{a.description}</div>
                   <div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#fbbf24", marginTop: "2px" }}>
@@ -592,15 +840,27 @@ export default function GMDashboard() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: "0.75rem", color: "var(--color-red)" }}>Vitalité ❤️ :</label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      max="7.0"
-                      value={editLives}
-                      onChange={(e) => setEditLives(Number(e.target.value))}
-                      style={{ width: "100%", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
-                    />
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        onClick={() => setEditLives(prev => Math.max(0.0, prev - 0.5))}
+                      >
+                        -
+                      </button>
+                      <span style={{ fontFamily: "var(--font-title)", minWidth: "28px", textAlign: "center", display: "inline-block" }}>
+                        {editLives}
+                      </span>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        onClick={() => setEditLives(prev => Math.min(7.0, prev + 0.5))}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
 
