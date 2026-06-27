@@ -6,6 +6,7 @@ import PlayerDashboard from "./components/PlayerDashboard";
 import GMDashboard from "./components/GMDashboard";
 import TutorialOverlay from "./components/TutorialOverlay";
 import { Loader2, AlertTriangle, LogIn } from "lucide-react";
+import mascotteLogo from "../DA/mascotte_logo_app.png";
 
 function MainAppContent() {
   const {
@@ -63,7 +64,7 @@ function MainAppContent() {
 
   // Réinitialiser les états de connexion si le salon ou l'utilisateur est déconnecté
   useEffect(() => {
-    if (!gameCode || !currentUser) {
+    if ((!gameCode || !currentUser) && gameCode !== "PENDING") {
       setIsGM(false);
       setPin("");
       setNickname("");
@@ -151,7 +152,17 @@ function MainAppContent() {
           
           {/* Logo & Mascotte */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "1.2rem" }}>
-            <span style={{ fontSize: "4rem", animation: "fire-crackling 1s ease-in-out infinite alternate" }}>🍪</span>
+            <img 
+              src={mascotteLogo} 
+              alt="Logo" 
+              style={{ 
+                width: "90px", 
+                height: "90px", 
+                objectFit: "contain", 
+                marginBottom: "6px", 
+                filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.5))" 
+              }} 
+            />
             <h1 style={{ fontSize: "2rem", color: "var(--color-purple)", marginTop: "6px" }}>
               Cookillers
             </h1>

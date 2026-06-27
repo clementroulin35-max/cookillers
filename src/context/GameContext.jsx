@@ -631,6 +631,16 @@ export const GameProvider = ({ children }) => {
     return data?.photo || null;
   };
 
+  const getHistoryProof = async (historyId) => {
+    const { data, error } = await supabase
+      .from("history")
+      .select("photo_proof")
+      .eq("id", historyId)
+      .maybeSingle();
+    if (error) throw error;
+    return data?.photo_proof || null;
+  };
+
   // Helper : Refresh manual
   const manualRefresh = () => {
     fetchGameState(gameCode);
@@ -670,6 +680,7 @@ export const GameProvider = ({ children }) => {
         removePlayer,
         updatePlayerPhoto,
         getPlayerPhoto,
+        getHistoryProof,
         manualRefresh,
         showToast
       }}

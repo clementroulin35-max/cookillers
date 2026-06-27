@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Trophy, ShieldAlert, Shuffle, AlignJustify, Award, Activity, MessageSquare, EyeOff, Shield, Heart } from "lucide-react";
+import { useGame } from "../context/GameContext";
 
 export const getRank = (score) => {
   if (score >= 3500) return { icon: "👑", label: "Dieu du Pogo", css: "rank-alpha" };
@@ -11,8 +12,19 @@ export const getRank = (score) => {
 };
 
 export default function Leaderboard({ players, history }) {
+  const { getHistoryProof } = useGame();
   const [subTab, setSubTab] = useState("scores"); // scores, trophies, flux
   const [expandedPhoto, setExpandedPhoto] = useState(null);
+  const [loadedProofs, setLoadedProofs] = useState({}); // { id: proofString }
+
+  const handleLoadProof = async (id) => {
+    try {
+      const proof = await getHistoryProof(id);
+      setLoadedProofs(prev => ({ ...prev, [id]: proof || "Pas de preuve." }));
+    } catch (err) {
+      console.error("Erreur de chargement preuve :", err);
+    }
+  };
 
   // Trier les joueurs par score descendant. Si zombie, le score effectif est divisé par 2
   const sortedPlayers = [...players].map(p => ({
@@ -181,7 +193,9 @@ export default function Leaderboard({ players, history }) {
           </span>
         );
       case "fountain_use":
-        const isPhoto = evt.photoProof && evt.photoProof.startsWith("data:image");
+        const hasProof = evt.hasPhotoProof;
+        const proof = loadedProofs[evt.id];
+        const isPhoto = proof && proof.startsWith("data:image");
         return (
           <span>
             ⛲ <strong>SOIN SOURCE</strong><br/>
@@ -189,19 +203,34 @@ export default function Leaderboard({ players, history }) {
             <span style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: "bold" }}>
               Régénération : +{Math.abs(evt.damagePenalty)} ❤️
             </span>
-            {evt.photoProof && isPhoto && (
+            
+            {hasProof && !proof && (
+              <div style={{ marginTop: "6px" }}>
+                <button
+                  type="button"
+                  className="btn-cartoon"
+                  style={{ padding: "4px 8px", fontSize: "0.7rem", backgroundColor: "rgba(34, 211, 238, 0.15)", border: "2px solid var(--color-cyan)" }}
+                  onClick={() => handleLoadProof(evt.id)}
+                >
+                  👁️ Dévoiler la preuve
+                </button>
+              </div>
+            )}
+
+            {proof && isPhoto && (
               <div style={{ marginTop: "6px" }}>
                 <img 
-                  src={evt.photoProof} 
+                  src={proof} 
                   alt="Preuve" 
-                  onClick={() => setExpandedPhoto(evt.photoProof)}
-                  style={{ width: "90px", height: "70px", objectFit: "cover", borderRadius: "8px", border: "2px solid var(--color-cyan)", cursor: "pointer" }}
+                  onClick={() => setExpandedPhoto(proof)}
+                  style={{ width: "90px", height: "70px", objectFit: "cover", borderRadius: "8px", border: "2px solid var(--color-cyan)", cursor: "pointer", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" }}
                 />
               </div>
             )}
-            {evt.photoProof && !isPhoto && (
+            
+            {proof && !isPhoto && (
               <div style={{ marginTop: "6px", backgroundColor: "rgba(34, 211, 238, 0.05)", borderLeft: "3px solid var(--color-cyan)", padding: "6px 10px", borderRadius: "0 8px 8px 0", fontStyle: "italic", fontSize: "0.85rem" }}>
-                « {evt.photoProof} »
+                « {proof} »
               </div>
             )}
           </span>

@@ -102,10 +102,12 @@ export default function GMDashboard() {
     setEditingDefi(defi.id);
     setDefiTitle(defi.title);
     setDefiDesc(defi.description);
-    setDefiReward(defi.scoreReward);
-    setDefiDamage(defi.damagePenalty);
-    setDefiZombieOnly(defi.isZombieOnly);
+    setDefiReward(defi.scoreReward || 0);
+    setDefiDamage(defi.damagePenalty || 0);
+    setDefiZombieOnly(defi.isZombieOnly || false);
+    setDefiType(defi.type || "mission");
     setShowAddDefiForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Soumission Ajout ou Modification Défi
@@ -120,9 +122,10 @@ export default function GMDashboard() {
         .update({
           title: defiTitle,
           description: defiDesc,
-          score_reward: defiReward,
+          score_reward: defiType === "mission" ? defiReward : 0,
           damage_penalty: defiDamage,
-          is_zombie_only: defiZombieOnly
+          is_zombie_only: defiZombieOnly,
+          type: defiType
         })
         .eq("id", editingDefi);
 
@@ -135,6 +138,7 @@ export default function GMDashboard() {
         setDefiReward(100);
         setDefiDamage(1.5);
         setDefiZombieOnly(false);
+        setDefiType("mission");
         setShowAddDefiForm(false);
         showToast("Défi mis à jour ! 📖");
         manualRefresh();
@@ -148,9 +152,10 @@ export default function GMDashboard() {
             game_code: gameCode,
             title: defiTitle,
             description: defiDesc,
-            score_reward: defiReward,
+            score_reward: defiType === "mission" ? defiReward : 0,
             damage_penalty: defiDamage,
-            is_zombie_only: defiZombieOnly
+            is_zombie_only: defiZombieOnly,
+            type: defiType
           }
         ]);
 
@@ -162,6 +167,7 @@ export default function GMDashboard() {
         setDefiReward(100);
         setDefiDamage(1.5);
         setDefiZombieOnly(false);
+        setDefiType("mission");
         setShowAddDefiForm(false);
         showToast("Nouveau défi injecté dans la pool ! 📖");
         manualRefresh();
@@ -554,64 +560,90 @@ export default function GMDashboard() {
                 Modération Suggestions 💡 ({gameState.history.filter(h => h.type === "suggestion_pending" && h.status === "pending").length})
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {gameState.history.filter(h => h.type === "suggestion_pending" && h.status === "pending").map((s) => (
-                  <div key={s.id} style={{ border: "1px solid rgba(168, 85, 247, 0.4)", borderRadius: "8px", padding: "8px", backgroundColor: "#100a1c" }}>
-                    <div style={{ fontSize: "0.8rem", color: "#9ca3af", marginBottom: "4px" }}>
-                      Proposé par : <strong>{s.playerName}</strong>
-                    </div>
-                    <div style={{ fontWeight: "bold", fontSize: "0.9rem", color: "#fff" }}>{s.actionTitle}</div>
-                    <div style={{ fontSize: "0.8rem", color: "#d1d5db", marginTop: "2px" }}>{s.photoProof}</div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
-                      <span style={{ fontSize: "0.75rem", color: "var(--color-cyan)" }}>
-                        🪙 +{s.scoreReward} | ❤️ -{s.damagePenalty}
-                      </span>
-                      <div style={{ display: "flex", gap: "6px" }}>
-                        <button
-                          type="button"
-                          className="btn-cartoon btn-green"
-                          style={{ padding: "2px 8px", fontSize: "0.7rem" }}
-                          onClick={async () => {
-                            // Valider : insérer dans action_pools
-                            const { error: insErr } = await supabase.from("action_pools").insert([
-                              {
-                                game_code: gameCode,
-                                title: s.actionTitle,
-                                description: s.photoProof,
-                                score_reward: s.scoreReward,
-                                damage_penalty: s.damagePenalty,
-                                is_zombie_only: false,
-                                created_by_player: s.playerName
+                {gameState.history.filter(h => h.type === "suggestion_pending" && h.status === "pending").map((s) => {
+                  const parts = s.photoProof ? s.photoProof.split("|") : [];
+                  const extractedType = parts.length > 1 ? parts[0] : "mission";
+                  const cleanDesc = parts.length > 1 ? parts.slice(1).join("|") : s.photoProof;
+
+                  let typeLabel = "🎯 Mission";
+                  let typeColor = "var(--color-purple)";
+                  if (extractedType === "fountain_action") {
+                    typeLabel = "⛲ Action Source";
+                    typeColor = "var(--color-cyan)";
+                  } else if (extractedType === "fountain_truth") {
+                    typeLabel = "⛲ Vérité Source";
+                    typeColor = "#10b981";
+                  }
+
+                  return (
+                    <div key={s.id} style={{ border: "1px solid rgba(168, 85, 247, 0.4)", borderRadius: "8px", padding: "8px", backgroundColor: "#100a1c" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                        <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
+                          Proposé par : <strong>{s.playerName}</strong>
+                        </span>
+                        <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${typeColor}`, color: typeColor, fontWeight: "bold" }}>
+                          {typeLabel}
+                        </span>
+                      </div>
+                      <div style={{ fontWeight: "bold", fontSize: "0.9rem", color: "#fff" }}>{s.actionTitle}</div>
+                      <div style={{ fontSize: "0.8rem", color: "#d1d5db", marginTop: "2px" }}>{cleanDesc}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
+                        <span style={{ fontSize: "0.75rem", color: "var(--color-cyan)" }}>
+                          {extractedType === "mission" ? (
+                            <>🪙 +{s.scoreReward} | ❤️ -{s.damagePenalty}</>
+                          ) : (
+                            <>Soin : +{s.damagePenalty} ❤️</>
+                          )}
+                        </span>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <button
+                            type="button"
+                            className="btn-cartoon btn-green"
+                            style={{ padding: "2px 8px", fontSize: "0.7rem" }}
+                            onClick={async () => {
+                              // Valider : insérer dans action_pools
+                              const { error: insErr } = await supabase.from("action_pools").insert([
+                                {
+                                  game_code: gameCode,
+                                  title: s.actionTitle,
+                                  description: cleanDesc,
+                                  score_reward: extractedType === "mission" ? s.scoreReward : 0,
+                                  damage_penalty: s.damagePenalty,
+                                  is_zombie_only: false,
+                                  type: extractedType,
+                                  created_by_player: s.playerName
+                                }
+                              ]);
+                              if (insErr) {
+                                showToast(`Erreur : ${insErr.message}`);
+                                return;
                               }
-                            ]);
-                            if (insErr) {
-                              showToast(`Erreur : ${insErr.message}`);
-                              return;
-                            }
-                            // Marquer history comme completed
-                            await supabase.from("history").update({ status: "completed" }).eq("id", s.id);
-                            showToast("Suggestion intégrée au catalogue de jeu ! ✓");
-                            manualRefresh();
-                          }}
-                        >
-                          Valider
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-cartoon btn-red"
-                          style={{ padding: "2px 8px", fontSize: "0.7rem" }}
-                          onClick={async () => {
-                            // Rejeter : marquer comme rejected dans history
-                            await supabase.from("history").update({ status: "rejected" }).eq("id", s.id);
-                            showToast("Suggestion rejetée.");
-                            manualRefresh();
-                          }}
-                        >
-                          Rejeter
-                        </button>
+                              // Marquer history comme completed
+                              await supabase.from("history").update({ status: "completed" }).eq("id", s.id);
+                              showToast("Suggestion intégrée au catalogue de jeu ! ✓");
+                              manualRefresh();
+                            }}
+                          >
+                            Valider
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-cartoon btn-red"
+                            style={{ padding: "2px 8px", fontSize: "0.7rem" }}
+                            onClick={async () => {
+                              // Rejeter : marquer comme rejected dans history
+                              await supabase.from("history").update({ status: "rejected" }).eq("id", s.id);
+                              showToast("Suggestion rejetée.");
+                              manualRefresh();
+                            }}
+                          >
+                            Rejeter
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -643,49 +675,93 @@ export default function GMDashboard() {
                 {editingDefi ? "Modifier le Défi" : "Ajouter un Défi"}
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", textAlign: "left" }}>
+                {/* Sélecteur de type */}
+                <div style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
+                  <button
+                    type="button"
+                    style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: defiType === "mission" ? "var(--color-cyan)" : "#100e1f", color: defiType === "mission" ? "#000" : "#fff", fontWeight: "bold", cursor: "pointer" }}
+                    onClick={() => { setDefiType("mission"); setDefiReward(100); setDefiDamage(1.5); }}
+                  >
+                    Mission 🎯
+                  </button>
+                  <button
+                    type="button"
+                    style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: defiType === "fountain_action" ? "var(--color-cyan)" : "#100e1f", color: defiType === "fountain_action" ? "#000" : "#fff", fontWeight: "bold", cursor: "pointer" }}
+                    onClick={() => { setDefiType("fountain_action"); setDefiReward(0); setDefiDamage(0.5); }}
+                  >
+                    Action Source ⛲
+                  </button>
+                  <button
+                    type="button"
+                    style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: defiType === "fountain_truth" ? "var(--color-cyan)" : "#100e1f", color: defiType === "fountain_truth" ? "#000" : "#fff", fontWeight: "bold", cursor: "pointer" }}
+                    onClick={() => { setDefiType("fountain_truth"); setDefiReward(0); setDefiDamage(0.5); }}
+                  >
+                    Vérité Source ⛲
+                  </button>
+                </div>
+
                 <input
                   type="text"
-                  placeholder="Intitulé"
+                  placeholder={defiType === "fountain_truth" ? "Intitulé de la Question (Ex: Quelle est ta pire phobie ?)" : "Intitulé du Défi"}
                   value={defiTitle}
                   onChange={(e) => setDefiTitle(e.target.value)}
                   style={{ width: "100%", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
                   required
                 />
                 <textarea
-                  placeholder="Description..."
+                  placeholder={defiType === "fountain_truth" ? "Preuve attendue ou réponse indicative..." : "Description de la preuve / consigne..."}
                   value={defiDesc}
                   onChange={(e) => setDefiDesc(e.target.value)}
                   style={{ width: "100%", height: "50px", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
                   required
                 />
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
-                    <span style={{ position: "absolute", left: "8px", fontSize: "1rem", pointerEvents: "none" }}>🪙</span>
-                    <input
-                      type="number"
-                      value={defiReward}
-                      onChange={(e) => setDefiReward(Number(e.target.value))}
-                      style={{ width: "100%", padding: "6px 6px 6px 30px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
-                    />
+                
+                {defiType === "mission" ? (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
+                      <span style={{ position: "absolute", left: "8px", fontSize: "1rem", pointerEvents: "none" }}>🪙</span>
+                      <input
+                        type="number"
+                        value={defiReward}
+                        onChange={(e) => setDefiReward(Number(e.target.value))}
+                        style={{ width: "100%", padding: "6px 6px 6px 30px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
+                      <span style={{ position: "absolute", left: "8px", fontSize: "1rem", pointerEvents: "none" }}>❤️</span>
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={defiDamage}
+                        onChange={(e) => setDefiDamage(Number(e.target.value))}
+                        style={{ width: "100%", padding: "6px 6px 6px 30px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
+                      />
+                    </div>
                   </div>
-                  <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
-                    <span style={{ position: "absolute", left: "8px", fontSize: "1rem", pointerEvents: "none" }}>❤️</span>
-                    <input
-                      type="number"
-                      step="0.5"
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>Difficulté / Soin apporté :</label>
+                    <select
                       value={defiDamage}
                       onChange={(e) => setDefiDamage(Number(e.target.value))}
-                      style={{ width: "100%", padding: "6px 6px 6px 30px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
-                    />
+                      style={{ width: "100%", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
+                    >
+                      <option value="0.5">Tier I : Jus de Chaussette (+0.5 ❤️)</option>
+                      <option value="1.5">Tier II : Élixir du Barman (+1.5 ❤️)</option>
+                      <option value="3.0">Tier III : Larmes de VIP (+3.0 ❤️)</option>
+                    </select>
                   </div>
-                </div>
-                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={defiZombieOnly}
-                    onChange={(e) => setDefiZombieOnly(e.target.checked)}
-                  /> Defi Zombie uniquement 🧟
-                </label>
+                )}
+
+                {defiType === "mission" && (
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={defiZombieOnly}
+                      onChange={(e) => setDefiZombieOnly(e.target.checked)}
+                    /> Defi Zombie uniquement 🧟
+                  </label>
+                )}
                 <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
                   <button type="submit" className="btn-cartoon btn-green" style={{ flex: 1, padding: "0.5rem" }}>
                     {editingDefi ? "Sauvegarder" : "Injecter"}
@@ -702,6 +778,7 @@ export default function GMDashboard() {
                         setDefiReward(100);
                         setDefiDamage(1.5);
                         setDefiZombieOnly(false);
+                        setDefiType("mission");
                         setShowAddDefiForm(false);
                       }}
                     >
@@ -975,6 +1052,7 @@ export default function GMDashboard() {
                     setEditZombie(p.isZombie);
                     setEditFrozen(p.isFrozen);
                     setSecuresPin("");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                   style={{
                     border: "2px solid #000",

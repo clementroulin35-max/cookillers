@@ -4,6 +4,8 @@ import { useGame } from "../context/GameContext";
 import { supabase } from "../services/supabaseClient";
 import Leaderboard, { getRank } from "./Leaderboard";
 import { AlertCircle, Eye, EyeOff, HelpCircle, Send, Plus, Minus, Camera, X, LogOut } from "lucide-react";
+import tombstoneZombie from "../../DA/Sans_titre_1-removebg-preview.png";
+import mascotteLogo from "../../DA/mascotte_logo_app.png";
 
 const FOUNTAIN_POOL = [
   // Actions Faciles (Tier 1) — gain 0.5
@@ -107,6 +109,7 @@ export default function PlayerDashboard() {
   const [suggestDesc, setSuggestDesc] = useState("");
   const [suggestReward, setSuggestReward] = useState(100);
   const [suggestDamage, setSuggestDamage] = useState(1.5);
+  const [suggestType, setSuggestType] = useState("mission"); // 'mission', 'fountain_action', 'fountain_truth'
   
   // Fontaine
   const [fountainType, setFountainType] = useState("verite"); // 'action' ou 'verite'
@@ -125,16 +128,18 @@ export default function PlayerDashboard() {
     localStorage.setItem("cookillers_low_perf", lowPerfMode ? "true" : "false");
   }, [lowPerfMode]);
 
-  // Charger la photo de profil de manière paresseuse à l'ouverture de la modale
+  // Charger la photo de profil dès le départ ou changement du joueur
   useEffect(() => {
-    if (showProfileModal && player) {
+    if (player && player.hasPhoto) {
       getPlayerPhoto(player.name).then(photo => {
         setProfilePhoto(photo);
       }).catch(err => {
-        console.error("Erreur de chargement photo :", err);
+        console.error("Erreur de chargement photo profil :", err);
       });
+    } else {
+      setProfilePhoto(null);
     }
-  }, [showProfileModal, player?.name, getPlayerPhoto]);
+  }, [player?.name, player?.hasPhoto, getPlayerPhoto]);
 
   // Charger la photo de la cible en tâche de fond
   useEffect(() => {
@@ -352,10 +357,15 @@ export default function PlayerDashboard() {
       showToast("Titre et description requis !");
       return;
     }
-    suggestAction(suggestTitle, suggestDesc, suggestReward, suggestDamage);
+    const encodedDesc = suggestType + "|" + suggestDesc;
+    const finalReward = suggestType === "mission" ? suggestReward : 0;
+    suggestAction(suggestTitle, encodedDesc, finalReward, suggestDamage);
     setSuggestTitle("");
     setSuggestDesc("");
-    showToast("Défi soumis en arbitrage au GM. Merci de contribuer ! 💡");
+    setSuggestType("mission");
+    setSuggestReward(100);
+    setSuggestDamage(1.5);
+    showToast("Suggestion soumise en arbitrage au Grand Juge. Merci ! 💡");
   };
 
   // Helper pour afficher les tooltips
@@ -396,8 +406,8 @@ export default function PlayerDashboard() {
             justifyContent: "center"
           }}
         >
-          {player.hasPhoto ? (
-            <span style={{ fontSize: "1.2rem" }}>👤</span>
+          {profilePhoto ? (
+            <img src={profilePhoto} alt="Profil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
             <span style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem" }}>
               {player.name.slice(0, 2).toUpperCase()}
@@ -407,7 +417,7 @@ export default function PlayerDashboard() {
 
         {/* Logo mini */}
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <span style={{ fontSize: "1.4rem" }}>🍪</span>
+          <img src={mascotteLogo} alt="Mascotte" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
           <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", textShadow: "1.5px 1.5px 0 #000", letterSpacing: "0.03em" }}>
             Cookillers
           </span>
@@ -458,17 +468,30 @@ export default function PlayerDashboard() {
       </header>
 
       {/* Onde ECG de Vitalité */}
-      <div className="ecg-container" style={{ margin: "4px 10px", height: "30px", borderRadius: "8px" }} onClick={() => triggerTooltip("ecg")}>
-        <div className={`ecg-line ${ecgClass}`} />
-        {isHelpActive && (
-          <div style={{ position: "absolute", right: "6px", top: "4px", backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "16px", height: "16px", display: "flex", alignItems: "center", justifyItems: "center", fontSize: "10px", fontWeight: "bold", cursor: "pointer", paddingLeft: "5px" }}>?</div>
-        )}
-        {activeTooltip === "ecg" && (
-          <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)" }}>
-            <strong>Constantes Vitales :</strong> Si vos cœurs ❤️ tombent à 0, vous décédez et passez zombie 🧟 (Mode Moisi).
+      {(() => {
+        let ecgColor = "#22c55e"; // vert
+        if (isZombie) ecgColor = "#a855f7"; // violet
+        else if (player.lives < 2.0) ecgColor = "#ef4444"; // rouge
+        else if (player.lives < 4.0) ecgColor = "#f97316"; // orange
+
+        return (
+          <div 
+            className="ecg-container" 
+            style={{ margin: "4px 10px", height: "30px", borderRadius: "8px", "--ecg-base-color": ecgColor }} 
+            onClick={() => triggerTooltip("ecg")}
+          >
+            <div className={`ecg-line ${ecgClass}`} />
+            {isHelpActive && (
+              <div style={{ position: "absolute", right: "6px", top: "4px", backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "16px", height: "16px", display: "flex", alignItems: "center", justifyItems: "center", fontSize: "10px", fontWeight: "bold", cursor: "pointer", paddingLeft: "5px" }}>?</div>
+            )}
+            {activeTooltip === "ecg" && (
+              <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)" }}>
+                <strong>Constantes Vitales :</strong> Si vos cœurs ❤️ tombent à 0, vous décédez et passez zombie 🧟 (Mode Moisi).
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Barre de Vitalité & Biscuits standardisée */}
       <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 12px", alignItems: "center" }}>
@@ -635,7 +658,113 @@ export default function PlayerDashboard() {
           </div>
 
           {/* Section Contrat principal */}
-          {player.target ? (
+          {/* Section Contrat principal / Mode Moisi */}
+          {isZombie ? (
+            /* AFFICHAGE DU MODE MOISI */
+            <div style={{ display: "flex", flexDirection: "column", padding: "10px", alignItems: "center" }}>
+              <h2 style={{ fontSize: "2rem", color: "var(--color-zombie)", fontFamily: "var(--font-title)", textTransform: "uppercase", margin: "10px 0 2px 0", textShadow: "3px 3px 0 #000" }}>
+                MODE MOISI
+              </h2>
+              <div style={{ backgroundColor: "#1c3d27", color: "var(--color-zombie)", border: "2px solid var(--color-zombie)", padding: "4px 12px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px", boxShadow: "2px 2px 0 #000" }}>
+                CADAVRE AMBULANT
+              </div>
+
+              {/* Image de la pierre tombale */}
+              <img 
+                src={tombstoneZombie} 
+                alt="Tombeau Zombie" 
+                style={{ width: "120px", height: "120px", objectFit: "contain", filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))", marginBottom: "12px" }}
+              />
+
+              <p style={{ fontSize: "0.85rem", color: "#9ca3af", textAlign: "center", fontStyle: "italic", padding: "0 15px", lineHeight: "1.4", marginBottom: "15px" }}>
+                "Vous êtes officiellement en décomposition. Votre pseudo sent le vieux camembert oublié au soleil."
+              </p>
+
+              {/* Cadre Contrat de Morsure */}
+              <div className="card-cartoon" style={{ border: "3px solid var(--color-zombie)", backgroundColor: "#0c1510", width: "100%", padding: "12px", textAlign: "left", marginBottom: "15px", boxShadow: "4px 4px 0 #000", position: "relative" }}>
+                {pendingHit && (
+                  <div style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(34, 197, 94, 0.4)",
+                    backdropFilter: "blur(4px)",
+                    zIndex: 30,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transform: "rotate(-4deg)"
+                  }}>
+                    <div style={{
+                      backgroundColor: "var(--color-zombie)",
+                      color: "#fff",
+                      fontFamily: "var(--font-title)",
+                      padding: "8px 24px",
+                      border: "3px solid #000",
+                      boxShadow: "3px 3px 0 #000",
+                      textTransform: "uppercase"
+                    }}>
+                      Morsure en examen 🛡️
+                    </div>
+                  </div>
+                )}
+                
+                <h3 style={{ fontSize: "0.8rem", color: "var(--color-zombie)", fontFamily: "var(--font-title)", textTransform: "uppercase", margin: "0 0 6px 0" }}>
+                  🧟 Contrat de Morsure
+                </h3>
+                <h4 style={{ fontSize: "1.05rem", color: "#fff", margin: "4px 0" }}>
+                  {currentAction ? currentAction.title : "Morsure Zombie"}
+                </h4>
+                <p style={{ fontSize: "0.85rem", color: "#9ca3af", fontStyle: "italic", margin: "4px 0 8px 0" }}>
+                  {currentAction ? currentAction.description : "Faire prononcer le mot 'Cerveau' à un survivant ou lui faire mimer une marche de zombie."}
+                </p>
+                <div style={{ display: "flex", gap: "12px", fontSize: "0.8rem", fontWeight: "bold", borderTop: "1px solid rgba(34, 197, 94, 0.2)", paddingTop: "8px" }}>
+                  <span style={{ color: "#fbbf24" }}>Récompense : +50 🪙</span>
+                  <span style={{ color: "var(--color-green)" }}>Rédemption : +1.0 ❤️</span>
+                </div>
+              </div>
+
+              {/* Sélection de la cible à mordre */}
+              <div style={{ width: "100%", textAlign: "left", marginBottom: "15px" }}>
+                <label style={{ fontSize: "0.8rem", color: "var(--color-zombie)", fontWeight: "bold", marginBottom: "6px", display: "block" }}>
+                  CIBLES POTENTIELLES :
+                </label>
+                <select
+                  value={zombieVictim}
+                  onChange={(e) => setZombieVictim(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "10px",
+                    backgroundColor: "#161320",
+                    color: "#fff",
+                    border: "3px solid #000",
+                    boxShadow: "3px 3px 0 #000"
+                  }}
+                  disabled={pendingHit}
+                >
+                  <option value="">-- Choisir un survivant à mordre --</option>
+                  {gameState.players.filter(p => !p.isZombie && !p.isFrozen).map(p => (
+                    <option key={p.name} value={p.name}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Bouton de morsure */}
+              <button
+                type="button"
+                className="btn-cartoon btn-red animate-pulse"
+                style={{ width: "100%", height: "48px", backgroundColor: "#b91c1c", border: "3px solid #000" }}
+                disabled={pendingHit || !zombieVictim}
+                onClick={handleHitSubmit}
+              >
+                MORDRE UN SURVIVANT 🧟
+              </button>
+            </div>
+          ) : player.target ? (
+            /* ÉCRAN DE TRAQUE STANDARD SURVIVANT */
             <div style={{ position: "relative" }}>
               {/* Masque de dissimulation */}
               {isMasked ? (
@@ -748,39 +877,16 @@ export default function PlayerDashboard() {
 
                       <div>
                         <span style={{ fontSize: "0.8rem", color: "var(--color-cyan)", fontFamily: "var(--font-title)", textTransform: "uppercase" }}>
-                          {isZombie ? "Victime potentielle :" : "Cible Secrète :"}
+                          Cible Secrète :
                         </span>
                         <h2 style={{ fontSize: "1.6rem", margin: 0, color: "#fff", transform: "none", textShadow: "2px 2px 0 #000", lineHeight: "1.2" }}>
-                          {isZombie ? (zombieVictim || "Choisir...") : player.target}
+                          {player.target}
                         </h2>
                       </div>
                     </div>
 
-                    {/* Sélection victime pour Zombie */}
-                    {isZombie && (
-                      <div style={{ marginBottom: "1rem" }}>
-                        <select
-                          value={zombieVictim}
-                          onChange={(e) => setZombieVictim(e.target.value)}
-                          style={{
-                            width: "100%",
-                            padding: "6px",
-                            borderRadius: "8px",
-                            backgroundColor: "#2e255c",
-                            color: "#fff",
-                            border: "2px solid #000"
-                          }}
-                        >
-                          <option value="">-- Qui voulez-vous mordre ? --</option>
-                          {gameState.players.filter(p => !p.isZombie && !p.isFrozen).map(p => (
-                            <option key={p.name} value={p.name}>{p.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
                     <span style={{ fontSize: "0.8rem", color: "var(--color-purple)", fontFamily: "var(--font-title)", textTransform: "uppercase", display: "block", marginTop: "8px" }}>
-                      {isZombie ? "Défi Morsure :" : "Piège Absurde :"}
+                      Piège Absurde :
                     </span>
                     <p style={{ fontSize: "0.95rem", color: "#e5e7eb", fontStyle: "italic", marginTop: "2px" }}>
                       {currentAction ? currentAction.description : "Pas de défi actif. Demandez une relance ou attendez."}
@@ -788,8 +894,8 @@ export default function PlayerDashboard() {
 
                     {currentAction && (
                       <div style={{ display: "flex", gap: "10px", marginTop: "12px", fontSize: "0.8rem", fontWeight: "bold" }}>
-                        <span style={{ color: "#fbbf24" }}> Récompense : +{isZombie ? 25 : currentAction.scoreReward} 🪙</span>
-                        <span style={{ color: "var(--color-red)" }}> Dégâts : -{isZombie ? 1.0 : currentAction.damagePenalty} ❤️</span>
+                        <span style={{ color: "#fbbf24" }}> Récompense : +{currentAction.scoreReward} 🪙</span>
+                        <span style={{ color: "var(--color-red)" }}> Dégâts : -{currentAction.damagePenalty} ❤️</span>
                       </div>
                     )}
                   </div>
@@ -805,14 +911,14 @@ export default function PlayerDashboard() {
                   disabled={pendingHit}
                   onClick={handleHitSubmit}
                 >
-                  {isZombie ? "🧟 Mordre !" : "⚔️ Contrat Exécuté"}
+                  ⚔️ Contrat Exécuté
                 </button>
 
                 <button
                   type="button"
                   className="btn-cartoon btn-cyan"
                   style={{ flex: 1, height: "48px", padding: "0" }}
-                  disabled={player.skips < 1 || pendingHit || isZombie}
+                  disabled={player.skips < 1 || pendingHit}
                   onClick={skipMission}
                   title="Brûler la Recette"
                 >
@@ -821,28 +927,28 @@ export default function PlayerDashboard() {
               </div>
 
               {/* Boutons secondaires : Dénonciation & Abandon */}
-              {!isZombie && (
-                <div style={{ display: "flex", gap: "12px", padding: "0 10px", marginTop: "12px" }}>
-                  <button
-                    type="button"
-                    className="btn-cartoon btn-red"
-                    data-tuto="contre-attaque"
-                    style={{ flex: 1, fontSize: "0.85rem", height: "40px" }}
-                    onClick={() => setShowCounterModal(true)}
-                  >
-                    ⚠️ Bureau des Rumeurs
-                  </button>
+              <div style={{ display: "flex", gap: "12px", padding: "0 10px", marginTop: "12px" }}>
+                <button
+                  type="button"
+                  className="btn-cartoon btn-red"
+                  data-tuto="contre-attaque"
+                  style={{ flex: 1, fontSize: "0.85rem", height: "40px" }}
+                  disabled={pendingHit}
+                  onClick={() => setShowCounterModal(true)}
+                >
+                  ⚠️ Bureau des Rumeurs
+                </button>
 
-                  <button
-                    type="button"
-                    className="btn-cartoon"
-                    style={{ flex: 1, fontSize: "0.85rem", backgroundColor: "#374151", height: "40px" }}
-                    onClick={() => setShowAbandonModal(true)}
-                  >
-                    🏳️ Abandonner Cible
-                  </button>
-                </div>
-              )}
+                <button
+                  type="button"
+                  className="btn-cartoon"
+                  style={{ flex: 1, fontSize: "0.85rem", backgroundColor: "#374151", height: "40px" }}
+                  disabled={pendingHit}
+                  onClick={() => setShowAbandonModal(true)}
+                >
+                  🏳️ Abandonner Cible
+                </button>
+              </div>
             </div>
           ) : (
             <div style={{ padding: "30px 15px", textAlign: "center", color: "#9ca3af" }}>
@@ -948,6 +1054,17 @@ export default function PlayerDashboard() {
                       </div>
                     )}
 
+                    {player.fountainRefreshesToday > 0 && (
+                      <button
+                        type="button"
+                        className="btn-cartoon"
+                        style={{ width: "100%", padding: "0.5rem", marginBottom: "10px", backgroundColor: "var(--color-purple)", border: "2px solid #000" }}
+                        onClick={handleFountainRefresh}
+                      >
+                        Changer de Recette 🌀
+                      </button>
+                    )}
+
                     <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
                       <button
                         type="button"
@@ -1004,13 +1121,40 @@ export default function PlayerDashboard() {
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "10px", textAlign: "left" }}>
+            {/* Sélecteur de type */}
+            <div style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
+              <button
+                type="button"
+                style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: suggestType === "mission" ? "var(--color-purple)" : "#100e1f", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
+                onClick={() => { setSuggestType("mission"); setSuggestReward(100); setSuggestDamage(1.5); }}
+              >
+                Mission 🎯
+              </button>
+              <button
+                type="button"
+                style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: suggestType === "fountain_action" ? "var(--color-purple)" : "#100e1f", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
+                onClick={() => { setSuggestType("fountain_action"); setSuggestReward(0); setSuggestDamage(0.5); }}
+              >
+                Action Source ⛲
+              </button>
+              <button
+                type="button"
+                style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: suggestType === "fountain_truth" ? "var(--color-purple)" : "#100e1f", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
+                onClick={() => { setSuggestType("fountain_truth"); setSuggestReward(0); setSuggestDamage(0.5); }}
+              >
+                Vérité Source ⛲
+              </button>
+            </div>
+
             <div>
-              <label style={{ fontSize: "0.8rem", color: "var(--color-purple)" }}>Intitulé du défi :</label>
+              <label style={{ fontSize: "0.8rem", color: "var(--color-purple)" }}>
+                {suggestType === "fountain_truth" ? "Intitulé de la question :" : "Intitulé du défi :"}
+              </label>
               <input
                 type="text"
                 value={suggestTitle}
                 onChange={(e) => setSuggestTitle(e.target.value)}
-                placeholder="Ex: Le Choc Shifumi ⚡"
+                placeholder={suggestType === "fountain_truth" ? "Ex: Quelle est ta pire phobie ? 🤫" : "Ex: Le Choc Shifumi ⚡"}
                 style={{
                   width: "100%",
                   padding: "8px",
@@ -1024,11 +1168,13 @@ export default function PlayerDashboard() {
             </div>
 
             <div>
-              <label style={{ fontSize: "0.8rem", color: "var(--color-purple)" }}>Description de la crasse :</label>
+              <label style={{ fontSize: "0.8rem", color: "var(--color-purple)" }}>
+                {suggestType === "fountain_truth" ? "Réponse ou consigne attendue :" : "Description de la crasse :"}
+              </label>
               <textarea
                 value={suggestDesc}
                 onChange={(e) => setSuggestDesc(e.target.value)}
-                placeholder="Expliquez clairement ce que la cible doit faire..."
+                placeholder={suggestType === "fountain_truth" ? "La cible doit dire sa réponse sincère..." : "Expliquez clairement ce que la cible doit faire..."}
                 style={{
                   width: "100%",
                   height: "70px",
@@ -1042,26 +1188,49 @@ export default function PlayerDashboard() {
               />
             </div>
 
-            {/* Sélecteurs Récompense 🪙 et Dégâts ❤️ */}
-            <div style={{ display: "flex", gap: "12px" }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: "0.8rem", color: "#fbbf24" }}>Biscuits 🪙 :</label>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                  <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.max(50, suggestReward - 50))}><Minus size={12}/></button>
-                  <span style={{ fontFamily: "var(--font-title)" }}>{suggestReward}</span>
-                  <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.min(600, suggestReward + 50))}><Plus size={12}/></button>
+            {suggestType === "mission" ? (
+              /* Sélecteurs Récompense 🪙 et Dégâts ❤️ */
+              <div style={{ display: "flex", gap: "12px" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: "0.8rem", color: "#fbbf24" }}>Biscuits 🪙 :</label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                    <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.max(50, suggestReward - 50))}><Minus size={12}/></button>
+                    <span style={{ fontFamily: "var(--font-title)" }}>{suggestReward}</span>
+                    <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.min(600, suggestReward + 50))}><Plus size={12}/></button>
+                  </div>
                 </div>
-              </div>
 
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: "0.8rem", color: "var(--color-red)" }}>Dégâts ❤️ :</label>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                  <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestDamage(Math.max(0.5, suggestDamage - 0.5))}><Minus size={12}/></button>
-                  <span style={{ fontFamily: "var(--font-title)" }}>{suggestDamage}</span>
-                  <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestDamage(Math.min(4.0, suggestDamage + 0.5))}><Plus size={12}/></button>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: "0.8rem", color: "var(--color-red)" }}>Dégâts ❤️ :</label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                    <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestDamage(Math.max(0.5, suggestDamage - 0.5))}><Minus size={12}/></button>
+                    <span style={{ fontFamily: "var(--font-title)" }}>{suggestDamage}</span>
+                    <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestDamage(Math.min(4.0, suggestDamage + 0.5))}><Plus size={12}/></button>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              /* Soin Fontaine pour action/verité */
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>Difficulté / Soin apporté :</label>
+                <select
+                  value={suggestDamage}
+                  onChange={(e) => setSuggestDamage(Number(e.target.value))}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    backgroundColor: "#1a172e",
+                    border: "2px solid #000",
+                    borderRadius: "8px",
+                    color: "#fff"
+                  }}
+                >
+                  <option value="0.5">Tier I : Jus de Chaussette (+0.5 ❤️)</option>
+                  <option value="1.5">Tier II : Élixir du Barman (+1.5 ❤️)</option>
+                  <option value="3.0">Tier III : Larmes de VIP (+3.0 ❤️)</option>
+                </select>
+              </div>
+            )}
 
             <button
               type="button"
