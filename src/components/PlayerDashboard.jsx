@@ -29,24 +29,6 @@ export default function PlayerDashboard() {
 
   const player = gameState.players.find(p => p.name === currentUser);
 
-  if (!player) {
-    return (
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        color: "#fff",
-        gap: "12px",
-        backgroundColor: "#0d0a1b"
-      }}>
-        <span className="animate-spin" style={{ fontSize: "2rem" }}>🍪</span>
-        <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem" }}>Chargement du profil...</span>
-      </div>
-    );
-  }
-
   // Onglets : 'contrat', 'source', 'suggestion', 'classement'
   const [activeTab, setActiveTab] = useState("contrat");
   const [isMasked, setIsMasked] = useState(false);
@@ -120,16 +102,16 @@ export default function PlayerDashboard() {
 
   // Charger la photo de la cible zombie
   useEffect(() => {
-    if (isZombie && zombieVictim) {
+    if (player?.isZombie && zombieVictim) {
       getPlayerPhoto(zombieVictim).then(photo => {
         setTargetPhoto(photo);
       }).catch(err => {
         console.error("Erreur chargement photo victime zombie :", err);
       });
-    } else if (isZombie) {
+    } else if (player?.isZombie) {
       setTargetPhoto(null);
     }
-  }, [zombieVictim, isZombie, getPlayerPhoto]);
+  }, [zombieVictim, player?.isZombie, getPlayerPhoto]);
 
   // Mascotte quotes
   const quotes = [
@@ -166,9 +148,18 @@ export default function PlayerDashboard() {
 
   if (!player) {
     return (
-      <div style={{ padding: "40px 20px", textAlign: "center", fontFamily: "var(--font-title)" }}>
-        <h2>Session perdue</h2>
-        <p style={{ marginTop: "1rem" }}>Veuillez vous reconnecter au campement.</p>
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        color: "#fff",
+        gap: "12px",
+        backgroundColor: "#0d0a1b"
+      }}>
+        <span className="animate-spin" style={{ fontSize: "2rem" }}>🍪</span>
+        <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem" }}>Chargement du profil...</span>
       </div>
     );
   }
