@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "../context/GameContext";
 import Leaderboard, { getRank } from "./Leaderboard";
-import { AlertCircle, Eye, EyeOff, HelpCircle, Send, Plus, Minus, Camera, X } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, HelpCircle, Send, Plus, Minus, Camera, X, LogOut } from "lucide-react";
 
 export default function PlayerDashboard() {
   const {
@@ -315,25 +315,48 @@ export default function PlayerDashboard() {
           </span>
         </div>
 
-        {/* Bouton d'aide contextuelle */}
-        <button
-          type="button"
-          onClick={() => {
-            setIsHelpActive(!isHelpActive);
-            setActiveTooltip(null);
-            if (!isHelpActive) {
-              showToast("Aide Active. Cliquez sur les points d'interrogation.");
-            }
-          }}
-          style={{
-            background: "none",
-            border: "none",
-            color: isHelpActive ? "var(--color-cyan)" : "#fff",
-            cursor: "pointer"
-          }}
-        >
-          <HelpCircle size={24} />
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {/* Bouton d'aide contextuelle */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsHelpActive(!isHelpActive);
+              setActiveTooltip(null);
+              if (!isHelpActive) {
+                showToast("Aide Active. Cliquez sur les points d'interrogation.");
+              }
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              color: isHelpActive ? "var(--color-cyan)" : "#fff",
+              cursor: "pointer"
+            }}
+          >
+            <HelpCircle size={24} />
+          </button>
+
+          {/* Bouton de déconnexion */}
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm("Voulez-vous vraiment quitter le salon ?")) {
+                logOut();
+              }
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#9ca3af",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center"
+            }}
+            title="Se déconnecter"
+          >
+            <LogOut size={22} />
+          </button>
+        </div>
       </header>
 
       {/* Onde ECG de Vitalité */}

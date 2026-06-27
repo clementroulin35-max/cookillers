@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useGame } from "../context/GameContext";
+import { supabase } from "../services/supabaseClient";
 import Leaderboard, { getRank } from "./Leaderboard";
-import { Check, X, Users, Award, Shield, FileText, Smartphone, Plus, Minus, Trash, RefreshCw, Play, XOctagon } from "lucide-react";
+import { Check, X, Users, Award, Shield, FileText, Smartphone, Plus, Minus, Trash, RefreshCw, Play, XOctagon, LogOut } from "lucide-react";
 
 export default function GMDashboard() {
   const {
@@ -19,6 +20,7 @@ export default function GMDashboard() {
     resetPlayerPin,
     removePlayer,
     suggestAction,
+    logOut,
     showToast
   } = useGame();
 
@@ -67,7 +69,7 @@ export default function GMDashboard() {
   const handleFinishGame = async () => {
     if (confirm("Voulez-vous vraiment clore la chasse aux cookies ? Cela fige le classement final et décerne les trophées.")) {
       // Mettre à jour games status à 'finished'
-      const { error } = await useGame().supabase
+      const { error } = await supabase
         .from("games")
         .update({ status: "finished", end_time: new Date() })
         .eq("game_code", gameCode);
@@ -75,7 +77,7 @@ export default function GMDashboard() {
         showToast(`Erreur : ${error.message}`);
       } else {
         // Loguer la fin
-        await useGame().supabase.from("history").insert([
+        await supabase.from("history").insert([
           { game_code: gameCode, player_name: "GM", type: "game_finished", status: "completed" }
         ]);
         showToast("Chasse figée avec succès ! Trophées décernés. 🏆");
@@ -98,7 +100,7 @@ export default function GMDashboard() {
     e.preventDefault();
     if (!defiTitle || !defiDesc) return;
 
-    const { error } = await useGame().supabase
+    const { error } = await supabase
       .from("action_pools")
       .insert([
         {
@@ -128,7 +130,7 @@ export default function GMDashboard() {
   // Suppression Défi
   const handleDeleteDefi = async (id) => {
     if (confirm("Supprimer définitivement ce défi ?")) {
-      const { error } = await useGame().supabase
+      const { error } = await supabase
         .from("action_pools")
         .delete()
         .eq("id", id);
@@ -147,7 +149,7 @@ export default function GMDashboard() {
     if (!editingPlayer) return;
     try {
       // Mettre à jour lives, score, isZombie en base
-      const { error } = await useGame().supabase
+      const { error } = await supabase
         .from("players")
         .update({
           score: editScore,
@@ -221,7 +223,29 @@ export default function GMDashboard() {
             Console Grand Juge
           </span>
         </div>
-        <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Salon : <strong>{gameCode}</strong></span>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Salon : <strong>{gameCode}</strong></span>
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm("Voulez-vous vraiment quitter le salon GM ?")) {
+                logOut();
+              }
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#9ca3af",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              padding: "4px"
+            }}
+            title="Se déconnecter"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </header>
 
       {/* Boutons de contrôle globaux du jeu */}

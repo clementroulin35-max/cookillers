@@ -488,6 +488,7 @@ export const GameProvider = ({ children }) => {
     if (!gameCode) return;
     const { error } = await supabase.rpc("start_game_transaction", { p_game_code: gameCode });
     if (error) throw error;
+    await fetchGameState(gameCode);
   };
 
   const skipMission = async () => {
@@ -537,11 +538,13 @@ export const GameProvider = ({ children }) => {
   const approveHit = async (historyId) => {
     const { error } = await supabase.rpc("approve_hit_transaction", { p_history_id: historyId });
     if (error) throw error;
+    await fetchGameState(gameCode);
   };
 
   const rejectHit = async (historyId) => {
     const { error } = await supabase.rpc("reject_hit_transaction", { p_history_id: historyId });
     if (error) throw error;
+    await fetchGameState(gameCode);
   };
 
   const resolveCounterAttack = async (historyId, isCorrect) => {
@@ -550,6 +553,7 @@ export const GameProvider = ({ children }) => {
       p_is_correct: isCorrect
     });
     if (error) throw error;
+    await fetchGameState(gameCode);
   };
 
   const approveZombieBite = async (historyId) => {
@@ -557,6 +561,7 @@ export const GameProvider = ({ children }) => {
       p_history_id: historyId
     });
     if (error) throw error;
+    await fetchGameState(gameCode);
   };
 
   const freezePlayer = async (playerName) => {
@@ -565,6 +570,7 @@ export const GameProvider = ({ children }) => {
       p_name: playerName
     });
     if (error) throw error;
+    await fetchGameState(gameCode);
   };
 
   const unfreezePlayer = async (playerName) => {
@@ -573,11 +579,13 @@ export const GameProvider = ({ children }) => {
       p_name: playerName
     });
     if (error) throw error;
+    await fetchGameState(gameCode);
   };
 
   const roosterCrow = async () => {
     const { error } = await supabase.rpc("rooster_crow_transaction", { p_game_code: gameCode });
     if (error) throw error;
+    await fetchGameState(gameCode);
   };
 
   const resetPlayerPin = async (playerName) => {
@@ -595,6 +603,7 @@ export const GameProvider = ({ children }) => {
       p_name: playerName
     });
     if (error) throw error;
+    await fetchGameState(gameCode);
   };
 
   const updatePlayerPhoto = async (playerName, photoBase64) => {
