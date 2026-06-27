@@ -408,6 +408,7 @@ export const GameProvider = ({ children }) => {
     }
 
     setGameCode(upperCode);
+    setCurrentUser(null);
     return upperCode;
   };
 

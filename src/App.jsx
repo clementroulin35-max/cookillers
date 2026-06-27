@@ -61,6 +61,15 @@ function MainAppContent() {
     }
   }, [pin, gameCode]);
 
+  // Réinitialiser les états de connexion si le salon ou l'utilisateur est déconnecté
+  useEffect(() => {
+    if (!gameCode || !currentUser) {
+      setIsGM(false);
+      setPin("");
+      setNickname("");
+    }
+  }, [gameCode, currentUser]);
+
   const handleJoin = async (e) => {
     e.preventDefault();
     setError("");
@@ -204,10 +213,36 @@ function MainAppContent() {
           ) : (
             /* Étape 2 : Connexion / Inscription dans le salon */
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "6px" }}>
                 <span className="rarity-badge" style={{ backgroundColor: isGM ? "var(--color-purple)" : "var(--color-cyan)" }}>
                   Salon : {isGM && gameCode === "PENDING" ? "Nouveau" : gameCode}
                 </span>
+
+                {/* Bouton de bascule GM / Joueur pour la connexion à un salon existant */}
+                {gameCode !== "PENDING" && (
+                  <button
+                    type="button"
+                    style={{
+                      background: isGM ? "rgba(34, 211, 238, 0.15)" : "rgba(168, 85, 247, 0.15)",
+                      border: isGM ? "2px solid var(--color-cyan)" : "2px solid var(--color-purple)",
+                      borderRadius: "8px",
+                      color: "#fff",
+                      padding: "4px 8px",
+                      fontSize: "0.7rem",
+                      cursor: "pointer",
+                      fontWeight: "bold"
+                    }}
+                    onClick={() => {
+                      setIsGM(!isGM);
+                      setPin("");
+                      setNickname("");
+                      setError("");
+                    }}
+                  >
+                    {isGM ? "👤 Joueur" : "⚖️ GM"}
+                  </button>
+                )}
+
                 <button
                   type="button"
                   style={{ background: "none", border: "none", color: "#9ca3af", fontSize: "0.8rem", cursor: "pointer", fontWeight: "bold" }}
