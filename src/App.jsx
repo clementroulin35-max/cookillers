@@ -55,10 +55,10 @@ function MainAppContent() {
 
   // Connexion automatique si le PIN fait 4 chiffres
   useEffect(() => {
-    if (pin.length === 4) {
+    if (pin.length === 4 && gameCode !== "PENDING") {
       handleAuth();
     }
-  }, [pin]);
+  }, [pin, gameCode]);
 
   const handleJoin = async (e) => {
     e.preventDefault();

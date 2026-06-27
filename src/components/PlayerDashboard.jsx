@@ -365,7 +365,7 @@ export default function PlayerDashboard() {
           )}
           {activeTooltip === "health" && (
             <div style={{ position: "absolute", top: "30px", left: 0, width: "200px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "8px", borderRadius: "8px", zIndex: 1000, fontSize: "0.8rem" }}>
-              Vos points de vie. Un combat trop long vous épuise.
+              Votre vitalité ❤️. Un combat trop long vous épuise.
             </div>
           )}
         </div>
@@ -384,7 +384,7 @@ export default function PlayerDashboard() {
           )}
           {activeTooltip === "biscuits" && (
             <div style={{ position: "absolute", top: "30px", right: 0, width: "200px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "8px", borderRadius: "8px", zIndex: 1000, fontSize: "0.8rem" }}>
-              Vos biscuits en or. Augmente avec vos éliminations pour grimper au classement.
+              Votre solde de 🪙. Augmente avec vos éliminations pour grimper au classement.
             </div>
           )}
         </div>
@@ -403,7 +403,7 @@ export default function PlayerDashboard() {
           )}
           {activeTooltip === "skips" && (
             <div style={{ position: "absolute", top: "30px", right: 0, width: "200px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "8px", borderRadius: "8px", zIndex: 1000, fontSize: "0.8rem" }}>
-              Vos jetons de relance. Consommez-en un pour changer de défi sans changer de cible.
+              Votre solde de 🌀. Consommez-en un pour changer de défi sans changer de cible.
             </div>
           )}
         </div>

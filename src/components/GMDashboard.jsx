@@ -279,41 +279,53 @@ export default function GMDashboard() {
             </p>
           )}
 
-          {/* Assassinats à trancher */}
+          {/* Assassinats / Morsures à trancher */}
           {pendingHits.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "1.5rem" }}>
               <h3 style={{ fontSize: "0.9rem", color: "var(--color-purple)", borderBottom: "2px solid var(--border-color)", paddingBottom: "4px" }}>
-                Neutralisations Déclarées ({pendingHits.length})
+                Demandes de Validation ({pendingHits.length})
               </h3>
-              {pendingHits.map((h) => (
-                <div key={h.id} style={{ border: "2px solid #000", borderRadius: "12px", padding: "10px", backgroundColor: "#1e172e", boxShadow: "2px 2px 0 #000" }}>
-                  <p style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
-                    <strong>{h.playerName}</strong> déclare avoir neutralisé <strong>{h.targetName}</strong> !<br/>
-                    Défi : <em>« {h.actionTitle} »</em>
-                  </p>
-                  {h.hasPhotoProof && (
-                    <span style={{ fontSize: "0.75rem", color: "var(--color-cyan)" }}>📸 Preuve photo jointe</span>
-                  )}
-                  <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
-                    <button
-                      type="button"
-                      className="btn-cartoon btn-green"
-                      style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
-                      onClick={() => approveHit(h.id)}
-                    >
-                      Accepter
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-cartoon btn-red"
-                      style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
-                      onClick={() => rejectHit(h.id)}
-                    >
-                      Rejeter
-                    </button>
+              {pendingHits.map((h) => {
+                const zombieAttack = gameState.players.find(p => p.name === h.playerName)?.isZombie;
+                return (
+                  <div key={h.id} style={{ border: "2px solid #000", borderRadius: "12px", padding: "10px", backgroundColor: "#1e172e", boxShadow: "2px 2px 0 #000" }}>
+                    <p style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
+                      {zombieAttack ? (
+                        <>
+                          <strong>🧟 [Zombie] {h.playerName}</strong> déclare avoir mordu <strong>{h.targetName}</strong> !
+                        </>
+                      ) : (
+                        <>
+                          <strong>⚔️ {h.playerName}</strong> déclare avoir neutralisé <strong>{h.targetName}</strong> !
+                        </>
+                      )}
+                      <br/>
+                      Défi : <em>« {h.actionTitle} »</em>
+                    </p>
+                    {h.hasPhotoProof && (
+                      <span style={{ fontSize: "0.75rem", color: "var(--color-cyan)" }}>📸 Preuve photo jointe</span>
+                    )}
+                    <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                      <button
+                        type="button"
+                        className="btn-cartoon btn-green"
+                        style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
+                        onClick={() => zombieAttack ? approveZombieBite(h.id) : approveHit(h.id)}
+                      >
+                        Accepter
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-cartoon btn-red"
+                        style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
+                        onClick={() => rejectHit(h.id)}
+                      >
+                        Rejeter
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -391,7 +403,7 @@ export default function GMDashboard() {
                 <div style={{ display: "flex", gap: "8px" }}>
                   <input
                     type="number"
-                    placeholder="Points"
+                    placeholder="🪙"
                     value={defiReward}
                     onChange={(e) => setDefiReward(Number(e.target.value))}
                     style={{ flex: 1, padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
@@ -399,7 +411,7 @@ export default function GMDashboard() {
                   <input
                     type="number"
                     step="0.5"
-                    placeholder="Dégâts"
+                    placeholder="❤️"
                     value={defiDamage}
                     onChange={(e) => setDefiDamage(Number(e.target.value))}
                     style={{ flex: 1, padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
