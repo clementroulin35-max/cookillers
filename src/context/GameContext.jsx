@@ -44,7 +44,7 @@ export const GameProvider = ({ children }) => {
 
   // Sync state version comparison and fetch state
   const fetchGameState = useCallback(async (code) => {
-    if (!code) return;
+    if (!code || code === "PENDING") return;
     try {
       // Appelle le RPC get_complete_game_state pour tout récupérer en un seul appel
       const { data, error } = await supabase.rpc("get_complete_game_state", {
@@ -85,9 +85,9 @@ export const GameProvider = ({ children }) => {
 
   // Sync gameCode, currentUser and offlineQueue to LocalStorage
   useEffect(() => {
-    if (gameCode) {
+    if (gameCode && gameCode !== "PENDING") {
       localStorage.setItem("cookillers_game_code", gameCode);
-    } else {
+    } else if (!gameCode) {
       localStorage.removeItem("cookillers_game_code");
     }
   }, [gameCode]);
@@ -128,6 +128,9 @@ export const GameProvider = ({ children }) => {
   useEffect(() => {
     if (!gameCode) {
       setGameState(initialGameState);
+      return;
+    }
+    if (gameCode === "PENDING") {
       return;
     }
 
