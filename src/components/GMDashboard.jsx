@@ -21,6 +21,7 @@ export default function GMDashboard() {
     removePlayer,
     suggestAction,
     logOut,
+    manualRefresh,
     showToast
   } = useGame();
 

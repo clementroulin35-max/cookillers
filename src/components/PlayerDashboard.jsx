@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "../context/GameContext";
+import { supabase } from "../services/supabaseClient";
 import Leaderboard, { getRank } from "./Leaderboard";
 import { AlertCircle, Eye, EyeOff, HelpCircle, Send, Plus, Minus, Camera, X, LogOut } from "lucide-react";
 
@@ -19,6 +20,8 @@ export default function PlayerDashboard() {
     freezePlayer,
     unfreezePlayer,
     updatePlayerPhoto,
+    getPlayerPhoto,
+    logOut,
     manualRefresh,
     showToast
   } = useGame();
@@ -29,6 +32,7 @@ export default function PlayerDashboard() {
   const [activeTab, setActiveTab] = useState("contrat");
   const [isMasked, setIsMasked] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(null);
   const [showCounterModal, setShowCounterModal] = useState(false);
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const [showFountainModal, setShowFountainModal] = useState(false);
@@ -69,6 +73,17 @@ export default function PlayerDashboard() {
   useEffect(() => {
     localStorage.setItem("cookillers_low_perf", lowPerfMode ? "true" : "false");
   }, [lowPerfMode]);
+
+  // Charger la photo de profil de manière paresseuse à l'ouverture de la modale
+  useEffect(() => {
+    if (showProfileModal) {
+      getPlayerPhoto(player.name).then(photo => {
+        setProfilePhoto(photo);
+      }).catch(err => {
+        console.error("Erreur de chargement photo :", err);
+      });
+    }
+  }, [showProfileModal, player.name, getPlayerPhoto]);
 
   // Mascotte quotes
   const quotes = [
@@ -153,6 +168,7 @@ export default function PlayerDashboard() {
     const reader = new FileReader();
     reader.onloadend = () => {
       updatePlayerPhoto(player.name, reader.result);
+      setProfilePhoto(reader.result);
       showToast("Photo de profil mise à jour avec succès ! 📸");
     };
     reader.readAsDataURL(file);
@@ -460,27 +476,10 @@ export default function PlayerDashboard() {
               zIndex: 1
             }} />
 
-            {/* Tentes en parallaxe arrière */}
-            <div style={{
-              position: "absolute",
-              bottom: "20px",
-              left: "15px",
-              width: "45px",
-              height: "40px",
-              border: "2px solid #000",
-              borderRadius: "4px",
-              backgroundColor: "#2e255c",
-              transform: `translate(${parallaxOffset.x * 0.8}px, ${parallaxOffset.y * 0.8}px)`,
-              zIndex: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.2rem"
-            }}>🏕️</div>
-
-            {/* Feu de camp animé au centre */}
+            {/* Feu de camp animé au centre (interactif) */}
             <div 
               className="fire-camp"
+              onClick={() => showToast("Aïe, c'est chaud ! Ne mettez pas les doigts dans le feu... 🔥")}
               style={{
                 zIndex: 5,
                 display: "flex",
@@ -769,6 +768,10 @@ export default function PlayerDashboard() {
           ) : isZombie ? (
             <div style={{ padding: "20px", textAlign: "center", color: "var(--color-zombie)", border: "2px dashed var(--color-zombie)", borderRadius: "12px" }}>
               Tu es un zombie. Les cœurs de zombie ne peuvent pas être soignés par la Source. Va mordre quelqu'un ! 🧠
+            </div>
+          ) : player.lives >= 7.0 ? (
+            <div style={{ padding: "20px", textAlign: "center", color: "var(--color-green)", border: "2px dashed var(--color-green)", borderRadius: "12px", lineHeight: "1.4" }}>
+              Tu débordes de vie. Calme-toi, l'ami, et va plutôt courir dans la boue au lieu de vider la gourde des copains. ⛲
             </div>
           ) : (
             <div>
@@ -1086,7 +1089,9 @@ export default function PlayerDashboard() {
                     alignItems: "center",
                     justifyContent: "center"
                   }}>
-                    {player.hasPhoto ? (
+                    {profilePhoto ? (
+                      <img src={profilePhoto} alt="Profil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : player.hasPhoto ? (
                       <span style={{ fontSize: "2rem" }}>👤</span>
                     ) : (
                       <span style={{ fontFamily: "var(--font-title)", fontSize: "1.5rem" }}>
@@ -1169,25 +1174,10 @@ export default function PlayerDashboard() {
                   {player.statKillsCount === 0 && (
                     <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Aucune victime pour l'instant. Les couteaux sont neufs.</span>
                   )}
-                </div>
               </div>
-
-              <button
-                type="button"
-                className="btn-cartoon btn-red"
-                style={{ width: "100%", marginTop: "1.2rem", height: "40px" }}
-                onClick={() => {
-                  if (confirm("Voulez-vous vraiment quitter ce salon de jeu ?")) {
-                    localStorage.removeItem("cookillers_current_user");
-                    localStorage.removeItem("cookillers_game_code");
-                    window.location.reload();
-                  }
-                }}
-              >
-                Quitter le Salon
-              </button>
             </div>
           </div>
+        </div>
         )}
       </AnimatePresence>
 
