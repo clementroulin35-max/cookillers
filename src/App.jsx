@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { GameProvider, useGame } from "./context/GameContext";
 import PinPad from "./components/PinPad";
 import PlayerDashboard from "./components/PlayerDashboard";
@@ -278,6 +279,28 @@ function MainAppContent() {
                         marginTop: "2px"
                       }}
                       required
+                    />
+                  </div>
+                )}
+
+                {isGM && gameCode === "PENDING" && (
+                  <div>
+                    <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)" }}>Nom / Code du Salon :</label>
+                    <input
+                      type="text"
+                      placeholder="EX: CAMP (Aléatoire si vide)"
+                      value={inputCode}
+                      onChange={(e) => setInputCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        backgroundColor: "#110f22",
+                        border: "2px solid #000",
+                        borderRadius: "8px",
+                        color: "#fff",
+                        marginTop: "2px",
+                        marginBottom: "6px"
+                      }}
                     />
                   </div>
                 )}
