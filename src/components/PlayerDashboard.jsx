@@ -29,6 +29,24 @@ export default function PlayerDashboard() {
 
   const player = gameState.players.find(p => p.name === currentUser);
 
+  if (!player) {
+    return (
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        color: "#fff",
+        gap: "12px",
+        backgroundColor: "#0d0a1b"
+      }}>
+        <span className="animate-spin" style={{ fontSize: "2rem" }}>🍪</span>
+        <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem" }}>Chargement du profil...</span>
+      </div>
+    );
+  }
+
   // Onglets : 'contrat', 'source', 'suggestion', 'classement'
   const [activeTab, setActiveTab] = useState("contrat");
   const [isMasked, setIsMasked] = useState(false);

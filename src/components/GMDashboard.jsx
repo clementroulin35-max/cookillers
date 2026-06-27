@@ -149,13 +149,27 @@ export default function GMDashboard() {
   const handleGodSave = async () => {
     if (!editingPlayer) return;
     try {
+      let finalLives = editLives;
+      const finalZombie = editZombie;
+
+      // Si on coche la case zombie, on force les PV à 0
+      if (finalZombie) {
+        finalLives = 0.0;
+      } else {
+        // Si on décoche la case zombie (résurrection), on force les PV à au moins 1.0 si le joueur était à <= 0
+        const currentPlayer = gameState.players.find(p => p.name === editingPlayer);
+        if (currentPlayer && (currentPlayer.isZombie || finalLives <= 0)) {
+          finalLives = Math.max(1.0, finalLives);
+        }
+      }
+
       // Mettre à jour lives, score, isZombie en base
       const { error } = await supabase
         .from("players")
         .update({
           score: editScore,
-          lives: editLives,
-          is_zombie: editZombie
+          lives: finalLives,
+          is_zombie: finalZombie
         })
         .eq("game_code", gameCode)
         .eq("name", editingPlayer);
@@ -524,6 +538,28 @@ export default function GMDashboard() {
             color: "var(--color-cyan)"
           }}>
             {gameCode}
+          </div>
+
+          {/* Lien de partage d'invitation copiable */}
+          <div style={{ marginTop: "1.5rem" }}>
+            <button
+              type="button"
+              className="btn-cartoon btn-purple"
+              style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", width: "100%", maxWidth: "280px", margin: "0 auto" }}
+              onClick={() => {
+                const inviteUrl = `${window.location.origin}/?join=${gameCode}`;
+                navigator.clipboard.writeText(inviteUrl).then(() => {
+                  showToast("Lien d'invitation copié ! 📋");
+                }).catch(() => {
+                  showToast("Erreur lors de la copie.");
+                });
+              }}
+            >
+              📋 Copier le Lien d'invitation
+            </button>
+            <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "6px", wordBreak: "break-all" }}>
+              {window.location.origin}/?join={gameCode}
+            </p>
           </div>
 
           <p style={{ fontSize: "0.8rem", color: "#9ca3af", marginTop: "1.5rem" }}>
