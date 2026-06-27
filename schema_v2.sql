@@ -687,8 +687,6 @@ DECLARE
     v_active_count integer;
     v_random_player record;
     v_action_id integer;
-END; -- syntax error correct: BEGIN
--- correction syntax block BEGIN
 BEGIN
     UPDATE public.players
     SET is_frozen = false
