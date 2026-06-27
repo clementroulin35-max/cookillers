@@ -1005,8 +1005,9 @@ DECLARE
     v_lives numeric(3,1);
     v_uses_today integer;
     v_is_zombie boolean;
+    v_active_title varchar(255);
 BEGIN
-    SELECT lives, fountain_uses_today, is_zombie INTO v_lives, v_uses_today, v_is_zombie
+    SELECT lives, fountain_uses_today, is_zombie, fountain_active_title INTO v_lives, v_uses_today, v_is_zombie, v_active_title
     FROM public.players
     WHERE game_code = p_game_code AND name = p_name FOR UPDATE;
 
@@ -1038,8 +1039,8 @@ BEGIN
         stat_fountain_uses = stat_fountain_uses + 1
     WHERE game_code = p_game_code AND name = p_name;
 
-    INSERT INTO public.history (game_code, player_name, type, status, damage_penalty, photo_proof)
-    VALUES (p_game_code, p_name, 'fountain_use', 'completed', -p_gain_lives, p_proof);
+    INSERT INTO public.history (game_code, player_name, type, status, action_title, damage_penalty, photo_proof)
+    VALUES (p_game_code, p_name, 'fountain_use', 'completed', v_active_title, -p_gain_lives, p_proof);
 
     UPDATE public.games SET state_version = state_version + 1 WHERE game_code = p_game_code;
     RETURN true;

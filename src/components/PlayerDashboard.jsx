@@ -8,6 +8,7 @@ import { AlertCircle, Eye, EyeOff, HelpCircle, Send, Plus, Minus, Camera, X, Log
 export default function PlayerDashboard() {
   const {
     currentUser,
+    gameCode,
     gameState,
     isOnline,
     toastMessage,
@@ -33,6 +34,7 @@ export default function PlayerDashboard() {
   const [isMasked, setIsMasked] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(null);
+  const [targetPhoto, setTargetPhoto] = useState(null);
   const [showCounterModal, setShowCounterModal] = useState(false);
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const [showFountainModal, setShowFountainModal] = useState(false);
@@ -84,6 +86,32 @@ export default function PlayerDashboard() {
       });
     }
   }, [showProfileModal, player.name, getPlayerPhoto]);
+
+  // Charger la photo de la cible en tâche de fond
+  useEffect(() => {
+    if (player && player.target) {
+      getPlayerPhoto(player.target).then(photo => {
+        setTargetPhoto(photo);
+      }).catch(err => {
+        console.error("Erreur chargement photo cible :", err);
+      });
+    } else {
+      setTargetPhoto(null);
+    }
+  }, [player?.target, getPlayerPhoto]);
+
+  // Charger la photo de la cible zombie
+  useEffect(() => {
+    if (isZombie && zombieVictim) {
+      getPlayerPhoto(zombieVictim).then(photo => {
+        setTargetPhoto(photo);
+      }).catch(err => {
+        console.error("Erreur chargement photo victime zombie :", err);
+      });
+    } else if (isZombie) {
+      setTargetPhoto(null);
+    }
+  }, [zombieVictim, isZombie, getPlayerPhoto]);
 
   // Mascotte quotes
   const quotes = [
@@ -249,7 +277,7 @@ export default function PlayerDashboard() {
     
     // Déclencher le RPC sur Supabase
     supabase.rpc("refresh_fountain_challenge_transaction", {
-      p_game_code: gameState.game.gameCode,
+      p_game_code: gameCode,
       p_name: player.name,
       p_new_title: selected.title,
       p_new_desc: selected.desc,
@@ -498,9 +526,10 @@ export default function PlayerDashboard() {
             <div style={{ position: "absolute", width: "100%", height: "100%", zIndex: 4 }}>
               {gameState.players.map((p, idx) => {
                 const angle = (idx * 2 * Math.PI) / Math.max(1, gameState.players.length);
-                const radius = 60; // rayon du cercle
-                const left = 50 + radius * Math.cos(angle);
-                const top = 50 + radius * Math.sin(angle);
+                const radiusX = 35; // Rayon horizontal en %
+                const radiusY = 22; // Rayon vertical en % pour s'adapter au cadre
+                const left = 50 + radiusX * Math.cos(angle);
+                const top = 50 + radiusY * Math.sin(angle);
 
                 // Si joueur gelé, il dort sous sa tente
                 if (p.isFrozen) {
@@ -641,12 +670,37 @@ export default function PlayerDashboard() {
                   </span>
 
                   <div style={{ marginTop: "10px", textAlign: "left" }}>
-                    <span style={{ fontSize: "0.8rem", color: "var(--color-cyan)", fontFamily: "var(--font-title)", textTransform: "uppercase" }}>
-                      {isZombie ? "Victime potentielle :" : "Cible Secrète :"}
-                    </span>
-                    <h2 style={{ fontSize: "1.8rem", margin: "4px 0", color: "#fff", transform: "none", textShadow: "2px 2px 0 #000" }}>
-                      {isZombie ? (zombieVictim || "Choisir...") : player.target}
-                    </h2>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "4px" }}>
+                      {/* Photo de profil de la cible (lazy-loaded) */}
+                      <div style={{
+                        width: "50px",
+                        height: "50px",
+                        borderRadius: "50%",
+                        border: "2px solid #000",
+                        backgroundColor: "#2e255c",
+                        overflow: "hidden",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "2px 2px 0 #000",
+                        flexShrink: 0
+                      }}>
+                        {targetPhoto ? (
+                          <img src={targetPhoto} alt="Cible" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <span style={{ fontSize: "1.5rem" }}>👤</span>
+                        )}
+                      </div>
+
+                      <div>
+                        <span style={{ fontSize: "0.8rem", color: "var(--color-cyan)", fontFamily: "var(--font-title)", textTransform: "uppercase" }}>
+                          {isZombie ? "Victime potentielle :" : "Cible Secrète :"}
+                        </span>
+                        <h2 style={{ fontSize: "1.6rem", margin: 0, color: "#fff", transform: "none", textShadow: "2px 2px 0 #000", lineHeight: "1.2" }}>
+                          {isZombie ? (zombieVictim || "Choisir...") : player.target}
+                        </h2>
+                      </div>
+                    </div>
 
                     {/* Sélection victime pour Zombie */}
                     {isZombie && (
@@ -990,6 +1044,30 @@ export default function PlayerDashboard() {
             >
               Envoyer à l'Arbitrage
             </button>
+
+            {/* Suggestions déjà soumises et actives du joueur */}
+            <div style={{ marginTop: "1.2rem" }}>
+              <h4 style={{ fontFamily: "var(--font-title)", fontSize: "0.8rem", color: "var(--color-purple)", borderBottom: "2px solid var(--border-color)", paddingBottom: "4px", marginBottom: "8px" }}>
+                Mes Suggestions actives
+              </h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "150px", overflowY: "auto" }}>
+                {gameState.actionPool.filter(a => a.createdByPlayer === player.name).map(a => (
+                  <div key={a.id} style={{ padding: "8px 10px", backgroundColor: "rgba(0,0,0,0.2)", borderRadius: "8px", border: "1px solid rgba(168, 85, 247, 0.2)", fontSize: "0.75rem", textAlign: "left" }}>
+                    <div style={{ fontWeight: "bold", color: "#fff" }}>{a.title}</div>
+                    <div style={{ fontSize: "0.7rem", color: "#9ca3af", marginTop: "2px" }}>{a.description}</div>
+                    <div style={{ display: "flex", gap: "10px", marginTop: "4px", fontSize: "0.65rem", color: "var(--color-cyan)" }}>
+                      <span>🪙 +{a.scoreReward}</span>
+                      <span>❤️ -{a.damagePenalty}</span>
+                    </div>
+                  </div>
+                ))}
+                {gameState.actionPool.filter(a => a.createdByPlayer === player.name).length === 0 && (
+                  <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic", textAlign: "center", padding: "10px" }}>
+                    Aucune suggestion active pour le moment. Proposez une idée !
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

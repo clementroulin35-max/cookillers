@@ -181,14 +181,15 @@ export default function Leaderboard({ players, history }) {
           </span>
         );
       case "fountain_use":
+        const isPhoto = evt.photoProof && evt.photoProof.startsWith("data:image");
         return (
           <span>
             ⛲ <strong>SOIN SOURCE</strong><br/>
-            <strong>{evt.playerName}</strong> s'est ressourcé à la Source.<br/>
-            <span style={{ color: "var(--color-cyan)", fontSize: "0.85rem", fontWeight: "bold" }}>
+            <strong>{evt.playerName}</strong> s'est ressourcé en réalisant le défi : <strong style={{ color: "var(--color-cyan)" }}>{evt.actionTitle || "Défi de la Source"}</strong>.<br/>
+            <span style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: "bold" }}>
               Régénération : +{Math.abs(evt.damagePenalty)} ❤️
             </span>
-            {evt.photoProof && (
+            {evt.photoProof && isPhoto && (
               <div style={{ marginTop: "6px" }}>
                 <img 
                   src={evt.photoProof} 
@@ -198,10 +199,11 @@ export default function Leaderboard({ players, history }) {
                 />
               </div>
             )}
-            <br/>
-            <span style={{ color: "#9ca3af", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-              <EyeOff size={12} /> La question ou l'action de la Source est masquée pour préserver le bluff.
-            </span>
+            {evt.photoProof && !isPhoto && (
+              <div style={{ marginTop: "6px", backgroundColor: "rgba(34, 211, 238, 0.05)", borderLeft: "3px solid var(--color-cyan)", padding: "6px 10px", borderRadius: "0 8px 8px 0", fontStyle: "italic", fontSize: "0.85rem" }}>
+                « {evt.photoProof} »
+              </div>
+            )}
           </span>
         );
       case "zombie_bite":
