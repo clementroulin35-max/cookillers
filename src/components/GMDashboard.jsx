@@ -44,6 +44,7 @@ export default function GMDashboard() {
   const [defiReward, setDefiReward] = useState(100);
   const [defiDamage, setDefiDamage] = useState(1.5);
   const [defiZombieOnly, setDefiZombieOnly] = useState(false);
+  const [defiType, setDefiType] = useState("mission"); // 'mission', 'fountain_action', 'fountain_truth'
 
   // Filtrer les événements de l'historique en attente (pending)
   const pendingHits = gameState.history.filter(h => h.status === "pending" && h.type === "hit_declared");
@@ -113,14 +114,16 @@ export default function GMDashboard() {
   // Soumission Ajout ou Modification Défi
   const handleAddDefiSubmit = async (e) => {
     e.preventDefault();
-    if (!defiTitle || !defiDesc) return;
+    if ((defiType === "mission" && !defiTitle) || !defiDesc) return;
+
+    const finalTitle = defiType === "mission" ? defiTitle : (defiDesc.slice(0, 35) + "...");
 
     if (editingDefi) {
       // Modification de défi existant
       const { error } = await supabase
         .from("action_pools")
         .update({
-          title: defiTitle,
+          title: finalTitle,
           description: defiDesc,
           score_reward: defiType === "mission" ? defiReward : 0,
           damage_penalty: defiDamage,
@@ -150,7 +153,7 @@ export default function GMDashboard() {
         .insert([
           {
             game_code: gameCode,
-            title: defiTitle,
+            title: finalTitle,
             description: defiDesc,
             score_reward: defiType === "mission" ? defiReward : 0,
             damage_penalty: defiDamage,
@@ -675,7 +678,6 @@ export default function GMDashboard() {
                 {editingDefi ? "Modifier le Défi" : "Ajouter un Défi"}
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", textAlign: "left" }}>
-                {/* Sélecteur de type */}
                 <div style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
                   <button
                     type="button"
@@ -689,30 +691,32 @@ export default function GMDashboard() {
                     style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: defiType === "fountain_action" ? "var(--color-cyan)" : "#100e1f", color: defiType === "fountain_action" ? "#000" : "#fff", fontWeight: "bold", cursor: "pointer" }}
                     onClick={() => { setDefiType("fountain_action"); setDefiReward(0); setDefiDamage(0.5); }}
                   >
-                    Action Source ⛲
+                    Action ⛲
                   </button>
                   <button
                     type="button"
                     style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: defiType === "fountain_truth" ? "var(--color-cyan)" : "#100e1f", color: defiType === "fountain_truth" ? "#000" : "#fff", fontWeight: "bold", cursor: "pointer" }}
                     onClick={() => { setDefiType("fountain_truth"); setDefiReward(0); setDefiDamage(0.5); }}
                   >
-                    Vérité Source ⛲
+                    Vérité ⛲
                   </button>
                 </div>
 
-                <input
-                  type="text"
-                  placeholder={defiType === "fountain_truth" ? "Intitulé de la Question (Ex: Quelle est ta pire phobie ?)" : "Intitulé du Défi"}
-                  value={defiTitle}
-                  onChange={(e) => setDefiTitle(e.target.value)}
-                  style={{ width: "100%", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
-                  required
-                />
+                {defiType === "mission" && (
+                  <input
+                    type="text"
+                    placeholder="Intitulé du Défi"
+                    value={defiTitle}
+                    onChange={(e) => setDefiTitle(e.target.value)}
+                    style={{ width: "100%", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
+                    required
+                  />
+                )}
                 <textarea
-                  placeholder={defiType === "fountain_truth" ? "Preuve attendue ou réponse indicative..." : "Description de la preuve / consigne..."}
+                  placeholder={defiType === "fountain_truth" ? "Votre question à poser..." : "Description du défi / action à réaliser..."}
                   value={defiDesc}
                   onChange={(e) => setDefiDesc(e.target.value)}
-                  style={{ width: "100%", height: "50px", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
+                  style={{ width: "100%", height: "60px", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
                   required
                 />
                 
@@ -739,17 +743,29 @@ export default function GMDashboard() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>Difficulté / Soin apporté :</label>
-                    <select
-                      value={defiDamage}
-                      onChange={(e) => setDefiDamage(Number(e.target.value))}
-                      style={{ width: "100%", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
-                    >
-                      <option value="0.5">Tier I : Jus de Chaussette (+0.5 ❤️)</option>
-                      <option value="1.5">Tier II : Élixir du Barman (+1.5 ❤️)</option>
-                      <option value="3.0">Tier III : Larmes de VIP (+3.0 ❤️)</option>
-                    </select>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
+                      <span>Difficulté / Soin apporté :</span>
+                      <span>
+                        {defiDamage === 0.5 ? "Tier I : Jus de Chaussette (+0.5 ❤️)" : 
+                         defiDamage === 1.5 ? "Tier II : Élixir du Barman (+1.5 ❤️)" : 
+                         "Tier III : Larmes de VIP (+3.0 ❤️)"}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="3"
+                      step="1"
+                      value={defiDamage === 0.5 ? 1 : defiDamage === 1.5 ? 2 : 3}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        if (val === 1) setDefiDamage(0.5);
+                        else if (val === 2) setDefiDamage(1.5);
+                        else setDefiDamage(3.0);
+                      }}
+                      style={{ width: "100%", accentColor: "var(--color-cyan)", cursor: "pointer" }}
+                    />
                   </div>
                 )}
 

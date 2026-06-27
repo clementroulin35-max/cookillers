@@ -119,6 +119,22 @@ export default function PlayerDashboard() {
 
   // Zombie victime selection
   const [zombieVictim, setZombieVictim] = useState("");
+  const [campPhotos, setCampPhotos] = useState({}); // { name: photoBase64 }
+
+  // Charger les photos de profil des joueurs présents au campement
+  useEffect(() => {
+    if (gameState.players) {
+      gameState.players.forEach(p => {
+        if (p.hasPhoto && !campPhotos[p.name]) {
+          getPlayerPhoto(p.name).then(photo => {
+            if (photo) {
+              setCampPhotos(prev => ({ ...prev, [p.name]: photo }));
+            }
+          }).catch(err => console.error("Erreur photo campement :", err));
+        }
+      });
+    }
+  }, [gameState.players, getPlayerPhoto, campPhotos]);
 
   // Mascotte sarcastique
   const [mascotteQuote, setMascotteQuote] = useState("");
@@ -594,9 +610,6 @@ export default function PlayerDashboard() {
               }}
             >
               <span style={{ fontSize: "3rem" }}>🔥</span>
-              <span style={{ fontSize: "0.65rem", fontFamily: "var(--font-title)", textShadow: "1px 1px 0 #000", color: "#fbbf24" }}>
-                Campement
-              </span>
             </div>
 
             {/* Cercle d'avatars des joueurs autour du feu */}
@@ -628,6 +641,8 @@ export default function PlayerDashboard() {
                   );
                 }
 
+                const userPhoto = campPhotos[p.name];
+
                 return (
                   <div
                     key={p.name}
@@ -646,11 +661,18 @@ export default function PlayerDashboard() {
                       justifyContent: "center",
                       fontSize: "0.7rem",
                       fontWeight: "bold",
-                      zIndex: 4
+                      zIndex: 4,
+                      overflow: "hidden"
                     }}
                     title={p.name}
                   >
-                    {p.isZombie ? "🧟" : p.name.slice(0, 2).toUpperCase()}
+                    {p.isZombie ? (
+                      "🧟"
+                    ) : userPhoto ? (
+                      <img src={userPhoto} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      p.name.slice(0, 2).toUpperCase()
+                    )}
                   </div>
                 );
               })}
@@ -933,7 +955,6 @@ export default function PlayerDashboard() {
                   className="btn-cartoon btn-red"
                   data-tuto="contre-attaque"
                   style={{ flex: 1, fontSize: "0.85rem", height: "40px" }}
-                  disabled={pendingHit}
                   onClick={() => setShowCounterModal(true)}
                 >
                   ⚠️ Bureau des Rumeurs
@@ -1135,46 +1156,48 @@ export default function PlayerDashboard() {
                 style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: suggestType === "fountain_action" ? "var(--color-purple)" : "#100e1f", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
                 onClick={() => { setSuggestType("fountain_action"); setSuggestReward(0); setSuggestDamage(0.5); }}
               >
-                Action Source ⛲
+                Action ⛲
               </button>
               <button
                 type="button"
                 style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: suggestType === "fountain_truth" ? "var(--color-purple)" : "#100e1f", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
                 onClick={() => { setSuggestType("fountain_truth"); setSuggestReward(0); setSuggestDamage(0.5); }}
               >
-                Vérité Source ⛲
+                Vérité ⛲
               </button>
             </div>
 
-            <div>
-              <label style={{ fontSize: "0.8rem", color: "var(--color-purple)" }}>
-                {suggestType === "fountain_truth" ? "Intitulé de la question :" : "Intitulé du défi :"}
-              </label>
-              <input
-                type="text"
-                value={suggestTitle}
-                onChange={(e) => setSuggestTitle(e.target.value)}
-                placeholder={suggestType === "fountain_truth" ? "Ex: Quelle est ta pire phobie ? 🤫" : "Ex: Le Choc Shifumi ⚡"}
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  backgroundColor: "#1a172e",
-                  border: "2px solid #000",
-                  borderRadius: "8px",
-                  color: "#fff",
-                  marginTop: "2px"
-                }}
-              />
-            </div>
+            {suggestType === "mission" && (
+              <div>
+                <label style={{ fontSize: "0.8rem", color: "var(--color-purple)" }}>
+                  Intitulé du défi :
+                </label>
+                <input
+                  type="text"
+                  value={suggestTitle}
+                  onChange={(e) => setSuggestTitle(e.target.value)}
+                  placeholder="Ex: Le Choc Shifumi ⚡"
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    backgroundColor: "#1a172e",
+                    border: "2px solid #000",
+                    borderRadius: "8px",
+                    color: "#fff",
+                    marginTop: "2px"
+                  }}
+                />
+              </div>
+            )}
 
             <div>
               <label style={{ fontSize: "0.8rem", color: "var(--color-purple)" }}>
-                {suggestType === "fountain_truth" ? "Réponse ou consigne attendue :" : "Description de la crasse :"}
+                {suggestType === "fountain_truth" ? "Votre question à poser :" : "Description du défi / action à réaliser :"}
               </label>
               <textarea
                 value={suggestDesc}
                 onChange={(e) => setSuggestDesc(e.target.value)}
-                placeholder={suggestType === "fountain_truth" ? "La cible doit dire sa réponse sincère..." : "Expliquez clairement ce que la cible doit faire..."}
+                placeholder={suggestType === "fountain_truth" ? "Votre question sincère..." : "Expliquez clairement ce qu'il faut faire..."}
                 style={{
                   width: "100%",
                   height: "70px",
@@ -1211,24 +1234,29 @@ export default function PlayerDashboard() {
               </div>
             ) : (
               /* Soin Fontaine pour action/verité */
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>Difficulté / Soin apporté :</label>
-                <select
-                  value={suggestDamage}
-                  onChange={(e) => setSuggestDamage(Number(e.target.value))}
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    backgroundColor: "#1a172e",
-                    border: "2px solid #000",
-                    borderRadius: "8px",
-                    color: "#fff"
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
+                  <span>Difficulté / Soin apporté :</span>
+                  <span>
+                    {suggestDamage === 0.5 ? "Tier I : Jus de Chaussette (+0.5 ❤️)" : 
+                     suggestDamage === 1.5 ? "Tier II : Élixir du Barman (+1.5 ❤️)" : 
+                     "Tier III : Larmes de VIP (+3.0 ❤️)"}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="1"
+                  value={suggestDamage === 0.5 ? 1 : suggestDamage === 1.5 ? 2 : 3}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (val === 1) setSuggestDamage(0.5);
+                    else if (val === 2) setSuggestDamage(1.5);
+                    else setSuggestDamage(3.0);
                   }}
-                >
-                  <option value="0.5">Tier I : Jus de Chaussette (+0.5 ❤️)</option>
-                  <option value="1.5">Tier II : Élixir du Barman (+1.5 ❤️)</option>
-                  <option value="3.0">Tier III : Larmes de VIP (+3.0 ❤️)</option>
-                </select>
+                  style={{ width: "100%", accentColor: "var(--color-cyan)", cursor: "pointer" }}
+                />
               </div>
             )}
 

@@ -11,7 +11,7 @@ export default function TutorialOverlay({ onComplete }) {
       selector: '[data-tuto="contrat"]',
       title: "🎯 La Prochaine Victime",
       text: "Voici ta proie du moment et le piège absurde à lui tendre. Fais ça discrètement, on n'est pas chez les barbares.",
-      position: "bottom"
+      position: "top"
     },
     {
       selector: '[data-tuto="masque"]',

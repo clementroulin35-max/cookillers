@@ -156,16 +156,13 @@ function MainAppContent() {
               src={mascotteLogo} 
               alt="Logo" 
               style={{ 
-                width: "90px", 
-                height: "90px", 
+                width: "160px", 
+                height: "160px", 
                 objectFit: "contain", 
                 marginBottom: "6px", 
                 filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.5))" 
               }} 
             />
-            <h1 style={{ fontSize: "2rem", color: "var(--color-purple)", marginTop: "6px" }}>
-              Cookillers
-            </h1>
             <p style={{ fontSize: "0.85rem", color: "#9ca3af", fontStyle: "italic", marginTop: "4px" }}>
               "La Chasse au Cookie Festival 2026"
             </p>
