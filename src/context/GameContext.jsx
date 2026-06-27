@@ -209,18 +209,21 @@ export const GameProvider = ({ children }) => {
         break;
       }
       case "SUGGESTION": {
-        const { error } = await supabase.from("action_pools").insert([
+        const { error } = await supabase.from("history").insert([
           {
             game_code: gameCode,
-            title: item.title,
-            description: item.description,
+            player_name: item.playerName,
+            type: "suggestion_pending",
+            status: "pending",
+            action_title: item.title,
+            photo_proof: item.description,
             score_reward: item.scoreReward,
-            damage_penalty: item.damagePenalty,
-            is_zombie_only: item.isZombieOnly,
-            created_by_player: item.playerName
+            damage_penalty: item.damagePenalty
           }
         ]);
         if (error) throw error;
+        // Incrémenter state_version pour notifier le GM
+        await supabase.from("games").update({ state_version: gameState.stateVersion + 1 }).eq("game_code", gameCode);
         break;
       }
       case "COUNTER_ATTACK": {

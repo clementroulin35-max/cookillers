@@ -137,7 +137,7 @@ export default function GMDashboard() {
         setDefiZombieOnly(false);
         setShowAddDefiForm(false);
         showToast("Défi mis à jour ! 📖");
-        await fetchGameState(gameCode);
+        manualRefresh();
       }
     } else {
       // Ajout de nouveau défi
@@ -164,7 +164,7 @@ export default function GMDashboard() {
         setDefiZombieOnly(false);
         setShowAddDefiForm(false);
         showToast("Nouveau défi injecté dans la pool ! 📖");
-        await fetchGameState(gameCode);
+        manualRefresh();
       }
     }
   };
@@ -324,6 +324,7 @@ export default function GMDashboard() {
       }
 
       setEditingPlayer(null);
+      manualRefresh();
       showToast(`Matricule de ${editingPlayer} mis à jour.`);
     } catch (err) {
       showToast(`Erreur : ${err.message}`);
@@ -589,7 +590,7 @@ export default function GMDashboard() {
                             // Marquer history comme completed
                             await supabase.from("history").update({ status: "completed" }).eq("id", s.id);
                             showToast("Suggestion intégrée au catalogue de jeu ! ✓");
-                            await fetchGameState(gameCode);
+                            manualRefresh();
                           }}
                         >
                           Valider
@@ -602,7 +603,7 @@ export default function GMDashboard() {
                             // Rejeter : marquer comme rejected dans history
                             await supabase.from("history").update({ status: "rejected" }).eq("id", s.id);
                             showToast("Suggestion rejetée.");
-                            await fetchGameState(gameCode);
+                            manualRefresh();
                           }}
                         >
                           Rejeter
@@ -712,9 +713,12 @@ export default function GMDashboard() {
             </form>
           )}
 
-          {/* Liste défis avec suppression */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {gameState.actionPool.map((a) => (
+          {/* Liste défis GM */}
+          <h3 style={{ fontSize: "0.85rem", color: "#d1d5db", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "4px", marginBottom: "8px", textAlign: "left" }}>
+            Défis du GM ({gameState.actionPool.filter(a => !a.createdByPlayer).length})
+          </h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "1.5rem" }}>
+            {gameState.actionPool.filter(a => !a.createdByPlayer).map((a) => (
               <div
                 key={a.id}
                 style={{
@@ -737,9 +741,6 @@ export default function GMDashboard() {
                   <div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#fbbf24", marginTop: "2px" }}>
                     +{a.scoreReward} 🪙 | -{a.damagePenalty} ❤️
                   </div>
-                  {a.createdByPlayer && (
-                    <span style={{ fontSize: "0.65rem", color: "var(--color-cyan)" }}>Proposé par {a.createdByPlayer}</span>
-                  )}
                 </div>
                 <button
                   type="button"
@@ -762,6 +763,62 @@ export default function GMDashboard() {
               </div>
             ))}
           </div>
+
+          {/* Liste défis proposés par les joueurs (validés) */}
+          {gameState.actionPool.filter(a => a.createdByPlayer).length > 0 && (
+            <>
+              <h3 style={{ fontSize: "0.85rem", color: "var(--color-cyan)", borderBottom: "1px solid rgba(0,255,255,0.2)", paddingBottom: "4px", marginBottom: "8px", textAlign: "left" }}>
+                Propositions validées ({gameState.actionPool.filter(a => a.createdByPlayer).length})
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {gameState.actionPool.filter(a => a.createdByPlayer).map((a) => (
+                  <div
+                    key={a.id}
+                    style={{
+                      border: "2px solid rgba(0,255,255,0.3)",
+                      borderRadius: "12px",
+                      padding: "8px 10px",
+                      backgroundColor: "rgba(0,255,255,0.03)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}
+                  >
+                    <div 
+                      style={{ textAlign: "left", flex: 1, marginRight: "10px", cursor: "pointer" }}
+                      onClick={() => handleStartEditDefi(a)}
+                      title="Cliquer pour modifier ce défi"
+                    >
+                      <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>{a.title} {a.isZombieOnly && "🧟"}</div>
+                      <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>{a.description}</div>
+                      <div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#fbbf24", marginTop: "2px" }}>
+                        +{a.scoreReward} 🪙 | -{a.damagePenalty} ❤️
+                      </div>
+                      <span style={{ fontSize: "0.65rem", color: "var(--color-cyan)" }}>Proposé par {a.createdByPlayer}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDefi(a.id)}
+                      style={{
+                        backgroundColor: "rgba(239, 68, 68, 0.15)",
+                        border: "2px solid var(--color-red)",
+                        color: "var(--color-red)",
+                        borderRadius: "8px",
+                        width: "28px",
+                        height: "28px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <Trash size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 

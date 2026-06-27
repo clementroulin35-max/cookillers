@@ -5,23 +5,53 @@ import { supabase } from "../services/supabaseClient";
 import Leaderboard, { getRank } from "./Leaderboard";
 import { AlertCircle, Eye, EyeOff, HelpCircle, Send, Plus, Minus, Camera, X, LogOut } from "lucide-react";
 
-const fountainPool = [
-  { tier: 1, title: "Jus de Chaussette 🧦", desc: "Boire une gorgée d'eau tiède récupérée au jet d'eau des douches.", gain: 0.5, type: "action" },
-  { tier: 1, title: "Confession humble 🤫", desc: "Confesser ton secret honteux le plus drôle à un festivalier.", gain: 0.5, type: "verite" },
-  { tier: 2, title: "Élixir du Barman 🥃", desc: "Boire un gobelet d'un breuvage surprise offert par ton voisin de tente.", gain: 1.5, type: "action" },
-  { tier: 2, title: "Question Vérité 🔮", desc: "Avouer quelle est la cible que tu as le plus détesté traquer.", gain: 1.5, type: "verite" },
-  { tier: 3, title: "Larmes de VIP 💎", desc: "Trouver de l'eau fraîche servie avec glaçons dans un gobelet propre.", gain: 3.0, type: "action" },
-  { tier: 3, title: "Révélation ultime 🧬", desc: "Révéler à ton voisin une triche que tu as faite dans un jeu précédent.", gain: 3.0, type: "verite" }
+const FOUNTAIN_POOL = [
+  // Actions Faciles (Tier 1) — gain 0.5
+  { type: "action", tier: 1, title: "Faire un compliment sincère à un inconnu.", gain: 0.5 },
+  { type: "action", tier: 1, title: "Boire un verre d'eau cul-sec en public.", gain: 0.5 },
+  { type: "action", tier: 1, title: "Ranger 3 déchets qui traînent par terre.", gain: 0.5 },
+  { type: "action", tier: 1, title: "Lancer une partie de 'Je n'ai jamais...' au camp avec au moins 3 personnes.", gain: 0.5 },
+  { type: "action", tier: 1, title: "Désigner un 'Maître du Pouce' : chaque fois que tu poses ton pouce sur la table, tout le monde doit faire de même.", gain: 0.5 },
+  { type: "action", tier: 1, title: "Faire un bras de fer avec un autre joueur.", gain: 0.5 },
+  // Actions Moyennes (Tier 2) — gain 1.5
+  { type: "action", tier: 2, title: "Raconter une blague nulle à un groupe d'inconnus.", gain: 1.5 },
+  { type: "action", tier: 2, title: "Faire un check de la main créatif avec quelqu'un.", gain: 1.5 },
+  { type: "action", tier: 2, title: "Parler pendant 5 minutes avec un accent étranger.", gain: 1.5 },
+  { type: "action", tier: 2, title: "Remplir un verre au milieu de la table, puis défier quelqu'un au Shifumi.", gain: 1.5 },
+  { type: "action", tier: 2, title: "Inventer une règle absurde pour le camp pendant 30 min.", gain: 1.5 },
+  { type: "action", tier: 2, title: "Réussir un 'Flip Cup' 3 fois de suite.", gain: 1.5 },
+  // Actions Difficiles (Tier 3) — gain 3.0
+  { type: "action", tier: 3, title: "Chanter le refrain d'une chanson connue en plein milieu du camp.", gain: 3.0 },
+  { type: "action", tier: 3, title: "Faire une séance de 10 pompes devant une scène.", gain: 3.0 },
+  { type: "action", tier: 3, title: "Convaincre un inconnu de te faire un massage de 15 secondes.", gain: 3.0 },
+  { type: "action", tier: 3, title: "Défier un voisin de tente à un duel de 'Bière Pong'.", gain: 3.0 },
+  { type: "action", tier: 3, title: "Faire une 'cascade' avec au moins 4 personnes où chacun boit consécutivement.", gain: 3.0 },
+  // Vérités Faciles (Tier 1) — gain 0.5
+  { type: "verite", tier: 1, title: "Quelle est ta chanson préférée honteuse ?", gain: 0.5 },
+  { type: "verite", tier: 1, title: "Quel est ton pire défaut en festival ?", gain: 0.5 },
+  { type: "verite", tier: 1, title: "As-tu déjà menti pour éviter de boire un verre ?", gain: 0.5 },
+  { type: "verite", tier: 1, title: "Quel est le surnom le plus ridicule qu'on t'ait jamais donné ?", gain: 0.5 },
+  { type: "verite", tier: 1, title: "Si tu devais échanger ton corps avec un joueur ici, qui choisirais-tu ?", gain: 0.5 },
+  { type: "verite", tier: 1, title: "Quelle est la pire excuse que tu as sortie pour annuler une soirée ?", gain: 0.5 },
+  // Vérités Moyennes (Tier 2) — gain 1.5
+  { type: "verite", tier: 2, title: "Quel joueur ici présent a le style vestimentaire le plus douteux ?", gain: 1.5 },
+  { type: "verite", tier: 2, title: "Quelle est la chose la plus absurde que tu aies faite en festival ?", gain: 1.5 },
+  { type: "verite", tier: 2, title: "As-tu déjà fait semblant de connaître un groupe de musique ?", gain: 1.5 },
+  { type: "verite", tier: 2, title: "Qui dans ce groupe serait le premier à se faire arrêter par la police ?", gain: 1.5 },
+  { type: "verite", tier: 2, title: "Quel est ton plus grand plaisir coupable inavouable ?", gain: 1.5 },
+  { type: "verite", tier: 2, title: "As-tu déjà eu un crush secret sur un(e) ami(e) d'un joueur présent ?", gain: 1.5 },
+  // Vérités Difficiles (Tier 3) — gain 3.0
+  { type: "verite", tier: 3, title: "Quel joueur du groupe as-tu le plus envie d'éliminer et pourquoi ?", gain: 3.0 },
+  { type: "verite", tier: 3, title: "As-tu un secret inavouable que personne ici ne connaît ?", gain: 3.0 },
+  { type: "verite", tier: 3, title: "Quelle est ta pire phobie ou situation embarrassante vécue au camping ?", gain: 3.0 },
+  { type: "verite", tier: 3, title: "Si tu devais avouer un énorme mensonge dit à un joueur du groupe, ce serait quoi ?", gain: 3.0 },
+  { type: "verite", tier: 3, title: "Quelle est la pire bêtise que tu aies commise sous l'effet de l'alcool ?", gain: 3.0 },
+  { type: "verite", tier: 3, title: "Si ta vie amoureuse était un film, quel en serait le titre ?", gain: 3.0 },
 ];
 
-const getFountainCouple = (tier) => {
-  const actions = fountainPool.filter(p => p.tier === tier && p.type === "action");
-  const verites = fountainPool.filter(p => p.tier === tier && p.type === "verite");
-  
-  const action = actions[Math.floor(Math.random() * actions.length)];
-  const verite = verites[Math.floor(Math.random() * verites.length)];
-  
-  return { action, verite };
+const getRandomFountainChallenge = (requestedType, tier) => {
+  const available = FOUNTAIN_POOL.filter(p => p.tier === tier && p.type === requestedType);
+  return available[Math.floor(Math.random() * available.length)];
 };
 
 export default function PlayerDashboard() {
@@ -83,10 +113,6 @@ export default function PlayerDashboard() {
   const [fountainTextProof, setFountainTextProof] = useState("");
   const [fountainPhotoProof, setFountainPhotoProof] = useState("");
   const [fountainChoice, setFountainChoice] = useState(null); // défi pioché
-  const [fountainCouple, setFountainCouple] = useState(() => {
-    const cached = localStorage.getItem(`cookillers_fountain_couple_${currentUser}`);
-    return cached ? JSON.parse(cached) : null;
-  });
 
   // Zombie victime selection
   const [zombieVictim, setZombieVictim] = useState("");
@@ -101,14 +127,14 @@ export default function PlayerDashboard() {
 
   // Charger la photo de profil de manière paresseuse à l'ouverture de la modale
   useEffect(() => {
-    if (showProfileModal) {
+    if (showProfileModal && player) {
       getPlayerPhoto(player.name).then(photo => {
         setProfilePhoto(photo);
       }).catch(err => {
         console.error("Erreur de chargement photo :", err);
       });
     }
-  }, [showProfileModal, player.name, getPlayerPhoto]);
+  }, [showProfileModal, player?.name, getPlayerPhoto]);
 
   // Charger la photo de la cible en tâche de fond
   useEffect(() => {
@@ -135,31 +161,6 @@ export default function PlayerDashboard() {
       setTargetPhoto(null);
     }
   }, [zombieVictim, player?.isZombie, getPlayerPhoto]);
-
-  // Initialiser le couple Action/Vérité si absent
-  useEffect(() => {
-    if (player && !fountainCouple) {
-      const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
-      const couple = getFountainCouple(tier);
-      setFountainCouple(couple);
-      localStorage.setItem(`cookillers_fountain_couple_${currentUser}`, JSON.stringify(couple));
-    }
-  }, [player, fountainCouple, currentUser]);
-
-  // Synchroniser le choix actif depuis la base de données
-  useEffect(() => {
-    if (player && player.fountainActiveTitle && !fountainChoice) {
-      setFountainChoice({
-        title: player.fountainActiveTitle,
-        desc: player.fountainActiveDescription,
-        type: player.fountainActiveType,
-        gain: player.fountainActiveTitle.includes("💎") || player.fountainActiveTitle.includes("🧬") ? 3.0 : (player.fountainActiveTitle.includes("🥃") || player.fountainActiveTitle.includes("🔮") ? 1.5 : 0.5)
-      });
-      setFountainType(player.fountainActiveType);
-    } else if (player && !player.fountainActiveTitle && fountainChoice) {
-      setFountainChoice(null);
-    }
-  }, [player?.fountainActiveTitle, player?.fountainActiveDescription, player?.fountainActiveType]);
 
   // Mascotte quotes
   const quotes = [
@@ -311,37 +312,21 @@ export default function PlayerDashboard() {
     showToast("Soins appliqués ! Preuve stockée pour audit public. ⛲");
   };
 
-  // Sélectionner un défi de la fontaine
-  const handleSelectFountainChallenge = async (selectedChallenge) => {
-    try {
-      const { error } = await supabase
-        .from("players")
-        .update({
-          fountain_active_title: selectedChallenge.title,
-          fountain_active_description: selectedChallenge.desc,
-          fountain_active_type: selectedChallenge.type
-        })
-        .eq("game_code", gameCode)
-        .eq("name", player.name);
-
-      if (error) throw error;
-
-      setFountainChoice(selectedChallenge);
-      setFountainType(selectedChallenge.type);
-      manualRefresh();
-    } catch (err) {
-      showToast(`Erreur sélection : ${err.message}`);
-    }
+  // Puiser un défi de la fontaine (Action ou Vérité)
+  const handleFountainDraw = (requestedType) => {
+    const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
+    const challenge = getRandomFountainChallenge(requestedType, tier);
+    setFountainChoice(challenge);
+    setFountainType(requestedType);
   };
 
-  // Relance de défi de la fontaine : piocher un nouveau couple Action & Vérité
+  // Relance de défi de la fontaine
   const handleFountainRefresh = async () => {
     if (player.fountainRefreshesToday < 1) {
       showToast("Plus de jetons de relance 🌀 pour la Fontaine aujourd'hui.");
       return;
     }
 
-    // Déclencher le RPC sur Supabase pour consommer 1 skip fontaine (on passe des chaînes vides)
     const { error } = await supabase.rpc("refresh_fountain_challenge_transaction", {
       p_game_code: gameCode,
       p_name: player.name,
@@ -353,13 +338,12 @@ export default function PlayerDashboard() {
     if (error) {
       showToast(`Erreur : ${error.message}`);
     } else {
-      // Générer le nouveau couple du tier correspondant
+      // Regénérer un défi du même type avec le tier adapté
       const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
-      const couple = getFountainCouple(tier);
-      setFountainCouple(couple);
-      localStorage.setItem(`cookillers_fountain_couple_${currentUser}`, JSON.stringify(couple));
+      const challenge = getRandomFountainChallenge(fountainType, tier);
+      setFountainChoice(challenge);
       manualRefresh();
-      showToast("Nouveau choix d'Action & Vérité disponible ! 🌀");
+      showToast("Nouveau défi de la Source pioché ! 🌀");
     }
   };
 
@@ -480,7 +464,7 @@ export default function PlayerDashboard() {
           <div style={{ position: "absolute", right: "6px", top: "4px", backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "16px", height: "16px", display: "flex", alignItems: "center", justifyItems: "center", fontSize: "10px", fontWeight: "bold", cursor: "pointer", paddingLeft: "5px" }}>?</div>
         )}
         {activeTooltip === "ecg" && (
-          <div style={{ position: "absolute", top: "35px", left: "10px", right: "10px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "10px", borderRadius: "8px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 10px rgba(0,0,0,0.5)" }}>
+          <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)" }}>
             <strong>Constantes Vitales :</strong> Si vos cœurs ❤️ tombent à 0, vous décédez et passez zombie 🧟 (Mode Moisi).
           </div>
         )}
@@ -501,7 +485,7 @@ export default function PlayerDashboard() {
             <div style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "12px", height: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: "bold" }}>?</div>
           )}
           {activeTooltip === "health" && (
-            <div style={{ position: "absolute", top: "30px", left: 0, width: "200px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "8px", borderRadius: "8px", zIndex: 1000, fontSize: "0.8rem" }}>
+            <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)" }}>
               Votre vitalité ❤️. Un combat trop long vous épuise.
             </div>
           )}
@@ -520,7 +504,7 @@ export default function PlayerDashboard() {
             <div style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "12px", height: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: "bold" }}>?</div>
           )}
           {activeTooltip === "biscuits" && (
-            <div style={{ position: "absolute", top: "30px", right: 0, width: "200px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "8px", borderRadius: "8px", zIndex: 1000, fontSize: "0.8rem" }}>
+            <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)" }}>
               Votre solde de 🪙. Augmente avec vos éliminations pour grimper au classement.
             </div>
           )}
@@ -539,7 +523,7 @@ export default function PlayerDashboard() {
             <div style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "12px", height: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: "bold" }}>?</div>
           )}
           {activeTooltip === "skips" && (
-            <div style={{ position: "absolute", top: "30px", right: 0, width: "200px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "8px", borderRadius: "8px", zIndex: 1000, fontSize: "0.8rem" }}>
+            <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)" }}>
               Votre solde de 🌀. Consommez-en un pour changer de défi sans changer de cible.
             </div>
           )}
@@ -977,24 +961,7 @@ export default function PlayerDashboard() {
                         type="button"
                         className="btn-cartoon"
                         style={{ flex: 1, padding: "0.5rem", backgroundColor: "#4b5563" }}
-                        onClick={async () => {
-                          try {
-                            await supabase
-                              .from("players")
-                              .update({
-                                fountain_active_title: null,
-                                fountain_active_description: null,
-                                fountain_active_type: null
-                              })
-                              .eq("game_code", gameCode)
-                              .eq("name", player.name);
-                            
-                            setFountainChoice(null);
-                            await manualRefresh();
-                          } catch (err) {
-                            console.error(err);
-                          }
-                        }}
+                        onClick={() => setFountainChoice(null)}
                       >
                         Retour
                       </button>
@@ -1003,44 +970,21 @@ export default function PlayerDashboard() {
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  {fountainCouple && (
-                    <>
-                      <button
-                        type="button"
-                        className="btn-cartoon btn-cyan"
-                        style={{ textAlign: "left", padding: "10px", height: "auto", display: "block" }}
-                        onClick={() => handleSelectFountainChallenge(fountainCouple.action)}
-                      >
-                        <div style={{ fontWeight: "bold", fontSize: "0.95rem" }}>🔥 Action : {fountainCouple.action.title}</div>
-                        <div style={{ fontSize: "0.8rem", color: "#d1d5db", marginTop: "2px", fontWeight: "normal", whiteSpace: "normal" }}>
-                          {fountainCouple.action.desc} (+{fountainCouple.action.gain} ❤️)
-                        </div>
-                      </button>
+                  <button
+                    type="button"
+                    className="btn-cartoon btn-cyan"
+                    onClick={() => handleFountainDraw("action")}
+                  >
+                    Puiser une Action (+{player.fountainTotalUses >= 5 ? "3.0" : player.fountainTotalUses >= 3 ? "1.5" : "0.5"} ❤️)
+                  </button>
 
-                      <button
-                        type="button"
-                        className="btn-cartoon btn-cyan"
-                        style={{ textAlign: "left", padding: "10px", height: "auto", display: "block" }}
-                        onClick={() => handleSelectFountainChallenge(fountainCouple.verite)}
-                      >
-                        <div style={{ fontWeight: "bold", fontSize: "0.95rem" }}>🤫 Vérité : {fountainCouple.verite.title}</div>
-                        <div style={{ fontSize: "0.8rem", color: "#d1d5db", marginTop: "2px", fontWeight: "normal", whiteSpace: "normal" }}>
-                          {fountainCouple.verite.desc} (+{fountainCouple.verite.gain} ❤️)
-                        </div>
-                      </button>
-                    </>
-                  )}
-
-                  {player.fountainRefreshesToday > 0 && (
-                    <button
-                      type="button"
-                      className="btn-cartoon"
-                      style={{ backgroundColor: "var(--color-purple)", border: "2px solid #000", marginTop: "8px" }}
-                      onClick={handleFountainRefresh}
-                    >
-                      Piocher une nouvelle 'Action & Vérité' 🌀
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="btn-cartoon btn-cyan"
+                    onClick={() => handleFountainDraw("verite")}
+                  >
+                    Puiser une Vérité (+{player.fountainTotalUses >= 5 ? "3.0" : player.fountainTotalUses >= 3 ? "1.5" : "0.5"} ❤️)
+                  </button>
                 </div>
               )}
             </div>
