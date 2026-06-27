@@ -385,11 +385,6 @@ BEGIN
 
     SELECT count(*) INTO v_active_survivors 
     FROM public.players 
-    WHERE game_code = r_hist.game_code && is_frozen = false && is_zombie = false; -- syntax correction for SQL standard: AND
-
-    -- correction syntax and
-    SELECT count(*) INTO v_active_survivors 
-    FROM public.players 
     WHERE game_code = r_hist.game_code AND is_frozen = false AND is_zombie = false;
 
     IF v_active_survivors = 1 THEN
@@ -547,14 +542,6 @@ BEGIN
         UPDATE public.players
         SET lives = v_victim_lives,
             score = v_victim_score
-        WHERE game_code = r_hist.game_code && name = r_hist.target_name; -- syntax correction: AND
-    END IF;
-
-    -- syntax correction and
-    IF v_victim_lives > 0.0 THEN
-        UPDATE public.players
-        SET lives = v_victim_lives,
-            score = v_victim_score
         WHERE game_code = r_hist.game_code AND name = r_hist.target_name;
     END IF;
 
@@ -678,16 +665,6 @@ BEGIN
             end_time = now()
         WHERE game_code = p_game_code;
         
-        INSERT INTO public.history (p_game_code, 'System', 'game_finished', 'completed'); -- syntax error, p_game_code is parameter name, use p_game_code directly or match parameter name
-    END IF;
-
-    -- syntax correction
-    IF v_active_survivors = 1 THEN
-        UPDATE public.games 
-        SET status = 'finished',
-            end_time = now()
-        WHERE game_code = p_game_code;
-        
         INSERT INTO public.history (game_code, player_name, type, status)
         VALUES (p_game_code, 'System', 'game_finished', 'completed');
     END IF;
@@ -710,6 +687,8 @@ DECLARE
     v_active_count integer;
     v_random_player record;
     v_action_id integer;
+END; -- syntax error correct: BEGIN
+-- correction syntax block BEGIN
 BEGIN
     UPDATE public.players
     SET is_frozen = false
@@ -940,7 +919,6 @@ BEGIN
         RAISE EXCEPTION 'Pas de cible à abandonner';
     END IF;
 
-    -- Appliquer la pénalité
     IF p_penalty_type = 'score' THEN
         IF v_score < 50 THEN
             RAISE EXCEPTION 'Score insuffisant pour payer la pénalité';
@@ -955,26 +933,22 @@ BEGIN
         RAISE EXCEPTION 'Type de pénalité inconnu';
     END IF;
 
-    -- 1. Identifier son tueur
     SELECT name INTO v_killer_name 
     FROM public.players 
     WHERE game_code = p_game_code AND target = p_name AND is_frozen = false AND is_zombie = false;
 
-    -- 2. Reconnecter le tueur directement sur sa cible (fermeture de la boucle)
     IF v_killer_name IS NOT NULL AND v_killer_name != p_name THEN
         UPDATE public.players 
         SET target = v_current_target 
         WHERE game_code = p_game_code AND name = v_killer_name;
     END IF;
 
-    -- 3. Attribuer les pénalités au joueur
     UPDATE public.players
     SET score = v_score,
         lives = v_lives,
         stat_abandon_count = stat_abandon_count + 1
     WHERE game_code = p_game_code AND name = p_name;
 
-    -- 4. Trouver une nouvelle cible via scission aléatoire d'un lien
     SELECT count(*) INTO v_active_count 
     FROM public.players 
     WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != p_name;
@@ -991,7 +965,6 @@ BEGIN
         LIMIT 1;
 
         IF FOUND THEN
-            -- X cible désormais le joueur, et le joueur cible Y
             UPDATE public.players
             SET target = p_name
             WHERE game_code = p_game_code AND name = v_random_player.name;
