@@ -36,6 +36,9 @@ export default function GMDashboard() {
   const [editLives, setEditLives] = useState(7.0);
   const [editZombie, setEditZombie] = useState(false);
   const [editFrozen, setEditFrozen] = useState(false);
+  const [editFountainUses, setEditFountainUses] = useState(0);
+  const [editFountainRefreshes, setEditFountainRefreshes] = useState(0);
+  const [editSkips, setEditSkips] = useState(0);
   const [securesPin, setSecuresPin] = useState("");
 
   // Pool de défis - Ajout / Édition
@@ -96,6 +99,31 @@ export default function GMDashboard() {
       }
     }
   };
+  const PlayerAvatar = ({ name, hasPhoto }) => {
+    const { getPlayerPhoto } = useGame();
+    const [photo, setPhoto] = React.useState(null);
+
+    React.useEffect(() => {
+      if (hasPhoto) {
+        getPlayerPhoto(name).then(setPhoto).catch(console.error);
+      } else {
+        setPhoto(null);
+      }
+    }, [name, hasPhoto, getPlayerPhoto]);
+
+    return (
+      <div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "2px solid #000", backgroundColor: "#1e1330", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "1px 1px 0 #000", flexShrink: 0, marginRight: "8px", overflow: "hidden" }}>
+        {photo ? (
+          <img src={photo} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <span style={{ fontFamily: "var(--font-title)", fontSize: "0.85rem", color: "#fff", lineHeight: "1" }}>
+            {name.slice(0, 2).toUpperCase()}
+          </span>
+        )}
+      </div>
+    );
+  };
+
   const getPlayerDisplayName = (username) => {
     if (!username) return "";
     if (username.toUpperCase() === "GM") return "GM";
@@ -242,6 +270,18 @@ export default function GMDashboard() {
       }
 
       if (currentPlayer) {
+        // Enregistrer d'abord les autres métriques (skips, utilisations fontaine, etc.)
+        const { error: metricsErr } = await supabase
+          .from("players")
+          .update({
+            fountain_uses_today: editFountainUses,
+            fountain_refreshes_today: editFountainRefreshes,
+            skips: editSkips
+          })
+          .eq("game_code", gameCode)
+          .eq("name", editingPlayer);
+        if (metricsErr) throw metricsErr;
+
         if (currentPlayer.isZombie && !finalZombie) {
           // RÉSURRECTION : Le joueur passe de zombie à vivant
           await resurrectPlayer(editingPlayer, editScore, finalLives);
@@ -1071,16 +1111,23 @@ export default function GMDashboard() {
             const p = gameState.players.find(pl => pl.name === editingPlayer);
             const currentMission = p ? gameState.actionPool.find(a => a.id === p.actionId) : null;
             const currentMissionTitle = currentMission ? currentMission.title : "Aucune";
+            const currentMissionDesc = currentMission ? currentMission.description : "";
             return (
               <div style={{ border: "2px solid var(--color-purple)", padding: "12px", borderRadius: "12px", backgroundColor: "#1d1933", textAlign: "left" }}>
                 <h3 style={{ fontSize: "1.1rem", marginBottom: "6px", transform: "none", textShadow: "none" }}>Modifier {getPlayerDisplayName(editingPlayer)}</h3>
                 <div style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "8px" }}>
                   <div>Cible : <strong>{p ? (getPlayerDisplayName(p.target) || "Aucune") : "Aucune"}</strong></div>
                   <div style={{ marginTop: "4px" }}>Mission en cours : <strong>{currentMissionTitle}</strong></div>
+                  {currentMissionDesc && (
+                    <div style={{ marginTop: "4px", fontSize: "0.75rem", fontStyle: "italic", color: "#9ca3af" }}>
+                      Description : {currentMissionDesc}
+                    </div>
+                  )}
                 </div>
               
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", marginBottom: "8px" }}>
+                {/* Row 1: Score & Vie */}
+                <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>🪙 :</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -1127,6 +1174,86 @@ export default function GMDashboard() {
                         className="btn-cartoon" 
                         style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
                         onClick={() => setEditLives(prev => Math.min(7.0, prev + 0.5))}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: Utilisation Fontaine & Relance Fontaine */}
+                <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>⛲ :</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
+                        onClick={() => setEditFountainUses(prev => Math.max(0, prev - 1))}
+                      >
+                        -
+                      </button>
+                      <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center", display: "inline-block" }}>
+                        {editFountainUses}/2
+                      </span>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
+                        onClick={() => setEditFountainUses(prev => Math.min(2, prev + 1))}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>⛲🌀 :</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
+                        onClick={() => setEditFountainRefreshes(prev => Math.max(0, prev - 1))}
+                      >
+                        -
+                      </button>
+                      <span style={{ fontFamily: "var(--font-title)", minWidth: "20px", textAlign: "center", display: "inline-block" }}>
+                        {editFountainRefreshes}
+                      </span>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
+                        onClick={() => setEditFountainRefreshes(prev => prev + 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 3: Relance Défi */}
+                <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "flex-start", flexWrap: "wrap", paddingBottom: "4px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>🎯🌀 :</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
+                        onClick={() => setEditSkips(prev => Math.max(0, prev - 1))}
+                      >
+                        -
+                      </button>
+                      <span style={{ fontFamily: "var(--font-title)", minWidth: "20px", textAlign: "center", display: "inline-block" }}>
+                        {editSkips}
+                      </span>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
+                        onClick={() => setEditSkips(prev => prev + 1)}
                       >
                         +
                       </button>
@@ -1183,44 +1310,68 @@ export default function GMDashboard() {
             </div>
             );
           })() : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {gameState.players.map((p) => (
-                <div
-                  key={p.name}
-                  onClick={() => {
-                    setEditingPlayer(p.name);
-                    setEditScore(p.score);
-                    setEditLives(p.lives);
-                    setEditZombie(p.isZombie);
-                    setEditFrozen(p.isFrozen);
-                    setSecuresPin("");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  style={{
-                    border: "2px solid #000",
-                    borderRadius: "12px",
-                    padding: "8px 12px",
-                    backgroundColor: "rgba(255,255,255,0.02)",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    cursor: "pointer"
-                  }}
-                >
-                  <div style={{ textAlign: "left" }}>
-                    <div style={{ fontWeight: "bold" }}>
-                      {getPlayerDisplayName(p.name)} {p.isZombie && "🧟"} {p.isFrozen && "❄️"}
+            <div style={{ border: "2px solid #000", borderRadius: "12px", overflow: "hidden", backgroundColor: "#150e1f", boxShadow: "3px 3px 0 #000" }}>
+              <div style={{ overflowX: "auto" }}>
+                <div style={{ minWidth: "420px" }}>
+                  {/* En-tête de la table */}
+                  <div style={{ display: "flex", padding: "8px 12px", borderBottom: "2px solid #000", backgroundColor: "#1c1326", fontWeight: "bold", fontSize: "0.75rem", color: "#9ca3af", textTransform: "uppercase", alignItems: "center" }}>
+                    <div style={{ flex: 2, minWidth: "120px", textAlign: "left" }}>Joueur</div>
+                    <div style={{ width: "50px", textAlign: "center" }} title="Score (Biscuits)">🪙</div>
+                    <div style={{ width: "50px", textAlign: "center" }} title="Vitalité / Zombie">❤️</div>
+                    <div style={{ width: "50px", textAlign: "center" }} title="Fontaine Utilisations">⛲</div>
+                    <div style={{ width: "55px", textAlign: "center" }} title="Relances Fontaine">⛲🌀</div>
+                    <div style={{ width: "55px", textAlign: "center" }} title="Relances Défi">🎯🌀</div>
+                  </div>
+                  {/* Lignes des joueurs */}
+                  {gameState.players.map((p) => (
+                    <div
+                      key={p.name}
+                      onClick={() => {
+                        setEditingPlayer(p.name);
+                        setEditScore(p.score);
+                        setEditLives(p.lives);
+                        setEditZombie(p.isZombie);
+                        setEditFrozen(p.isFrozen);
+                        setEditFountainUses(p.fountainUsesToday || 0);
+                        setEditFountainRefreshes(p.fountainRefreshesToday || 0);
+                        setEditSkips(p.skips || 0);
+                        setSecuresPin("");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      style={{
+                        borderBottom: "1px solid rgba(255,255,255,0.05)",
+                        padding: "8px 12px",
+                        backgroundColor: p.isZombie ? "rgba(168, 85, 247, 0.05)" : "rgba(255,255,255,0.02)",
+                        display: "flex",
+                        alignItems: "center",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <div style={{ flex: 2, minWidth: "120px", display: "flex", alignItems: "center", textAlign: "left" }}>
+                        <PlayerAvatar name={p.name} hasPhoto={p.hasPhoto} />
+                        <span style={{ fontWeight: "bold", fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {getPlayerDisplayName(p.name)} {p.isZombie && "🧟"} {p.isFrozen && "❄️"}
+                        </span>
+                      </div>
+                      <div style={{ width: "50px", textAlign: "center", color: "#fbbf24", fontWeight: "bold", fontSize: "0.85rem" }}>
+                        {p.score}
+                      </div>
+                      <div style={{ width: "50px", textAlign: "center", fontSize: "0.85rem" }}>
+                        {p.isZombie ? "💀" : `${p.lives}`}
+                      </div>
+                      <div style={{ width: "50px", textAlign: "center", fontSize: "0.85rem" }}>
+                        {p.fountainUsesToday || 0}/2
+                      </div>
+                      <div style={{ width: "55px", textAlign: "center", fontSize: "0.85rem" }}>
+                        {p.fountainRefreshesToday || 0}
+                      </div>
+                      <div style={{ width: "55px", textAlign: "center", fontSize: "0.85rem" }}>
+                        {p.skips || 0}
+                      </div>
                     </div>
-                    <span style={{ fontSize: "0.7rem", color: "#9ca3af" }}>
-                      Cible : {getPlayerDisplayName(p.target) || "Aucune"}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", gap: "12px", fontSize: "0.9rem", alignItems: "center" }}>
-                    <div style={{ color: "#fbbf24", width: "70px", textAlign: "right" }}>{p.score} 🪙</div>
-                    <div style={{ width: "75px", textAlign: "right" }}>{p.isZombie ? "🧟" : `${p.lives} ❤️`}</div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           )}
         </div>

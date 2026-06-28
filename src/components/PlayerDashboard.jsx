@@ -710,7 +710,7 @@ export default function PlayerDashboard() {
       {/* Onde ECG de Vitalité */}
       {(() => {
         let ecgColor = "#22c55e"; // vert
-        if (isZombie) ecgColor = "#a855f7"; // violet
+        if (isZombie) ecgColor = "#6b7280"; // gris
         else if (player.lives < 2.0) ecgColor = "#ef4444"; // rouge
         else if (player.lives < 4.0) ecgColor = "#f97316"; // orange
 
@@ -1028,7 +1028,7 @@ export default function PlayerDashboard() {
                 >
                   <option value="">-- Choisir un survivant à mordre --</option>
                   {gameState.players.filter(p => !p.isZombie && !p.isFrozen).map(p => (
-                    <option key={p.name} value={p.name}>{p.name}</option>
+                    <option key={p.name} value={p.name}>{getPlayerDisplayName(p.name)}</option>
                   ))}
                 </select>
               </div>
@@ -1745,16 +1745,39 @@ export default function PlayerDashboard() {
                 Mes Suggestions actives
               </h4>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "150px", overflowY: "auto" }}>
-                {gameState.actionPool.filter(a => a.createdByPlayer === player.name).map(a => (
-                  <div key={a.id} style={{ padding: "8px 10px", backgroundColor: "rgba(0,0,0,0.2)", borderRadius: "8px", border: "1px solid rgba(168, 85, 247, 0.2)", fontSize: "0.75rem", textAlign: "left" }}>
-                    <div style={{ fontWeight: "bold", color: "#fff" }}>{a.title}</div>
-                    <div style={{ fontSize: "0.7rem", color: "#9ca3af", marginTop: "2px" }}>{a.description}</div>
-                    <div style={{ display: "flex", gap: "10px", marginTop: "4px", fontSize: "0.65rem", color: "var(--color-cyan)" }}>
-                      <span>🪙 +{a.scoreReward}</span>
-                      <span>❤️ -{a.damagePenalty}</span>
+                {gameState.actionPool.filter(a => a.createdByPlayer === player.name).map(a => {
+                  const displayTitle = a.type === "fountain_action" ? "Action" : (a.type === "fountain_truth" ? "Vérité" : a.title);
+                  let typeLabel = "🎯 Mission";
+                  let typeColor = "var(--color-purple)";
+                  if (a.type === "fountain_action") {
+                    typeLabel = "⚡ Action";
+                    typeColor = "var(--color-cyan)";
+                  } else if (a.type === "fountain_truth") {
+                    typeLabel = "💬 Vérité";
+                    typeColor = "#10b981";
+                  }
+                  return (
+                    <div key={a.id} style={{ padding: "8px 10px", backgroundColor: "rgba(0,0,0,0.2)", borderRadius: "8px", border: "1px solid rgba(168, 85, 247, 0.2)", fontSize: "0.75rem", textAlign: "left" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                        <div style={{ fontWeight: "bold", color: "#fff" }}>{displayTitle}</div>
+                        <span style={{ fontSize: "0.6rem", padding: "1px 4px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${typeColor}`, color: typeColor, fontWeight: "bold" }}>
+                          {typeLabel}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "0.7rem", color: "#9ca3af", marginTop: "2px" }}>{a.description}</div>
+                      <div style={{ display: "flex", gap: "10px", marginTop: "4px", fontSize: "0.65rem" }}>
+                        {(a.type === "mission" || !a.type) ? (
+                          <>
+                            <span style={{ color: "#fbbf24" }}>🪙 +{a.scoreReward}</span>
+                            <span style={{ color: "var(--color-red)" }}>❤️ -{a.damagePenalty}</span>
+                          </>
+                        ) : (
+                          <span style={{ color: "var(--color-green)", fontWeight: "bold" }}>❤️ +{a.damagePenalty}</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {gameState.actionPool.filter(a => a.createdByPlayer === player.name).length === 0 && (
                   <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic", textAlign: "center", padding: "10px" }}>
                     Aucune suggestion active pour le moment. Proposez une idée !
@@ -2132,7 +2155,7 @@ export default function PlayerDashboard() {
                   >
                     <option value="">-- Sélectionner le suspect --</option>
                     {gameState.players.filter(p => p.name !== player.name && !p.isFrozen).map(p => (
-                      <option key={p.name} value={p.name}>{p.name}</option>
+                      <option key={p.name} value={p.name}>{getPlayerDisplayName(p.name)}</option>
                     ))}
                   </select>
                 </div>

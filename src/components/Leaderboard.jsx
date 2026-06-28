@@ -526,20 +526,20 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                       </div>
                     </div>
                     
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                        <span style={{ fontWeight: "black", fontSize: "1rem", color: "#fbbf24" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", width: "80px" }}>
+                        <span style={{ fontWeight: "black", fontSize: "1rem", color: "#fbbf24", textAlign: "right" }}>
                           {player.effectiveScore} 🪙
                         </span>
                         {player.isZombie && (
-                          <span style={{ fontSize: "0.7rem", color: "var(--color-zombie)" }}>
-                            (Score divisé par 2)
+                          <span style={{ fontSize: "0.6rem", color: "var(--color-zombie)", textAlign: "right", whiteSpace: "nowrap" }}>
+                            (Score / 2)
                           </span>
                         )}
                       </div>
-                      <span style={{ fontSize: "1.1rem" }}>
-                        {player.isZombie ? "🧟" : `${player.lives} ❤️`}
-                      </span>
+                      <div style={{ width: "70px", textAlign: "right", fontSize: "1.1rem" }}>
+                        {player.isZombie ? "💀" : `${player.lives} ❤️`}
+                      </div>
                     </div>
                   </div>
                 );
