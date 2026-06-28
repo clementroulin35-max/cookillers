@@ -73,7 +73,16 @@ export const GameProvider = ({ children }) => {
         if (!a.type) {
           if (a.scoreReward === 0) {
             const desc = a.description || "";
-            if (desc.trim().endsWith("?") || (a.title && a.title.toLowerCase().includes("vérité")) || (a.title && a.title.toLowerCase().includes("confess"))) {
+            const title = a.title || "";
+            const isTruth = desc.includes("?") || 
+                            desc.toLowerCase().includes("quelle") || 
+                            desc.toLowerCase().includes("quel") || 
+                            desc.toLowerCase().includes("avouer") ||
+                            desc.toLowerCase().includes("avoue") ||
+                            desc.toLowerCase().includes("raconte") ||
+                            desc.toLowerCase().includes("vérité") ||
+                            title.toLowerCase().includes("vérité");
+            if (isTruth) {
               return { ...a, type: "fountain_truth" };
             }
             return { ...a, type: "fountain_action" };
@@ -83,6 +92,33 @@ export const GameProvider = ({ children }) => {
         return a;
       });
 
+      // Synchronisation défensive pour les descriptions de suggestions si la colonne est absente de la réponse RPC
+      let historyData = data.history || [];
+      const hasMissingDesc = historyData.some(h => h.type === "suggestion_pending" && h.status === "pending" && h.photoProof === undefined);
+      if (hasMissingDesc) {
+        try {
+          const { data: dbHistory } = await supabase
+            .from("history")
+            .select("id, photo_proof")
+            .eq("game_code", code)
+            .eq("type", "suggestion_pending")
+            .eq("status", "pending");
+          if (dbHistory) {
+            historyData = historyData.map(h => {
+              if (h.type === "suggestion_pending" && h.status === "pending" && h.photoProof === undefined) {
+                const found = dbHistory.find(d => d.id === h.id);
+                if (found) {
+                  return { ...h, photoProof: found.photo_proof };
+                }
+              }
+              return h;
+            });
+          }
+        } catch (e) {
+          console.error("Error fetching history description fallback:", e);
+        }
+      }
+
       const formattedState = {
         started: data.game.status === "active" || data.game.status === "finished",
         status: data.game.status,
@@ -91,7 +127,7 @@ export const GameProvider = ({ children }) => {
         endTime: data.game.endTime,
         players: data.players || [],
         actionPool: mappedPool,
-        history: data.history || []
+        history: historyData
       };
 
       setGameState(formattedState);

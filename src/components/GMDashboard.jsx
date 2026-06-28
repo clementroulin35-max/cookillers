@@ -505,8 +505,18 @@ export default function GMDashboard() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {gameState.history.filter(h => h.type === "suggestion_pending" && h.status === "pending").map((s) => {
                   const parts = s.photoProof ? s.photoProof.split("|") : [];
-                  const extractedType = parts.length > 1 ? parts[0] : "mission";
+                  let extractedType = parts.length > 1 ? parts[0] : "mission";
                   const cleanDesc = parts.length > 1 ? parts.slice(1).join("|") : s.photoProof;
+
+                  // Détection par fallback si le préfixe est absent mais que le score de gain est de 0
+                  if (extractedType === "mission" && s.scoreReward === 0) {
+                    const checkText = ((s.actionTitle || "") + " " + (cleanDesc || "")).toLowerCase();
+                    if (checkText.includes("?") || checkText.includes("vérité") || checkText.includes("confess") || checkText.includes("raconte")) {
+                      extractedType = "fountain_truth";
+                    } else {
+                      extractedType = "fountain_action";
+                    }
+                  }
 
                   let typeLabel = "🎯 Mission";
                   let typeColor = "var(--color-purple)";
@@ -552,13 +562,15 @@ export default function GMDashboard() {
                       </div>
 
                       <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "8px" }}>
-                        <input
-                          type="text"
-                          value={mod.title}
-                          onChange={(e) => updateMod("title", e.target.value)}
-                          placeholder="Intitulé"
-                          style={{ width: "100%", padding: "4px 8px", backgroundColor: "#1c192d", border: "1.5px solid #000", borderRadius: "6px", color: "#fff", fontSize: "0.85rem" }}
-                        />
+                        {extractedType === "mission" && (
+                          <input
+                            type="text"
+                            value={mod.title}
+                            onChange={(e) => updateMod("title", e.target.value)}
+                            placeholder="Intitulé"
+                            style={{ width: "100%", padding: "4px 8px", backgroundColor: "#1c192d", border: "1.5px solid #000", borderRadius: "6px", color: "#fff", fontSize: "0.85rem" }}
+                          />
+                        )}
                         <textarea
                           value={mod.desc}
                           onChange={(e) => updateMod("desc", e.target.value)}
@@ -577,7 +589,7 @@ export default function GMDashboard() {
                                 <button
                                   type="button"
                                   className="btn-cartoon"
-                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
                                   onClick={() => updateMod("reward", Math.max(50, mod.reward - 50))}
                                 >
                                   -
@@ -586,7 +598,7 @@ export default function GMDashboard() {
                                 <button
                                   type="button"
                                   className="btn-cartoon"
-                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
                                   onClick={() => updateMod("reward", Math.min(600, mod.reward + 50))}
                                 >
                                   +
@@ -599,7 +611,7 @@ export default function GMDashboard() {
                                 <button
                                   type="button"
                                   className="btn-cartoon"
-                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
                                   onClick={() => updateMod("damage", Math.max(0.5, mod.damage - 0.5))}
                                 >
                                   -
@@ -608,7 +620,7 @@ export default function GMDashboard() {
                                 <button
                                   type="button"
                                   className="btn-cartoon"
-                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
                                   onClick={() => updateMod("damage", Math.min(7.0, mod.damage + 0.5))}
                                 >
                                   +
@@ -622,7 +634,7 @@ export default function GMDashboard() {
                               <button
                                 type="button"
                                 className="btn-cartoon"
-                                style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
                                 onClick={() => {
                                   if (mod.damage === 3.0) updateMod("damage", 1.5);
                                   else if (mod.damage === 1.5) updateMod("damage", 0.5);
@@ -639,7 +651,7 @@ export default function GMDashboard() {
                               <button
                                 type="button"
                                 className="btn-cartoon"
-                                style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
                                 onClick={() => {
                                   if (mod.damage === 0.5) updateMod("damage", 1.5);
                                   else if (mod.damage === 1.5) updateMod("damage", 3.0);
@@ -794,7 +806,7 @@ export default function GMDashboard() {
                       <button
                         type="button"
                         className="btn-cartoon"
-                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiReward(Math.max(50, defiReward - 50))}
                       >
                         -
@@ -803,7 +815,7 @@ export default function GMDashboard() {
                       <button
                         type="button"
                         className="btn-cartoon"
-                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiReward(Math.min(600, defiReward + 50))}
                       >
                         +
@@ -816,7 +828,7 @@ export default function GMDashboard() {
                       <button
                         type="button"
                         className="btn-cartoon"
-                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiDamage(Math.max(0.5, defiDamage - 0.5))}
                       >
                         -
@@ -825,7 +837,7 @@ export default function GMDashboard() {
                       <button
                         type="button"
                         className="btn-cartoon"
-                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiDamage(Math.min(7.0, defiDamage + 0.5))}
                       >
                         +
@@ -847,7 +859,7 @@ export default function GMDashboard() {
                        <button
                          type="button"
                          className="btn-cartoon"
-                         style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                         style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                          onClick={() => {
                            if (defiDamage === 3.0) setDefiDamage(1.5);
                            else if (defiDamage === 1.5) setDefiDamage(0.5);
@@ -864,7 +876,7 @@ export default function GMDashboard() {
                        <button
                          type="button"
                          className="btn-cartoon"
-                         style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                         style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                          onClick={() => {
                            if (defiDamage === 0.5) setDefiDamage(1.5);
                            else if (defiDamage === 1.5) setDefiDamage(3.0);
@@ -1076,14 +1088,14 @@ export default function GMDashboard() {
               <h3 style={{ fontSize: "1.1rem", marginBottom: "8px", transform: "none", textShadow: "none" }}>Modifier {editingPlayer}</h3>
               
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ display: "flex", gap: "16px", alignItems: "flex-end", flexWrap: "wrap", marginBottom: "8px" }}>
-                  <div>
-                    <label style={{ fontSize: "0.75rem", color: "#fbbf24", display: "block", marginBottom: "4px" }}>🪙 :</label>
+                <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap", marginBottom: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>🪙 :</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <button 
                         type="button" 
                         className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
                         onClick={() => setEditScore(prev => Math.max(0, prev - 50))}
                       >
                         -
@@ -1097,20 +1109,20 @@ export default function GMDashboard() {
                       <button 
                         type="button" 
                         className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
                         onClick={() => setEditScore(prev => prev + 50)}
                       >
                         +
                       </button>
                     </div>
                   </div>
-                  <div>
-                    <label style={{ fontSize: "0.75rem", color: "var(--color-red)", display: "block", marginBottom: "4px" }}>❤️ :</label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>❤️ :</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <button 
                         type="button" 
                         className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
                         onClick={() => setEditLives(prev => Math.max(0.0, prev - 0.5))}
                       >
                         -
@@ -1121,7 +1133,7 @@ export default function GMDashboard() {
                       <button 
                         type="button" 
                         className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
                         onClick={() => setEditLives(prev => Math.min(7.0, prev + 0.5))}
                       >
                         +

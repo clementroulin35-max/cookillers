@@ -464,6 +464,27 @@ export default function PlayerDashboard() {
     showToast("Accusation lancée auprès des Juges. Croisez les doigts.");
   };
 
+  // Helper pour piocher / récupérer le couple Action / Vérité de la Fontaine de façon persistante
+  const getOrCreateFountainPair = () => {
+    if (!player) return null;
+    const key = `fountain_pair_${player.name}_${gameCode}`;
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        console.error("Erreur lors de la lecture du cache du couple Fontaine :", e);
+      }
+    }
+    // Génération d'un nouveau couple conjointe (Action & Vérité) pour le Tier adapté du joueur
+    const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
+    const actionCh = getRandomFountainChallenge("action", tier, gameState.actionPool);
+    const veriteCh = getRandomFountainChallenge("verite", tier, gameState.actionPool);
+    const newPair = { action: actionCh, verite: veriteCh };
+    localStorage.setItem(key, JSON.stringify(newPair));
+    return newPair;
+  };
+
   // Soumission Fontaine
   const handleFountainSubmit = () => {
     if (fountainType === "verite" && !fountainTextProof) {
@@ -479,6 +500,10 @@ export default function PlayerDashboard() {
     const gain = fountainChoice.gain;
 
     submitFountainProof(fountainType, proof, gain);
+    // Nettoyer le couple du cache local après validation réussie
+    if (player) {
+      localStorage.removeItem(`fountain_pair_${player.name}_${gameCode}`);
+    }
     setFountainChoice(null);
     setFountainTextProof("");
     setFountainPhotoProof("");
@@ -488,8 +513,9 @@ export default function PlayerDashboard() {
 
   // Puiser un défi de la fontaine (Action ou Vérité)
   const handleFountainDraw = (requestedType) => {
-    const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
-    const challenge = getRandomFountainChallenge(requestedType, tier, gameState.actionPool);
+    const pair = getOrCreateFountainPair();
+    if (!pair) return;
+    const challenge = requestedType === "action" ? pair.action : pair.verite;
     setFountainChoice(challenge);
     setFountainType(requestedType);
   };
@@ -512,9 +538,14 @@ export default function PlayerDashboard() {
     if (error) {
       showToast(`Erreur : ${error.message}`);
     } else {
-      // Regénérer un défi du même type avec le tier adapté
+      // Regénérer simultanément l'Action et la Vérité pour le nouveau tirage (le couple entier change !)
       const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
-      const challenge = getRandomFountainChallenge(fountainType, tier, gameState.actionPool);
+      const actionCh = getRandomFountainChallenge("action", tier, gameState.actionPool);
+      const veriteCh = getRandomFountainChallenge("verite", tier, gameState.actionPool);
+      const newPair = { action: actionCh, verite: veriteCh };
+      localStorage.setItem(`fountain_pair_${player.name}_${gameCode}`, JSON.stringify(newPair));
+
+      const challenge = fountainType === "action" ? actionCh : veriteCh;
       setFountainChoice(challenge);
       manualRefresh();
       showToast("Nouveau défi de la Source pioché ! 🌀");
@@ -1306,18 +1337,15 @@ export default function PlayerDashboard() {
               {fountainChoice ? (
                 <>
                   <div style={{ border: "2px solid var(--color-cyan)", borderRadius: "12px", padding: "12px", backgroundColor: "rgba(34, 211, 238, 0.03)" }}>
-                  <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--color-cyan)", fontWeight: "bold" }}>
-                    Défi de la Source :
-                  </span>
-                  <h3 style={{ fontSize: "1.2rem", margin: "4px 0", transform: "none", textShadow: "none", color: "#fff" }}>
-                    {fountainChoice.title}
+                  <h3 style={{ fontSize: "1.1rem", margin: "4px 0", transform: "none", textShadow: "none", color: "#fff", lineHeight: "1.4" }}>
+                    <span style={{ fontSize: "0.85rem", textTransform: "uppercase", color: "var(--color-cyan)", fontWeight: "bold" }}>
+                      Défi de la Source :{" "}
+                    </span>
+                    {fountainChoice.title ? fountainChoice.title : (fountainType === "action" ? "ACTION" : "VERITE")}
                   </h3>
-                  <p style={{ fontSize: "0.9rem", fontStyle: "italic", margin: "4px 0" }}>
+                  <p style={{ fontSize: "0.9rem", fontStyle: "italic", margin: "8px 0 4px 0" }}>
                     {fountainChoice.desc}
                   </p>
-                  <div style={{ fontSize: "0.85rem", color: "var(--color-green)", fontWeight: "bold", marginTop: "8px" }}>
-                    Gain de Vitalité : +{fountainChoice.gain} ❤️
-                  </div>
 
                   {/* Formulaire de Preuve */}
                   <div style={{ marginTop: "1rem", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
@@ -1453,15 +1481,13 @@ export default function PlayerDashboard() {
                         cursor: "pointer",
                         backgroundColor: "#161b2e",
                         border: "3px solid #000",
-                        height: "120px"
+                        height: "120px",
+                        margin: 0
                       }}
                       onClick={() => handleFountainDraw("action")}
                     >
                       <span style={{ fontSize: "2rem", marginBottom: "4px" }}>⚡</span>
                       <span style={{ fontFamily: "var(--font-title)", fontSize: "0.85rem", color: "#fff" }}>Action</span>
-                      <span style={{ fontSize: "0.75rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
-                        +{player.fountainTotalUses >= 5 ? "3.0" : player.fountainTotalUses >= 3 ? "1.5" : "0.5"} ❤️
-                      </span>
                     </button>
 
                     {/* Center: VS text */}
@@ -1498,16 +1524,26 @@ export default function PlayerDashboard() {
                         cursor: "pointer",
                         backgroundColor: "#161b2e",
                         border: "3px solid #000",
-                        height: "120px"
+                        height: "120px",
+                        margin: 0
                       }}
                       onClick={() => handleFountainDraw("verite")}
                     >
                       <span style={{ fontSize: "2rem", marginBottom: "4px" }}>💬</span>
                       <span style={{ fontFamily: "var(--font-title)", fontSize: "0.85rem", color: "#fff" }}>Vérité</span>
-                      <span style={{ fontSize: "0.75rem", color: "#10b981", fontWeight: "bold" }}>
-                        +{player.fountainTotalUses >= 5 ? "3.0" : player.fountainTotalUses >= 3 ? "1.5" : "0.5"} ❤️
-                      </span>
                     </button>
+                  </div>
+                  <div style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginTop: "16px",
+                    fontFamily: "var(--font-title)",
+                    fontSize: "1.5rem",
+                    color: "var(--color-green)",
+                    textShadow: "2px 2px 0 #000"
+                  }}>
+                    +{player.fountainTotalUses >= 5 ? "3.0" : player.fountainTotalUses >= 3 ? "1.5" : "0.5"} ❤️
                   </div>
                 </div>
               )}
@@ -1663,7 +1699,7 @@ export default function PlayerDashboard() {
                   <button
                     type="button"
                     className="btn-cartoon"
-                    style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                    style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                     onClick={() => {
                       if (suggestDamage === 3.0) setSuggestDamage(1.5);
                       else if (suggestDamage === 1.5) setSuggestDamage(0.5);
@@ -1680,7 +1716,7 @@ export default function PlayerDashboard() {
                   <button
                     type="button"
                     className="btn-cartoon"
-                    style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                    style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                     onClick={() => {
                       if (suggestDamage === 0.5) setSuggestDamage(1.5);
                       else if (suggestDamage === 1.5) setSuggestDamage(3.0);
@@ -2173,7 +2209,8 @@ export default function PlayerDashboard() {
                     border: "3px solid #000",
                     opacity: player.lives <= 0.5 ? 0.5 : 1,
                     minWidth: "120px",
-                    height: "120px"
+                    height: "120px",
+                    margin: 0
                   }}
                   disabled={player.lives <= 0.5}
                   onClick={() => {
@@ -2223,7 +2260,8 @@ export default function PlayerDashboard() {
                     border: "3px solid #000",
                     opacity: player.score < 50 ? 0.5 : 1,
                     minWidth: "120px",
-                    height: "120px"
+                    height: "120px",
+                    margin: 0
                   }}
                   disabled={player.score < 50}
                   onClick={() => {
