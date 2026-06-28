@@ -888,7 +888,6 @@ export default function PlayerDashboard() {
 
             {/* Feu de camp animé au centre (interactif) */}
             <div 
-              ref={fireRef}
               className="fire-camp"
               onClick={() => showToast("Aïe, c'est chaud ! Ne mettez pas les doigts dans le feu... 🔥")}
               style={{
@@ -896,11 +895,85 @@ export default function PlayerDashboard() {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                cursor: "pointer"
+                cursor: "pointer",
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%)"
               }}
             >
-              <span style={{ fontSize: "3rem" }}>🔥</span>
+              <span style={{ fontSize: "3.2rem" }}>🔥</span>
             </div>
+
+            {/* Zone de détection et de pulsation crépitement autour du feu */}
+            <div 
+              ref={fireRef}
+              className="fire-pulse-ring"
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+                width: "90px",
+                height: "90px",
+                borderRadius: "50%",
+                border: "2px dashed rgba(249, 115, 22, 0.4)",
+                zIndex: 3,
+                pointerEvents: "none"
+              }}
+            />
+
+            {/* Aide du Feu de Camp si active */}
+            {isHelpActive && (
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  triggerTooltip("campfire");
+                }}
+                style={{ 
+                  position: "absolute", 
+                  top: "10px", 
+                  right: "10px", 
+                  backgroundColor: "var(--color-cyan)", 
+                  color: "#000", 
+                  borderRadius: "50%", 
+                  width: "18px", 
+                  height: "18px", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  fontSize: "11px", 
+                  fontWeight: "bold", 
+                  cursor: "pointer",
+                  zIndex: 20
+                }}
+              >
+                ?
+              </div>
+            )}
+            {activeTooltip === "campfire" && (
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveTooltip(null);
+                }} 
+                style={{ 
+                  position: "fixed", 
+                  bottom: "90px", 
+                  left: "16px", 
+                  right: "16px", 
+                  backgroundColor: "#1e1b30", 
+                  border: "2px solid var(--color-cyan)", 
+                  padding: "12px", 
+                  borderRadius: "12px", 
+                  zIndex: 10000, 
+                  fontSize: "0.85rem", 
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.7)" 
+                }}
+              >
+                <strong>Le Campement :</strong> Faites glisser la bulle d'un autre joueur suspecté dans le feu de camp central 🔥 pour lancer une accusation de meurtre. Attention, accuser à tort vous coûtera 0.5 ❤️. On ne peut pas accuser un joueur zombie 🧟 ou gelé ❄️.
+              </div>
+            )}
 
             {/* Cercle d'avatars des joueurs autour du feu */}
             <div style={{ position: "absolute", width: "100%", height: "100%", zIndex: 4 }}>
@@ -954,23 +1027,42 @@ export default function PlayerDashboard() {
                       fontWeight: "bold",
                       zIndex: 10,
                       cursor: isMe ? "default" : "grab",
-                      touchAction: "none"
+                      touchAction: "none",
+                      userSelect: "none",
+                      WebkitUserSelect: "none"
                     }}
                     title={p.displayName || p.name}
                   >
-                    <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
                       {userPhoto ? (
-                        <img src={userPhoto} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src={userPhoto} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
                       ) : (
-                        p.displayName ? p.displayName.slice(0, 2).toUpperCase() : p.name.slice(0, 2).toUpperCase()
+                        <span style={{ pointerEvents: "none" }}>
+                          {p.displayName ? p.displayName.slice(0, 2).toUpperCase() : p.name.slice(0, 2).toUpperCase()}
+                        </span>
                       )}
                     </div>
                     {p.isFrozen && (
-                      <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12 }}>❄️</span>
+                      <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12, pointerEvents: "none" }}>❄️</span>
                     )}
                     {p.isZombie && (
-                      <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12 }}>🧟</span>
+                      <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12, pointerEvents: "none" }}>🧟</span>
                     )}
+                    <span style={{
+                      position: "absolute",
+                      top: "52px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      fontSize: "0.7rem",
+                      fontStyle: "italic",
+                      color: "#ffffff",
+                      textShadow: "1px 1px 0 #000",
+                      pointerEvents: "none",
+                      whiteSpace: "nowrap",
+                      zIndex: 15
+                    }}>
+                      {getPlayerDisplayName(p.name)}
+                    </span>
                   </motion.div>
                 );
               })}
@@ -1122,7 +1214,8 @@ export default function PlayerDashboard() {
                 <div 
                   className={`card-cartoon ${rarityClass} glow-cyan`}
                   data-tuto="contrat"
-                  style={{ minHeight: "190px", position: "relative" }}
+                  style={{ minHeight: "190px", position: "relative", cursor: "pointer" }}
+                  onClick={() => setIsMasked(true)}
                 >
                   {isTargetFrozen && (
                     <div style={{
@@ -1151,24 +1244,57 @@ export default function PlayerDashboard() {
                   {/* Scan holographique cyan */}
                   <div className="scan-line" />
 
-                  {/* Bouton de dissimulation rapide */}
-                  <button
-                    type="button"
-                    onClick={() => setIsMasked(true)}
-                    style={{
-                      position: "absolute",
-                      top: "10px",
-                      right: "10px",
-                      background: "none",
-                      border: "none",
-                      color: "var(--color-cyan)",
-                      cursor: "pointer",
-                      zIndex: 20
-                    }}
-                    title="Masquer instantanément"
-                  >
-                    <Eye size={20} />
-                  </button>
+                  {/* Bulle d'aide contextuelle */}
+                  {isHelpActive && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        triggerTooltip("target_card");
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: "10px",
+                        right: "10px",
+                        backgroundColor: "var(--color-cyan)",
+                        color: "#000",
+                        borderRadius: "50%",
+                        width: "18px",
+                        height: "18px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "11px",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        zIndex: 40
+                      }}
+                    >
+                      ?
+                    </div>
+                  )}
+                  {activeTooltip === "target_card" && (
+                    <div 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveTooltip(null);
+                      }} 
+                      style={{ 
+                        position: "fixed", 
+                        bottom: "90px", 
+                        left: "16px", 
+                        right: "16px", 
+                        backgroundColor: "#1e1b30", 
+                        border: "2px solid var(--color-cyan)", 
+                        padding: "12px", 
+                        borderRadius: "12px", 
+                        zIndex: 10000, 
+                        fontSize: "0.85rem", 
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.7)" 
+                      }}
+                    >
+                      <strong>Votre Contrat Secret :</strong> Affiche le profil de votre cible active ainsi que le piège absurde à réaliser. Cliquez n'importe où sur cet encart pour le masquer instantanément en cas de danger !
+                    </div>
+                  )}
 
                   {/* Bandeau Examen si arbitrage en cours */}
                   {pendingHit && (
@@ -1207,12 +1333,12 @@ export default function PlayerDashboard() {
                     {rarityLabel}
                   </span>
 
-                  <div style={{ marginTop: "10px", textAlign: "left" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "4px" }}>
-                      {/* Photo de profil de la cible (lazy-loaded) */}
+                  <div style={{ marginTop: "10px", width: "100%" }}>
+                    {/* Partie haute : Avatar + Nom Cible (Centrés) */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", marginBottom: "12px" }}>
                       <div style={{
-                        width: "50px",
-                        height: "50px",
+                        width: "60px",
+                        height: "60px",
                         borderRadius: "50%",
                         border: "2px solid #000",
                         backgroundColor: "#2e255c",
@@ -1222,12 +1348,13 @@ export default function PlayerDashboard() {
                         justifyContent: "center",
                         boxShadow: "2px 2px 0 #000",
                         flexShrink: 0,
-                        position: "relative"
+                        position: "relative",
+                        marginBottom: "8px"
                       }}>
                         {targetPhoto ? (
                           <img src={targetPhoto} alt="Cible" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         ) : (
-                          <span style={{ fontSize: "1.5rem" }}>👤</span>
+                          <span style={{ fontSize: "1.8rem" }}>👤</span>
                         )}
                         {!lowPerfMode && (
                           <div 
@@ -1253,8 +1380,8 @@ export default function PlayerDashboard() {
                         )}
                       </div>
 
-                      <div>
-                        <span style={{ fontSize: "0.8rem", color: "var(--color-cyan)", fontFamily: "var(--font-title)", textTransform: "uppercase" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
+                        <span style={{ fontSize: "0.85rem", color: "var(--color-cyan)", fontFamily: "var(--font-title)", textTransform: "uppercase" }}>
                           Cible Secrète :
                         </span>
                         <h2 style={{ fontSize: "1.6rem", margin: 0, color: "#fff", transform: "none", textShadow: "2px 2px 0 #000", lineHeight: "1.2" }}>
@@ -1263,19 +1390,22 @@ export default function PlayerDashboard() {
                       </div>
                     </div>
 
-                    <span style={{ fontSize: "0.8rem", color: "var(--color-purple)", fontFamily: "var(--font-title)", textTransform: "uppercase", display: "block", marginTop: "8px" }}>
-                      Piège Absurde :
-                    </span>
-                    <p style={{ fontSize: "0.95rem", color: "#e5e7eb", fontStyle: "italic", marginTop: "2px" }}>
-                      {currentAction ? currentAction.description : "Pas de défi actif. Demandez une relance ou attendez."}
-                    </p>
+                    {/* Partie basse : Défi + Gain (Alignés à gauche) */}
+                    <div style={{ textAlign: "left" }}>
+                      <span style={{ fontSize: "0.8rem", color: "var(--color-purple)", fontFamily: "var(--font-title)", textTransform: "uppercase", display: "block", marginTop: "8px" }}>
+                        Piège Absurde :
+                      </span>
+                      <p style={{ fontSize: "0.95rem", color: "#e5e7eb", fontStyle: "italic", marginTop: "2px" }}>
+                        {currentAction ? currentAction.description : "Pas de défi actif. Demandez une relance ou attendez."}
+                      </p>
 
-                    {currentAction && (
-                      <div style={{ display: "flex", gap: "10px", marginTop: "12px", fontSize: "0.8rem", fontWeight: "bold" }}>
-                        <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "4px" }}> Récompense : +{isZombie ? Math.floor(currentAction.scoreReward / 2) : currentAction.scoreReward} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5em", height: "1.5em", verticalAlign: "middle" }} /></span>
-                        <span style={{ color: "var(--color-red)" }}> Dégâts : -{isZombie ? 0 : currentAction.damagePenalty} ❤️</span>
-                      </div>
-                    )}
+                      {currentAction && (
+                        <div style={{ display: "flex", gap: "10px", marginTop: "12px", fontSize: "0.8rem", fontWeight: "bold" }}>
+                          <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "4px" }}> Récompense : +{isZombie ? Math.floor(currentAction.scoreReward / 2) : currentAction.scoreReward} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5em", height: "1.5em", verticalAlign: "middle" }} /></span>
+                          <span style={{ color: "var(--color-red)" }}> Dégâts : -{isZombie ? 0 : currentAction.damagePenalty} ❤️</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

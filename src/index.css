@@ -589,3 +589,23 @@ h1, h2, h3, .cartoon-title {
   50% { top: 100%; }
   100% { top: 0%; }
 }
+
+@keyframes fire-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+    border-color: rgba(249, 115, 22, 0.7); /* Orange */
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.3;
+  }
+}
+
+.fire-pulse-ring {
+  animation: fire-pulse 2.2s infinite ease-in-out;
+}
