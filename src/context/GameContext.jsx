@@ -474,33 +474,35 @@ export const GameProvider = ({ children }) => {
 
   const registerPlayer = async (name, pin) => {
     if (!gameCode) return;
-    const formattedName = formatPlayerName(name);
-    if (!formattedName) throw new Error("Pseudo requis");
+    const cleanName = name.trim();
+    if (!cleanName) throw new Error("Pseudo requis");
+    const dbName = cleanName.toUpperCase();
 
-    const pinHash = await sha256(formattedName.toLowerCase() + pin + "cookillers_salt_2026");
+    const pinHash = await sha256(cleanName.toLowerCase() + pin + "cookillers_salt_2026");
 
     // Appel du RPC join_and_initialize_player
     const { error } = await supabase.rpc("join_and_initialize_player", {
       p_game_code: gameCode,
-      p_name: formattedName,
+      p_name: cleanName,
       p_pin_hash: pinHash
     });
 
     if (error) throw error;
 
     localStorage.setItem("cookillers_player_pin", pin);
-    setCurrentUser(formattedName);
+    setCurrentUser(dbName);
     await fetchGameState(gameCode);
-    return formattedName;
+    return dbName;
   };
 
   const loginPlayer = async (name, pin) => {
     if (!gameCode) return;
-    const formattedName = formatPlayerName(name);
-    if (!formattedName) throw new Error("Pseudo requis");
+    const cleanName = name.trim();
+    if (!cleanName) throw new Error("Pseudo requis");
+    const dbName = cleanName.toUpperCase();
 
     // S'il s'agit du GM
-    if (formattedName === "GM") {
+    if (dbName === "GM") {
       const { data: gameData, error: gameError } = await supabase
         .from("games")
         .select("gm_pin")
@@ -518,19 +520,19 @@ export const GameProvider = ({ children }) => {
     }
 
     // Hashage du PIN avec le même sel client
-    const pinHash = await sha256(formattedName.toLowerCase() + pin + "cookillers_salt_2026");
+    const pinHash = await sha256(cleanName.toLowerCase() + pin + "cookillers_salt_2026");
 
     // Récupérer le joueur
     const { data: player, error } = await supabase
       .from("players")
       .select("pin_hash")
       .eq("game_code", gameCode)
-      .eq("name", formattedName)
+      .eq("name", dbName)
       .maybeSingle();
 
     if (error) throw error;
     if (!player) {
-      throw new Error(`Le joueur "${formattedName}" n'est pas inscrit.`);
+      throw new Error(`Le joueur "${cleanName}" n'est pas inscrit.`);
     }
 
     if (player.pin_hash !== pinHash) {
@@ -538,9 +540,9 @@ export const GameProvider = ({ children }) => {
     }
 
     localStorage.setItem("cookillers_player_pin", pin);
-    setCurrentUser(formattedName);
+    setCurrentUser(dbName);
     await fetchGameState(gameCode);
-    return formattedName;
+    return dbName;
   };
 
   const logOut = () => {

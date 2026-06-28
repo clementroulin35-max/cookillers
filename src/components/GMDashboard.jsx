@@ -90,7 +90,13 @@ export default function GMDashboard() {
       }
     }
   };
-
+  const getPlayerDisplayName = (username) => {
+    if (!username) return "";
+    if (username.toUpperCase() === "GM") return "GM";
+    if (username.toUpperCase() === "SYSTEM") return "System";
+    const found = gameState.players.find(p => p.name.toUpperCase() === username.toUpperCase());
+    return found ? (found.displayName || found.name) : username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+  };
   // Action : Le Chant du Coq
   const handleRoosterCrow = async () => {
     try {
@@ -406,11 +412,11 @@ export default function GMDashboard() {
                     <p style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
                       {zombieAttack ? (
                         <>
-                          <strong>🧟 [Zombie] {h.playerName}</strong> déclare avoir mordu <strong>{h.targetName}</strong> !
+                          <strong>🧟 [Zombie] {getPlayerDisplayName(h.playerName)}</strong> déclare avoir mordu <strong>{getPlayerDisplayName(h.targetName)}</strong> !
                         </>
                       ) : (
                         <>
-                          <strong>⚔️ {h.playerName}</strong> déclare avoir neutralisé <strong>{h.targetName}</strong> !
+                          <strong>⚔️ {getPlayerDisplayName(h.playerName)}</strong> déclare avoir neutralisé <strong>{getPlayerDisplayName(h.targetName)}</strong> !
                         </>
                       )}
                       <br/>
@@ -452,7 +458,7 @@ export default function GMDashboard() {
               {pendingCounters.map((c) => (
                 <div key={c.id} style={{ border: "2px solid #000", borderRadius: "12px", padding: "10px", backgroundColor: "#1e172e", boxShadow: "2px 2px 0 #000" }}>
                   <p style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
-                    <strong>{c.playerName}</strong> accuse <strong>{c.targetName}</strong> de vouloir lui faire accomplir :<br/>
+                    <strong>{getPlayerDisplayName(c.playerName)}</strong> accuse <strong>{getPlayerDisplayName(c.targetName)}</strong> de vouloir lui faire accomplir :<br/>
                     <em>« {c.actionTitle} »</em>
                   </p>
                   <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
@@ -499,10 +505,10 @@ export default function GMDashboard() {
                   let typeLabel = "🎯 Mission";
                   let typeColor = "var(--color-purple)";
                   if (extractedType === "fountain_action") {
-                    typeLabel = "⚡ Action Source";
+                    typeLabel = "⚡ Action";
                     typeColor = "var(--color-cyan)";
                   } else if (extractedType === "fountain_truth") {
-                    typeLabel = "💬 Vérité Source";
+                    typeLabel = "💬 Vérité";
                     typeColor = "#10b981";
                   }
 
@@ -532,7 +538,7 @@ export default function GMDashboard() {
                     <div key={s.id} style={{ border: "1px solid rgba(168, 85, 247, 0.4)", borderRadius: "8px", padding: "8px", backgroundColor: "#100a1c" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                         <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
-                          Proposé par : <strong>{s.playerName}</strong>
+                          Proposé par : <strong>{getPlayerDisplayName(s.playerName)}</strong>
                         </span>
                         <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${typeColor}`, color: typeColor, fontWeight: "bold" }}>
                           {typeLabel}
@@ -580,16 +586,42 @@ export default function GMDashboard() {
                               </label>
                             </>
                           ) : (
-                            <label style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "2px" }}>
-                              Soin ❤️
-                              <input
-                                type="number"
-                                step="0.5"
-                                value={mod.damage}
-                                onChange={(e) => updateMod("damage", Number(e.target.value))}
-                                style={{ width: "40px", padding: "2px", backgroundColor: "#1c192d", border: "1.5px solid #000", borderRadius: "4px", color: "#fff", fontSize: "0.75rem", textAlign: "center" }}
-                              />
-                            </label>
+                            /* Soin Fontaine pour action/verité : Sélection 3 étoiles */
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>Soin :</span>
+                              <button
+                                type="button"
+                                className="btn-cartoon"
+                                style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                onClick={() => {
+                                  if (mod.damage === 3.0) updateMod("damage", 1.5);
+                                  else if (mod.damage === 1.5) updateMod("damage", 0.5);
+                                }}
+                                disabled={mod.damage === 0.5}
+                              >
+                                -
+                              </button>
+                              <div style={{ display: "flex", gap: "2px" }}>
+                                <span style={{ color: "#f59e0b", fontSize: "1.1rem" }}>★</span>
+                                <span style={{ color: mod.damage >= 1.5 ? "#f59e0b" : "#4b5563", fontSize: "1.1rem" }}>★</span>
+                                <span style={{ color: mod.damage >= 3.0 ? "#f59e0b" : "#4b5563", fontSize: "1.1rem" }}>★</span>
+                              </div>
+                              <button
+                                type="button"
+                                className="btn-cartoon"
+                                style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                onClick={() => {
+                                  if (mod.damage === 0.5) updateMod("damage", 1.5);
+                                  else if (mod.damage === 1.5) updateMod("damage", 3.0);
+                                }}
+                                disabled={mod.damage === 3.0}
+                              >
+                                +
+                              </button>
+                              <span style={{ fontSize: "0.7rem", color: "var(--color-cyan)" }}>
+                                (+{mod.damage} ❤️)
+                              </span>
+                            </div>
                           )}
                         </div>
 
@@ -746,32 +778,50 @@ export default function GMDashboard() {
                       />
                     </div>
                   </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
-                      <span>Difficulté / Soin apporté :</span>
-                      <span>
-                        {defiDamage === 0.5 ? "Tier I : Jus de Chaussette (+0.5 ❤️)" : 
-                         defiDamage === 1.5 ? "Tier II : Élixir du Barman (+1.5 ❤️)" : 
-                         "Tier III : Larmes de VIP (+3.0 ❤️)"}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="1"
-                      max="3"
-                      step="1"
-                      value={defiDamage === 0.5 ? 1 : defiDamage === 1.5 ? 2 : 3}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        if (val === 1) setDefiDamage(0.5);
-                        else if (val === 2) setDefiDamage(1.5);
-                        else setDefiDamage(3.0);
-                      }}
-                      style={{ width: "100%", accentColor: "var(--color-cyan)", cursor: "pointer" }}
-                    />
-                  </div>
-                )}
+                 ) : (
+                   /* Soin Fontaine pour action/verité : Sélection 3 étoiles GM */
+                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
+                       <span>Difficulté / Soin :</span>
+                       <span>
+                         {defiDamage === 0.5 ? "Tier I : Jus de Chaussette (+0.5 ❤️)" : 
+                          defiDamage === 1.5 ? "Tier II : Élixir du Barman (+1.5 ❤️)" : 
+                          "Tier III : Larmes de VIP (+3.0 ❤️)"}
+                       </span>
+                     </div>
+                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                       <button
+                         type="button"
+                         className="btn-cartoon"
+                         style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                         onClick={() => {
+                           if (defiDamage === 3.0) setDefiDamage(1.5);
+                           else if (defiDamage === 1.5) setDefiDamage(0.5);
+                         }}
+                         disabled={defiDamage === 0.5}
+                       >
+                         -
+                       </button>
+                       <div style={{ display: "flex", gap: "4px", margin: "0 8px" }}>
+                         <span style={{ color: "#f59e0b", fontSize: "1.4rem", textShadow: "1px 1px 0 #000" }}>★</span>
+                         <span style={{ color: defiDamage >= 1.5 ? "#f59e0b" : "#4b5563", fontSize: "1.4rem", textShadow: "1px 1px 0 #000" }}>★</span>
+                         <span style={{ color: defiDamage >= 3.0 ? "#f59e0b" : "#4b5563", fontSize: "1.4rem", textShadow: "1px 1px 0 #000" }}>★</span>
+                       </div>
+                       <button
+                         type="button"
+                         className="btn-cartoon"
+                         style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                         onClick={() => {
+                           if (defiDamage === 0.5) setDefiDamage(1.5);
+                           else if (defiDamage === 1.5) setDefiDamage(3.0);
+                         }}
+                         disabled={defiDamage === 3.0}
+                       >
+                         +
+                       </button>
+                     </div>
+                   </div>
+                 )}
 
                 {defiType === "mission" && (
                   <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", cursor: "pointer" }}>
@@ -1077,10 +1127,10 @@ export default function GMDashboard() {
                 >
                   <div style={{ textAlign: "left" }}>
                     <div style={{ fontWeight: "bold" }}>
-                      {p.name} {p.isZombie && "🧟"} {p.isFrozen && "❄️"}
+                      {p.displayName || p.name} {p.isZombie && "🧟"} {p.isFrozen && "❄️"}
                     </div>
                     <span style={{ fontSize: "0.7rem", color: "#9ca3af" }}>
-                      Cible : {p.target || "Aucune"}
+                      Cible : {getPlayerDisplayName(p.target) || "Aucune"}
                     </span>
                   </div>
                   <div style={{ display: "flex", gap: "10px", fontSize: "0.9rem" }}>

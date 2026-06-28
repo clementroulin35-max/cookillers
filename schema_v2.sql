@@ -51,6 +51,7 @@ CREATE TABLE public.players (
     stat_fountain_uses integer DEFAULT 0 NOT NULL,
     stat_evaded_hits integer DEFAULT 0 NOT NULL,
     stat_zombie_date timestamp with time zone,
+    display_name varchar(50),
     
     PRIMARY KEY (game_code, name)
 );
@@ -130,6 +131,7 @@ BEGIN
 
     SELECT json_agg(json_build_object(
         'name', name,
+        'displayName', COALESCE(display_name, name),
         'lives', lives,
         'score', score,
         'skips', skips,
@@ -164,7 +166,8 @@ BEGIN
         'scoreReward', score_reward,
         'damagePenalty', damage_penalty,
         'isZombieOnly', is_zombie_only,
-        'createdByPlayer', created_by_player
+        'createdByPlayer', created_by_player,
+        'type', type
     )) INTO v_actions
     FROM public.action_pools
     WHERE game_code = p_game_code;
@@ -179,6 +182,7 @@ BEGIN
         'scoreReward', score_reward,
         'damagePenalty', damage_penalty,
         'status', status,
+        'photoProof', photo_proof,
         'hasPhotoProof', (photo_proof IS NOT NULL AND photo_proof != '')
     ) ORDER BY created_at DESC) INTO v_history
     FROM public.history
@@ -216,7 +220,12 @@ DECLARE
     v_active_count integer;
     v_random_player record;
     v_action_id integer;
+    v_upper_name varchar(50);
+    v_display_name varchar(50);
 BEGIN
+    v_upper_name := UPPER(TRIM(p_name));
+    v_display_name := UPPER(SUBSTRING(TRIM(p_name) FROM 1 FOR 1)) || LOWER(SUBSTRING(TRIM(p_name) FROM 2));
+
     SELECT status INTO v_status FROM public.games WHERE game_code = p_game_code;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Salon inexistant';
@@ -227,48 +236,49 @@ BEGIN
     END IF;
 
     INSERT INTO public.players (
-        game_code, name, pin_hash, lives, score, skips, is_zombie, is_frozen
+        game_code, name, display_name, pin_hash, lives, score, skips, is_zombie, is_frozen
     ) VALUES (
-        p_game_code, p_name, p_pin_hash, 7.0, 0, 2, false, false
+        p_game_code, v_upper_name, v_display_name, p_pin_hash, 7.0, 0, 2, false, false
     )
     ON CONFLICT (game_code, name) DO UPDATE 
-    SET pin_hash = EXCLUDED.pin_hash;
+    SET pin_hash = EXCLUDED.pin_hash,
+        display_name = EXCLUDED.display_name;
 
     -- Si la partie a déjà commencé, on intègre automatiquement le joueur
     IF v_status = 'active' THEN
         SELECT (target IS NOT NULL) INTO v_has_target 
         FROM public.players 
-        WHERE game_code = p_game_code AND name = p_name;
+        WHERE game_code = p_game_code AND name = v_upper_name;
 
         IF v_has_target IS NULL OR v_has_target = false THEN
             -- Compter les autres joueurs actifs
             SELECT count(*) INTO v_active_count 
             FROM public.players 
-            WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != p_name;
+            WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != v_upper_name;
 
             IF v_active_count = 0 THEN
                 UPDATE public.players 
-                SET target = p_name 
-                WHERE game_code = p_game_code AND name = p_name;
+                SET target = v_upper_name 
+                WHERE game_code = p_game_code AND name = v_upper_name;
             ELSE
                 SELECT name, target INTO v_random_player
                 FROM public.players
-                WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != p_name
+                WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != v_upper_name
                 ORDER BY random()
                 LIMIT 1;
 
                 IF FOUND THEN
                     UPDATE public.players
-                    SET target = p_name
+                    SET target = v_upper_name
                     WHERE game_code = p_game_code AND name = v_random_player.name;
 
                     UPDATE public.players
                     SET target = v_random_player.target
-                    WHERE game_code = p_game_code AND name = p_name;
+                    WHERE game_code = p_game_code AND name = v_upper_name;
                 ELSE
                     UPDATE public.players 
-                    SET target = p_name 
-                    WHERE game_code = p_game_code AND name = p_name;
+                    SET target = v_upper_name 
+                    WHERE game_code = p_game_code AND name = v_upper_name;
                 END IF;
             END IF;
 
@@ -281,7 +291,7 @@ BEGIN
 
             UPDATE public.players
             SET action_id = v_action_id
-            WHERE game_code = p_game_code AND name = p_name;
+            WHERE game_code = p_game_code AND name = v_upper_name;
         END IF;
     END IF;
 

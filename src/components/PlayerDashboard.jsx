@@ -102,6 +102,14 @@ export default function PlayerDashboard() {
   const targetPlayerObj = player ? gameState.players.find(p => p.name === player.target) : null;
   const isTargetFrozen = targetPlayerObj ? targetPlayerObj.isFrozen : false;
 
+  const getPlayerDisplayName = (username) => {
+    if (!username) return "";
+    if (username.toUpperCase() === "GM") return "GM";
+    if (username.toUpperCase() === "SYSTEM") return "System";
+    const found = gameState.players.find(p => p.name.toUpperCase() === username.toUpperCase());
+    return found ? (found.displayName || found.name) : username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+  };
+
   // Onglets : 'contrat', 'source', 'suggestion', 'classement'
   const [activeTab, setActiveTab] = useState("contrat");
   const [isMasked, setIsMasked] = useState(false);
@@ -418,6 +426,16 @@ export default function PlayerDashboard() {
   // Soumission Déclaration Meurtre
   const handleHitSubmit = () => {
     if (pendingHit) return;
+
+    const targetDisplayName = getPlayerDisplayName(isZombie ? zombieVictim : player.target);
+    const confirmMsg = isZombie
+      ? `Es-tu sûr d'avoir mordu ${targetDisplayName} ? Cette action enverra la preuve au Juge.`
+      : `Es-tu sûr d'avoir exécuté le contrat sur ${targetDisplayName} ? Cette action enverra la preuve au Juge.`;
+
+    if (!window.confirm(confirmMsg)) {
+      return;
+    }
+
     // Si zombie : morsure, sinon hit normal
     if (isZombie) {
       if (!zombieVictim) {
@@ -602,7 +620,7 @@ export default function PlayerDashboard() {
             <img src={profilePhoto} alt="Profil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
             <span style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem" }}>
-              {player.name.slice(0, 2).toUpperCase()}
+              {(player.displayName || player.name).slice(0, 2).toUpperCase()}
             </span>
           )}
         </div>
@@ -1079,13 +1097,12 @@ export default function PlayerDashboard() {
                       left: 0,
                       width: "100%",
                       height: "100%",
-                      backgroundColor: "rgba(239, 68, 68, 0.4)",
-                      backdropFilter: "blur(4px)",
+                      backgroundColor: "rgba(17, 14, 32, 0.95)",
+                      borderRadius: "12px",
                       zIndex: 30,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      transform: "rotate(-6deg)"
+                      justifyContent: "center"
                     }}>
                       <div style={{
                         backgroundColor: "var(--color-red)",
@@ -1096,9 +1113,10 @@ export default function PlayerDashboard() {
                         boxShadow: "3px 3px 0 #000",
                         textTransform: "uppercase",
                         fontSize: "0.8rem",
-                        textAlign: "center"
+                        textAlign: "center",
+                        transform: "rotate(-6deg)"
                       }}>
-                        EN COURS D'EXAMEN PAR LE JUGE 🛡️
+                        EN COURS D'EXAMEN PAR LE JUGE ⚖️
                       </div>
                     </div>
                   )}
@@ -1159,7 +1177,7 @@ export default function PlayerDashboard() {
                           Cible Secrète :
                         </span>
                         <h2 style={{ fontSize: "1.6rem", margin: 0, color: "#fff", transform: "none", textShadow: "2px 2px 0 #000", lineHeight: "1.2" }}>
-                          {player.target}
+                          {getPlayerDisplayName(player.target)}
                         </h2>
                       </div>
                     </div>
@@ -1220,7 +1238,13 @@ export default function PlayerDashboard() {
                 <button
                   type="button"
                   className="btn-cartoon"
-                  style={{ flex: 1, fontSize: "0.85rem", backgroundColor: "#374151", height: "40px" }}
+                  style={{
+                    flex: 1,
+                    fontSize: "0.85rem",
+                    backgroundColor: pendingHit ? "#374151" : "#ffffff",
+                    color: pendingHit ? "#9ca3af" : "#000000",
+                    height: "40px"
+                  }}
                   disabled={pendingHit}
                   onClick={() => setShowAbandonModal(true)}
                 >
@@ -1562,30 +1586,47 @@ export default function PlayerDashboard() {
                 </div>
               </div>
             ) : (
-              /* Soin Fontaine pour action/verité */
+              /* Soin Fontaine pour action/verité : Sélection 3 étoiles */
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
-                  <span>Difficulté / Soin apporté :</span>
+                  <span>Difficulté / Soin :</span>
                   <span>
                     {suggestDamage === 0.5 ? "Tier I : Jus de Chaussette (+0.5 ❤️)" : 
                      suggestDamage === 1.5 ? "Tier II : Élixir du Barman (+1.5 ❤️)" : 
                      "Tier III : Larmes de VIP (+3.0 ❤️)"}
                   </span>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="3"
-                  step="1"
-                  value={suggestDamage === 0.5 ? 1 : suggestDamage === 1.5 ? 2 : 3}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    if (val === 1) setSuggestDamage(0.5);
-                    else if (val === 2) setSuggestDamage(1.5);
-                    else setSuggestDamage(3.0);
-                  }}
-                  style={{ width: "100%", accentColor: "var(--color-cyan)", cursor: "pointer" }}
-                />
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <button
+                    type="button"
+                    className="btn-cartoon"
+                    style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                    onClick={() => {
+                      if (suggestDamage === 3.0) setSuggestDamage(1.5);
+                      else if (suggestDamage === 1.5) setSuggestDamage(0.5);
+                    }}
+                    disabled={suggestDamage === 0.5}
+                  >
+                    -
+                  </button>
+                  <div style={{ display: "flex", gap: "4px", margin: "0 8px" }}>
+                    <span style={{ color: "#f59e0b", fontSize: "1.4rem", textShadow: "1px 1px 0 #000" }}>★</span>
+                    <span style={{ color: suggestDamage >= 1.5 ? "#f59e0b" : "#4b5563", fontSize: "1.4rem", textShadow: "1px 1px 0 #000" }}>★</span>
+                    <span style={{ color: suggestDamage >= 3.0 ? "#f59e0b" : "#4b5563", fontSize: "1.4rem", textShadow: "1px 1px 0 #000" }}>★</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-cartoon"
+                    style={{ padding: "4px 10px", fontSize: "0.8rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                    onClick={() => {
+                      if (suggestDamage === 0.5) setSuggestDamage(1.5);
+                      else if (suggestDamage === 1.5) setSuggestDamage(3.0);
+                    }}
+                    disabled={suggestDamage === 3.0}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             )}
 
@@ -1733,7 +1774,7 @@ export default function PlayerDashboard() {
                       <span style={{ fontSize: "2rem" }}>👤</span>
                     ) : (
                       <span style={{ fontFamily: "var(--font-title)", fontSize: "1.5rem" }}>
-                        {player.name.slice(0, 2).toUpperCase()}
+                         {(player.displayName || player.name).slice(0, 2).toUpperCase()}
                       </span>
                     )}
                   </div>
@@ -1768,7 +1809,7 @@ export default function PlayerDashboard() {
               </div>
 
               <div style={{ marginBottom: "1rem" }}>
-                <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{player.name}</span>
+                <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{player.displayName || player.name}</span>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: "0.8rem", color: "#9ca3af", marginTop: "4px" }}>
                   <span>PIN Secret : {revealPin ? (localStorage.getItem("cookillers_player_pin") || "****") : "****"}</span>
                   <button
@@ -2234,30 +2275,24 @@ export default function PlayerDashboard() {
       )}
 
       {/* Barre de navigation basse */}
-      <nav className={`bottom-nav ${pendingHit ? "nav-disabled" : ""}`}>
+      <nav className="bottom-nav">
         <div
-          className={`bottom-nav-item ${activeTab === "suggestion" ? "active" : ""} ${pendingHit ? "disabled-item" : ""}`}
-          onClick={() => {
-            if (!pendingHit) setActiveTab("suggestion");
-          }}
+          className={`bottom-nav-item ${activeTab === "suggestion" ? "active" : ""}`}
+          onClick={() => setActiveTab("suggestion")}
           aria-label="Proposer un défi"
-          style={pendingHit ? { opacity: 0.3, cursor: "not-allowed" } : {}}
         >
           <span style={{ fontSize: "1.6rem" }}>💡</span>
         </div>
         <div
-          className={`bottom-nav-item ${activeTab === "source" ? "active" : ""} ${pendingHit ? "disabled-item" : ""}`}
+          className={`bottom-nav-item ${activeTab === "source" ? "active" : ""}`}
           onClick={() => {
-            if (!pendingHit) {
-              if (isZombie) {
-                setShowZombieFountainModal(true);
-              } else {
-                setActiveTab("source");
-              }
+            if (isZombie) {
+              setShowZombieFountainModal(true);
+            } else {
+              setActiveTab("source");
             }
           }}
           aria-label="Soins à la Source"
-          style={pendingHit ? { opacity: 0.3, cursor: "not-allowed" } : {}}
         >
           <span style={{ fontSize: "1.6rem" }}>{isZombie ? "⛲🔒" : "⛲"}</span>
         </div>
@@ -2269,12 +2304,9 @@ export default function PlayerDashboard() {
           <span style={{ fontSize: "1.6rem" }}>🎯</span>
         </div>
         <div
-          className={`bottom-nav-item ${activeTab === "classement" ? "active" : ""} ${pendingHit ? "disabled-item" : ""}`}
-          onClick={() => {
-            if (!pendingHit) setActiveTab("classement");
-          }}
+          className={`bottom-nav-item ${activeTab === "classement" ? "active" : ""}`}
+          onClick={() => setActiveTab("classement")}
           aria-label="Classement et Flux d'actualités"
-          style={pendingHit ? { opacity: 0.3, cursor: "not-allowed" } : {}}
         >
           <span style={{ fontSize: "1.6rem" }}>🏆</span>
         </div>
