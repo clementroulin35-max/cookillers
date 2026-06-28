@@ -1087,3 +1087,133 @@ BEGIN
     RETURN true;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- RPC 17 : Ressusciter un joueur Zombie (GM Mode Dieu)
+CREATE OR REPLACE FUNCTION public.resurrect_player_transaction(
+    p_game_code text,
+    p_name text,
+    p_score integer,
+    p_lives numeric
+)
+RETURNS boolean
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_active_count integer;
+    v_random_player record;
+    v_action_id integer;
+BEGIN
+    UPDATE public.players
+    SET is_zombie = false,
+        score = p_score,
+        lives = p_lives
+    WHERE game_code = p_game_code AND name = p_name;
+
+    SELECT count(*) INTO v_active_count 
+    FROM public.players 
+    WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != p_name;
+
+    IF v_active_count = 0 THEN
+        UPDATE public.players 
+        SET target = name 
+        WHERE game_code = p_game_code AND name = p_name;
+    ELSE
+        SELECT name, target INTO v_random_player
+        FROM public.players
+        WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != p_name
+        ORDER BY random()
+        LIMIT 1;
+
+        IF FOUND THEN
+            UPDATE public.players
+            SET target = p_name
+            WHERE game_code = p_game_code AND name = v_random_player.name;
+
+            UPDATE public.players
+            SET target = v_random_player.target
+            WHERE game_code = p_game_code AND name = p_name;
+        ELSE
+            UPDATE public.players 
+            SET target = name 
+            WHERE game_code = p_game_code AND name = p_name;
+        END IF;
+    END IF;
+
+    SELECT id INTO v_action_id
+    FROM public.action_pools
+    WHERE game_code = p_game_code AND is_zombie_only = false
+    ORDER BY random()
+    LIMIT 1;
+
+    UPDATE public.players
+    SET action_id = v_action_id
+    WHERE game_code = p_game_code AND name = p_name;
+
+    INSERT INTO public.history (game_code, player_name, type, status)
+    VALUES (p_game_code, p_name, 'player_unfrozen', 'completed');
+
+    UPDATE public.games SET state_version = state_version + 1 WHERE game_code = p_game_code;
+    RETURN true;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- RPC 18 : Tuer un joueur vivant (GM Mode Dieu)
+CREATE OR REPLACE FUNCTION public.kill_player_transaction(
+    p_game_code text,
+    p_name text,
+    p_score integer
+)
+RETURNS boolean
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_killer_name varchar(50);
+    v_next_target_name varchar(50);
+    v_active_survivors integer;
+BEGIN
+    SELECT name INTO v_killer_name 
+    FROM public.players 
+    WHERE game_code = p_game_code AND target = p_name AND is_frozen = false AND is_zombie = false;
+
+    SELECT target INTO v_next_target_name 
+    FROM public.players 
+    WHERE game_code = p_game_code AND name = p_name;
+
+    IF v_killer_name IS NOT NULL AND v_killer_name != p_name THEN
+        UPDATE public.players 
+        SET target = v_next_target_name 
+        WHERE game_code = p_game_code AND name = v_killer_name;
+    END IF;
+
+    UPDATE public.players 
+    SET is_zombie = true,
+        lives = 0.0,
+        score = p_score,
+        target = NULL, 
+        action_id = NULL,
+        stat_zombie_date = now()
+    WHERE game_code = p_game_code AND name = p_name;
+
+    INSERT INTO public.history (game_code, player_name, type, status)
+    VALUES (p_game_code, p_name, 'player_frozen', 'completed');
+
+    SELECT count(*) INTO v_active_survivors 
+    FROM public.players 
+    WHERE game_code = p_game_code AND is_frozen = false AND is_zombie = false;
+
+    IF v_active_survivors = 1 THEN
+        UPDATE public.games 
+        SET status = 'finished',
+            end_time = now()
+        WHERE game_code = p_game_code;
+        
+        INSERT INTO public.history (game_code, player_name, type, status)
+        VALUES (p_game_code, 'System', 'game_finished', 'completed');
+    END IF;
+
+    UPDATE public.games SET state_version = state_version + 1 WHERE game_code = p_game_code;
+    RETURN true;
+END;
+$$ LANGUAGE plpgsql;

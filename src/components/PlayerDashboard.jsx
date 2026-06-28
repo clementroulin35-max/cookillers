@@ -6,6 +6,7 @@ import Leaderboard, { getRank } from "./Leaderboard";
 import { AlertCircle, Eye, EyeOff, HelpCircle, Send, Plus, Minus, Camera, X, LogOut } from "lucide-react";
 import tombstoneZombie from "../../DA/Sans_titre_1-removebg-preview.png";
 import mascotteLogo from "../../DA/mascotte_logo_app.png";
+import { vibrateLight, vibrateMedium, vibrateSuccess, vibrateFailure, vibrateDeath } from "../utils/haptic";
 
 const FOUNTAIN_POOL = [
   // Actions Faciles (Tier 1) — gain 0.5
@@ -75,6 +76,7 @@ export default function PlayerDashboard() {
     getPlayerPhoto,
     logOut,
     manualRefresh,
+    offlineQueue,
     showToast
   } = useGame();
 
@@ -2202,25 +2204,58 @@ export default function PlayerDashboard() {
         </div>
       )}
 
-      {/* Barre de navigation basse */}
-      <nav className="bottom-nav">
+      {offlineQueue && offlineQueue.length > 0 && (
         <div
-          className={`bottom-nav-item ${activeTab === "suggestion" ? "active" : ""}`}
-          onClick={() => setActiveTab("suggestion")}
+          style={{
+            position: "fixed",
+            bottom: "64px",
+            left: 0,
+            right: 0,
+            backgroundColor: "#f97316",
+            color: "#000",
+            textAlign: "center",
+            padding: "6px 12px",
+            fontSize: "0.75rem",
+            fontWeight: "bold",
+            borderTop: "3px solid #000",
+            borderBottom: "3px solid #000",
+            zIndex: 999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "6px",
+            animation: "pulse 2s infinite"
+          }}
+        >
+          <span>⏳ {offlineQueue.length} action{offlineQueue.length > 1 ? "s" : ""} en attente de synchronisation...</span>
+        </div>
+      )}
+
+      {/* Barre de navigation basse */}
+      <nav className={`bottom-nav ${pendingHit ? "nav-disabled" : ""}`}>
+        <div
+          className={`bottom-nav-item ${activeTab === "suggestion" ? "active" : ""} ${pendingHit ? "disabled-item" : ""}`}
+          onClick={() => {
+            if (!pendingHit) setActiveTab("suggestion");
+          }}
           aria-label="Proposer un défi"
+          style={pendingHit ? { opacity: 0.3, cursor: "not-allowed" } : {}}
         >
           <span style={{ fontSize: "1.6rem" }}>💡</span>
         </div>
         <div
-          className={`bottom-nav-item ${activeTab === "source" ? "active" : ""}`}
+          className={`bottom-nav-item ${activeTab === "source" ? "active" : ""} ${pendingHit ? "disabled-item" : ""}`}
           onClick={() => {
-            if (isZombie) {
-              setShowZombieFountainModal(true);
-            } else {
-              setActiveTab("source");
+            if (!pendingHit) {
+              if (isZombie) {
+                setShowZombieFountainModal(true);
+              } else {
+                setActiveTab("source");
+              }
             }
           }}
           aria-label="Soins à la Source"
+          style={pendingHit ? { opacity: 0.3, cursor: "not-allowed" } : {}}
         >
           <span style={{ fontSize: "1.6rem" }}>{isZombie ? "⛲🔒" : "⛲"}</span>
         </div>
@@ -2232,9 +2267,12 @@ export default function PlayerDashboard() {
           <span style={{ fontSize: "1.6rem" }}>🎯</span>
         </div>
         <div
-          className={`bottom-nav-item ${activeTab === "classement" ? "active" : ""}`}
-          onClick={() => setActiveTab("classement")}
+          className={`bottom-nav-item ${activeTab === "classement" ? "active" : ""} ${pendingHit ? "disabled-item" : ""}`}
+          onClick={() => {
+            if (!pendingHit) setActiveTab("classement");
+          }}
           aria-label="Classement et Flux d'actualités"
+          style={pendingHit ? { opacity: 0.3, cursor: "not-allowed" } : {}}
         >
           <span style={{ fontSize: "1.6rem" }}>🏆</span>
         </div>

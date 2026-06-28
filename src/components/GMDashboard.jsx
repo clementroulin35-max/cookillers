@@ -19,6 +19,8 @@ export default function GMDashboard() {
     roosterCrow,
     resetPlayerPin,
     removePlayer,
+    resurrectPlayer,
+    killPlayer,
     suggestAction,
     logOut,
     manualRefresh,
@@ -217,97 +219,10 @@ export default function GMDashboard() {
       if (currentPlayer) {
         if (currentPlayer.isZombie && !finalZombie) {
           // RÉSURRECTION : Le joueur passe de zombie à vivant
-          // 1. Trouver un joueur actif vivant au hasard pour s'insérer dans sa cible
-          const { data: activePlayers, error: fetchErr } = await supabase
-            .from("players")
-            .select("name, target")
-            .eq("game_code", gameCode)
-            .eq("is_zombie", false)
-            .eq("is_frozen", false)
-            .neq("name", editingPlayer);
-
-          if (!fetchErr && activePlayers && activePlayers.length > 0) {
-            const randomPlayer = activePlayers[Math.floor(Math.random() * activePlayers.length)];
-            const oldTarget = randomPlayer.target;
-
-            // randomPlayer cible le joueur ressuscité
-            await supabase
-              .from("players")
-              .update({ target: editingPlayer })
-              .eq("game_code", gameCode)
-              .eq("name", randomPlayer.name);
-
-            // Le joueur ressuscité cible l'ancienne cible de randomPlayer et reçoit un défi
-            const { data: poolActions } = await supabase
-              .from("action_pools")
-              .select("id")
-              .eq("game_code", gameCode)
-              .eq("is_zombie_only", false);
-
-            const randomActionId = poolActions && poolActions.length > 0 
-              ? poolActions[Math.floor(Math.random() * poolActions.length)].id 
-              : null;
-
-            const { error: upErr } = await supabase
-              .from("players")
-              .update({
-                score: editScore,
-                lives: finalLives,
-                is_zombie: false,
-                target: oldTarget,
-                action_id: randomActionId
-              })
-              .eq("game_code", gameCode)
-              .eq("name", editingPlayer);
-
-            if (upErr) throw upErr;
-          } else {
-            // Se cible lui-même s'il est tout seul
-            const { error: upErr } = await supabase
-              .from("players")
-              .update({
-                score: editScore,
-                lives: finalLives,
-                is_zombie: false,
-                target: editingPlayer
-              })
-              .eq("game_code", gameCode)
-              .eq("name", editingPlayer);
-
-            if (upErr) throw upErr;
-          }
+          await resurrectPlayer(editingPlayer, editScore, finalLives);
         } else if (!currentPlayer.isZombie && finalZombie) {
           // DÉCÈS : Le joueur vivant passe zombie
-          // Trouver le tueur qui le ciblait
-          const { data: killer } = await supabase
-            .from("players")
-            .select("name")
-            .eq("game_code", gameCode)
-            .eq("target", editingPlayer)
-            .maybeSingle();
-
-          if (killer) {
-            // Refermer la boucle : le tueur cible la cible du mort
-            await supabase
-              .from("players")
-              .update({ target: currentPlayer.target })
-              .eq("game_code", gameCode)
-              .eq("name", killer.name);
-          }
-
-          const { error: upErr } = await supabase
-            .from("players")
-            .update({
-              score: editScore,
-              lives: 0.0,
-              is_zombie: true,
-              target: null,
-              action_id: null
-            })
-            .eq("game_code", gameCode)
-            .eq("name", editingPlayer);
-
-          if (upErr) throw upErr;
+          await killPlayer(editingPlayer, editScore);
         } else {
           // Simple mise à jour des stats sans changement de statut zombie
           const { error: upErr } = await supabase

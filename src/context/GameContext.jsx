@@ -612,6 +612,27 @@ export const GameProvider = ({ children }) => {
     await fetchGameState(gameCode);
   };
 
+  const resurrectPlayer = async (playerName, score, lives) => {
+    const { error } = await supabase.rpc("resurrect_player_transaction", {
+      p_game_code: gameCode,
+      p_name: playerName,
+      p_score: score,
+      p_lives: lives
+    });
+    if (error) throw error;
+    await fetchGameState(gameCode);
+  };
+
+  const killPlayer = async (playerName, score) => {
+    const { error } = await supabase.rpc("kill_player_transaction", {
+      p_game_code: gameCode,
+      p_name: playerName,
+      p_score: score
+    });
+    if (error) throw error;
+    await fetchGameState(gameCode);
+  };
+
   const updatePlayerPhoto = async (playerName, photoBase64) => {
     const { error } = await supabase
       .from("players")
@@ -680,6 +701,8 @@ export const GameProvider = ({ children }) => {
         roosterCrow,
         resetPlayerPin,
         removePlayer,
+        resurrectPlayer,
+        killPlayer,
         updatePlayerPhoto,
         getPlayerPhoto,
         getHistoryProof,
