@@ -114,7 +114,13 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
             {player.name.slice(0, 2).toUpperCase()}
           </div>
           {player.isZombie && (
-            <span style={{ position: "absolute", bottom: 0, right: 0, fontSize: "1.1rem" }}>🧟</span>
+            <>
+              <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: "1.1rem", zIndex: 10 }}>🧟</span>
+              <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, pointerEvents: "none" }}>
+                <div style={{ position: "absolute", width: "100%", height: "4px", backgroundColor: "var(--color-red)", transform: "rotate(45deg)", border: "1px solid #000" }} />
+                <div style={{ position: "absolute", width: "100%", height: "4px", backgroundColor: "var(--color-red)", transform: "rotate(-45deg)", border: "1px solid #000" }} />
+              </div>
+            </>
           )}
         </div>
         <span style={{ fontFamily: "var(--font-title)", fontSize: "0.85rem", textShadow: "1px 1px 0 #000", maxWidth: "80px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -153,16 +159,20 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
           </span>
         );
       case "hit_approved":
+        let diffLabel = "Mineure";
+        if (evt.scoreReward >= 400) diffLabel = "Légendaire";
+        else if (evt.scoreReward >= 200) diffLabel = "Élite";
+        else if (evt.scoreReward >= 100) diffLabel = "Majeure";
         return (
           <span>
             ⚔️ <strong>CONTRAT EXÉCUTÉ</strong><br/>
             <strong>{evt.playerName}</strong> a validé un contrat sur <strong>{evt.targetName}</strong> !<br/>
             <span style={{ color: "var(--color-purple)", fontSize: "0.85rem", fontWeight: "bold" }}>
-              Gain : +{evt.scoreReward} 🪙 | Dégâts : -{evt.damagePenalty} ❤️
+              Difficulté : {diffLabel} (+{evt.scoreReward} 🪙 | -{evt.damagePenalty} ❤️)
             </span>
             <br/>
             <span style={{ color: "#9ca3af", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-              <EyeOff size={12} /> Le titre et la description du défi secret sont masqués.
+              <EyeOff size={12} /> Le titre du défi et sa description sont masqués pour ne pas révéler aux autres joueurs les pièges possibles du catalogue.
             </span>
           </span>
         );
@@ -196,12 +206,19 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
         const hasProof = evt.hasPhotoProof;
         const proof = loadedProofs[evt.id];
         const isPhoto = proof && proof.startsWith("data:image");
+        let tierLabel = "Tier I : Jus de Chaussette";
+        if (Math.abs(evt.damagePenalty) >= 3.0) tierLabel = "Tier III : Larmes de VIP";
+        else if (Math.abs(evt.damagePenalty) >= 1.5) tierLabel = "Tier II : Élixir du Barman";
         return (
           <span>
             ⛲ <strong>SOIN SOURCE</strong><br/>
-            <strong>{evt.playerName}</strong> s'est ressourcé en réalisant le défi : <strong style={{ color: "var(--color-cyan)" }}>{evt.actionTitle || "Défi de la Source"}</strong>.<br/>
+            <strong>{evt.playerName}</strong> s'est ressourcé.<br/>
             <span style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: "bold" }}>
-              Régénération : +{Math.abs(evt.damagePenalty)} ❤️
+              {tierLabel} (+{Math.abs(evt.damagePenalty)} ❤️)
+            </span>
+            <br/>
+            <span style={{ color: "#9ca3af", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+              <EyeOff size={12} /> Le titre de la vérité ou de l'action et sa description sont masqués pour protéger l'intimité du joueur.
             </span>
             
             {hasProof && !proof && (
@@ -465,6 +482,29 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                       <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", width: "24px", color: "var(--color-purple)" }}>
                         {idx + 1}
                       </span>
+                      <div style={{
+                        position: "relative",
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "50%",
+                        border: `2px solid ${player.isZombie ? "var(--color-red)" : "#000"}`,
+                        backgroundColor: "#2e2a47",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                        overflow: "hidden",
+                        flexShrink: 0
+                      }}>
+                        {player.name.slice(0, 2).toUpperCase()}
+                        {player.isZombie && (
+                          <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, pointerEvents: "none" }}>
+                            <div style={{ position: "absolute", width: "100%", height: "3px", backgroundColor: "var(--color-red)", transform: "rotate(45deg)", border: "0.5px solid #000" }} />
+                            <div style={{ position: "absolute", width: "100%", height: "3px", backgroundColor: "var(--color-red)", transform: "rotate(-45deg)", border: "0.5px solid #000" }} />
+                          </div>
+                        )}
+                      </div>
                       <div style={{ display: "flex", flexDirection: "column" }}>
                         <span style={{ fontWeight: "bold", fontSize: "1rem", display: "flex", alignItems: "center", gap: "6px" }}>
                           {player.name}

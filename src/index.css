@@ -302,6 +302,24 @@ h1, h2, h3, .cartoon-title {
   pointer-events: none;
 }
 
+@keyframes radar-pulse-cyan {
+  0% { box-shadow: 0 0 0 0px rgba(34, 211, 238, 0.8); }
+  100% { box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); }
+}
+
+@keyframes radar-pulse-orange {
+  0% { box-shadow: 0 0 0 0px rgba(249, 115, 22, 0.8); }
+  100% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+}
+
+.radar-cyan {
+  animation: radar-pulse-cyan 1.4s infinite;
+}
+
+.radar-orange {
+  animation: radar-pulse-orange 1.4s infinite;
+}
+
 /* Modale performances réduites (Low motion) */
 @media (prefers-reduced-motion: reduce) {
   .ecg-line {
@@ -341,6 +359,64 @@ h1, h2, h3, .cartoon-title {
 
 .low-perf-mode .screen-shake {
   animation: none !important;
+}
+
+@keyframes crosshair-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+.target-crosshair {
+  animation: crosshair-pulse 1.8s infinite ease-in-out;
+}
+
+/* Effet VHS Glitch */
+.vhs-glitch-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(168, 85, 247, 0.05);
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+.vhs-glitch-overlay::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(168, 85, 247, 0.06), rgba(0, 255, 0, 0.01), rgba(34, 211, 238, 0.04));
+  background-size: 100% 4px, 6px 100%;
+}
+
+@keyframes heartbeat-break {
+  0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.1; }
+  50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.1; }
+}
+
+.giant-broken-heart {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10rem;
+  color: rgba(168, 85, 247, 0.1);
+  pointer-events: none;
+  z-index: 2;
+  animation: heartbeat-break 4s infinite ease-in-out;
+}
+
+@keyframes float-up-fade {
+  0% { transform: translate(-50%, -30%) scale(0.8); opacity: 0; }
+  20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -90%) scale(1); opacity: 0; }
+}
+
+.floating-score-animation {
+  animation: float-up-fade 1.8s forwards ease-out;
 }
 
 /* Pavé Numérique PIN style Cartoon */

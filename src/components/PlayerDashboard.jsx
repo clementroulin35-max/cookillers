@@ -79,6 +79,8 @@ export default function PlayerDashboard() {
   } = useGame();
 
   const player = gameState.players.find(p => p.name === currentUser);
+  const targetPlayerObj = player ? gameState.players.find(p => p.name === player.target) : null;
+  const isTargetFrozen = targetPlayerObj ? targetPlayerObj.isFrozen : false;
 
   // Onglets : 'contrat', 'source', 'suggestion', 'classement'
   const [activeTab, setActiveTab] = useState("contrat");
@@ -119,6 +121,21 @@ export default function PlayerDashboard() {
   const [fountainTextProof, setFountainTextProof] = useState("");
   const [fountainPhotoProof, setFountainPhotoProof] = useState("");
   const [fountainChoice, setFountainChoice] = useState(null); // défi pioché
+
+  const [floatingScore, setFloatingScore] = useState(null); // { amount: number, id: number }
+  const prevScoreRef = useRef(player ? player.score : 0);
+
+  const scoreVal = player ? player.score : 0;
+  useEffect(() => {
+    if (scoreVal > prevScoreRef.current) {
+      const diff = scoreVal - prevScoreRef.current;
+      setFloatingScore({ amount: diff, id: Date.now() });
+      setTimeout(() => {
+        setFloatingScore(null);
+      }, 1800);
+    }
+    prevScoreRef.current = scoreVal;
+  }, [scoreVal]);
 
   // Zombie victime selection
   const [zombieVictim, setZombieVictim] = useState("");
@@ -525,6 +542,8 @@ export default function PlayerDashboard() {
         );
       })}
 
+      {isZombie && !lowPerfMode && <div className="vhs-glitch-overlay" />}
+
       {/* Header global */}
       <header style={{
         display: "flex",
@@ -792,9 +811,22 @@ export default function PlayerDashboard() {
 
                 const userPhoto = campPhotos[p.name];
 
+                const isSuspecting = gameState.history.some(
+                  h => h.playerName === p.name && h.type === "counter_attack_pending" && h.status === "pending"
+                );
+
+                const isAccused = gameState.history.some(
+                  h => h.targetName === p.name && h.type === "counter_attack_pending" && h.status === "pending"
+                );
+
+                let radarClass = "";
+                if (isSuspecting) radarClass = "radar-cyan";
+                else if (isAccused) radarClass = "radar-orange";
+
                 return (
                   <div
                     key={p.name}
+                    className={radarClass}
                     style={{
                       position: "absolute",
                       left: `${left}%`,
@@ -840,12 +872,17 @@ export default function PlayerDashboard() {
                 CADAVRE AMBULANT
               </div>
 
-              {/* Image de la pierre tombale */}
-              <img 
-                src={tombstoneZombie} 
-                alt="Tombeau Zombie" 
-                style={{ width: "120px", height: "120px", objectFit: "contain", filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))", marginBottom: "12px" }}
-              />
+              {/* Image de la pierre tombale et Coeur Brisé */}
+              <div style={{ position: "relative", width: "120px", height: "120px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <img 
+                  src={tombstoneZombie} 
+                  alt="Tombeau Zombie" 
+                  style={{ width: "100%", height: "100%", objectFit: "contain", filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))", zIndex: 1 }}
+                />
+                {!lowPerfMode && (
+                  <div className="giant-broken-heart">💔</div>
+                )}
+              </div>
 
               <p style={{ fontSize: "0.85rem", color: "#9ca3af", textAlign: "center", fontStyle: "italic", padding: "0 15px", lineHeight: "1.4", marginBottom: "15px" }}>
                 "Vous êtes officiellement en décomposition. Votre pseudo sent le vieux camembert oublié au soleil."
@@ -964,8 +1001,32 @@ export default function PlayerDashboard() {
                 <div 
                   className={`card-cartoon ${rarityClass} glow-cyan`}
                   data-tuto="contrat"
-                  style={{ minHeight: "190px" }}
+                  style={{ minHeight: "190px", position: "relative" }}
                 >
+                  {isTargetFrozen && (
+                    <div style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: "rgba(34, 211, 238, 0.15)",
+                      border: "3.5px solid var(--color-cyan)",
+                      borderRadius: "16px",
+                      zIndex: 35,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      pointerEvents: "none"
+                    }}>
+                      <span style={{ fontSize: "3rem", filter: "drop-shadow(0 0 10px rgba(0,255,255,0.8))" }}>❄️</span>
+                      <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", color: "#fff", textShadow: "2px 2px 0 #000", marginTop: "4px" }}>
+                        CIBLE EXFILTRÉE
+                      </span>
+                    </div>
+                  )}
+
                   {/* Scan holographique cyan */}
                   <div className="scan-line" />
 
@@ -1002,18 +1063,20 @@ export default function PlayerDashboard() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      transform: "rotate(-4deg)"
+                      transform: "rotate(-6deg)"
                     }}>
                       <div style={{
                         backgroundColor: "var(--color-red)",
                         color: "#fff",
                         fontFamily: "var(--font-title)",
-                        padding: "8px 24px",
+                        padding: "8px 16px",
                         border: "3px solid #000",
                         boxShadow: "3px 3px 0 #000",
-                        textTransform: "uppercase"
+                        textTransform: "uppercase",
+                        fontSize: "0.8rem",
+                        textAlign: "center"
                       }}>
-                        En cours d'examen 🛡️
+                        EN COURS D'EXAMEN PAR LE JUGE 🛡️
                       </div>
                     </div>
                   )}
@@ -1037,12 +1100,35 @@ export default function PlayerDashboard() {
                         alignItems: "center",
                         justifyContent: "center",
                         boxShadow: "2px 2px 0 #000",
-                        flexShrink: 0
+                        flexShrink: 0,
+                        position: "relative"
                       }}>
                         {targetPhoto ? (
                           <img src={targetPhoto} alt="Cible" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         ) : (
                           <span style={{ fontSize: "1.5rem" }}>👤</span>
+                        )}
+                        {!lowPerfMode && (
+                          <div 
+                            className="target-crosshair"
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                              border: "2px solid rgba(239, 68, 68, 0.4)",
+                              borderRadius: "50%",
+                              pointerEvents: "none",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}
+                          >
+                            <div style={{ position: "absolute", width: "100%", height: "1.5px", backgroundColor: "rgba(239, 68, 68, 0.6)" }} />
+                            <div style={{ position: "absolute", width: "1.5px", height: "100%", backgroundColor: "rgba(239, 68, 68, 0.6)" }} />
+                            <div style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: "rgb(239, 68, 68)", zIndex: 2 }} />
+                          </div>
                         )}
                       </div>
 
@@ -1096,12 +1182,12 @@ export default function PlayerDashboard() {
               <div style={{ display: "flex", gap: "12px", padding: "0 10px", marginTop: "6px" }}>
                 <button
                   type="button"
-                  className="btn-cartoon btn-green"
+                  className={`btn-cartoon ${isTargetFrozen ? "btn-disabled" : "btn-green"}`}
                   style={{ flex: 2, height: "48px" }}
-                  disabled={pendingHit}
+                  disabled={pendingHit || isTargetFrozen}
                   onClick={handleHitSubmit}
                 >
-                  ⚔️ Contrat Exécuté
+                  {isTargetFrozen ? "Cible Gelée ❄️" : "⚔️ Contrat Exécuté"}
                 </button>
 
                 <button
@@ -1692,6 +1778,60 @@ export default function PlayerDashboard() {
                 </div>
               </div>
 
+              {/* Rang cosmétique & Barre de progression */}
+              {(() => {
+                const score = player.score;
+                let nextScore = 150;
+                let prevScore = 0;
+                let rankLabel = "Le Touriste en Tongs";
+                let rankIcon = "⚔️";
+
+                if (score >= 3500) {
+                  rankLabel = "Dieu du Pogo";
+                  rankIcon = "👑";
+                  nextScore = 3500;
+                  prevScore = 3500;
+                } else if (score >= 2000) {
+                  rankLabel = "Légende du Camping";
+                  rankIcon = "💀";
+                  nextScore = 3500;
+                  prevScore = 2000;
+                } else if (score >= 1000) {
+                  rankLabel = "L'Ombre Invisible";
+                  rankIcon = "👻";
+                  nextScore = 2000;
+                  prevScore = 1000;
+                } else if (score >= 450) {
+                  rankLabel = "Le Chasseur de Bières";
+                  rankIcon = "🐺";
+                  nextScore = 1000;
+                  prevScore = 450;
+                } else if (score >= 150) {
+                  rankLabel = "Le Tireur de Gobelet";
+                  rankIcon = "🏹";
+                  nextScore = 450;
+                  prevScore = 150;
+                }
+
+                const percent = score >= 3500 ? 100 : Math.min(100, Math.max(0, ((score - prevScore) / (nextScore - prevScore)) * 100));
+
+                return (
+                  <div style={{ marginBottom: "1rem", padding: "8px", backgroundColor: "rgba(0,0,0,0.2)", borderRadius: "10px", border: "2px solid var(--border-color)", textAlign: "left" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", fontWeight: "bold", marginBottom: "4px" }}>
+                      <span style={{ color: "var(--color-cyan)" }}>Rang : {rankIcon} {rankLabel}</span>
+                      {score < 3500 && <span style={{ fontSize: "0.7rem", color: "#9ca3af" }}>{score} / {nextScore} 🪙</span>}
+                    </div>
+                    {score < 3500 ? (
+                      <div style={{ width: "100%", height: "8px", backgroundColor: "#110f1e", border: "1.5px solid #000", borderRadius: "6px", overflow: "hidden", boxShadow: "1px 1px 0 #000" }}>
+                        <div style={{ width: `${percent}%`, height: "100%", backgroundColor: "var(--color-purple)", transition: "width 0.4s ease-in-out" }} />
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: "0.75rem", color: "var(--color-purple)", fontWeight: "bold" }}>RANG MAXIMUM ATTEINT 🌟</span>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Option performance réduite */}
               <div style={{
                 display: "flex",
@@ -2041,6 +2181,26 @@ export default function PlayerDashboard() {
           </div>
         )}
       </AnimatePresence>
+
+      {floatingScore && !lowPerfMode && (
+        <div 
+          className="floating-score-animation"
+          style={{
+            position: "fixed",
+            top: "45%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            color: "#fbbf24",
+            fontSize: "2.8rem",
+            fontFamily: "var(--font-title)",
+            textShadow: "3px 3px 0 #000, -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000",
+            zIndex: 99999,
+            pointerEvents: "none"
+          }}
+        >
+          +{floatingScore.amount} 🪙
+        </div>
+      )}
 
       {/* Barre de navigation basse */}
       <nav className="bottom-nav">

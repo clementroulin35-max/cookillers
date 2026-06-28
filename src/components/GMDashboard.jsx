@@ -39,6 +39,7 @@ export default function GMDashboard() {
   // Pool de défis - Ajout / Édition
   const [showAddDefiForm, setShowAddDefiForm] = useState(false);
   const [editingDefi, setEditingDefi] = useState(null);
+  const [modificationsSuggestions, setModificationsSuggestions] = useState({}); // { id: { title, desc, reward, damage } }
   const [defiTitle, setDefiTitle] = useState("");
   const [defiDesc, setDefiDesc] = useState("");
   const [defiReward, setDefiReward] = useState(100);
@@ -578,9 +579,31 @@ export default function GMDashboard() {
                     typeColor = "#10b981";
                   }
 
+                  // Initialiser l'état local de modification si absent
+                  if (!modificationsSuggestions[s.id]) {
+                    modificationsSuggestions[s.id] = {
+                      title: s.actionTitle,
+                      desc: cleanDesc,
+                      reward: extractedType === "mission" ? s.scoreReward : 0,
+                      damage: s.damagePenalty
+                    };
+                  }
+
+                  const mod = modificationsSuggestions[s.id];
+
+                  const updateMod = (field, val) => {
+                    setModificationsSuggestions(prev => ({
+                      ...prev,
+                      [s.id]: {
+                        ...prev[s.id],
+                        [field]: val
+                      }
+                    }));
+                  };
+
                   return (
                     <div key={s.id} style={{ border: "1px solid rgba(168, 85, 247, 0.4)", borderRadius: "8px", padding: "8px", backgroundColor: "#100a1c" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                         <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
                           Proposé par : <strong>{s.playerName}</strong>
                         </span>
@@ -588,30 +611,75 @@ export default function GMDashboard() {
                           {typeLabel}
                         </span>
                       </div>
-                      <div style={{ fontWeight: "bold", fontSize: "0.9rem", color: "#fff" }}>{s.actionTitle}</div>
-                      <div style={{ fontSize: "0.8rem", color: "#d1d5db", marginTop: "2px" }}>{cleanDesc}</div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "8px" }}>
+                        <input
+                          type="text"
+                          value={mod.title}
+                          onChange={(e) => updateMod("title", e.target.value)}
+                          placeholder="Intitulé"
+                          style={{ width: "100%", padding: "4px 8px", backgroundColor: "#1c192d", border: "1.5px solid #000", borderRadius: "6px", color: "#fff", fontSize: "0.85rem" }}
+                        />
+                        <textarea
+                          value={mod.desc}
+                          onChange={(e) => updateMod("desc", e.target.value)}
+                          placeholder="Description"
+                          style={{ width: "100%", height: "48px", padding: "4px 8px", backgroundColor: "#1c192d", border: "1.5px solid #000", borderRadius: "6px", color: "#fff", fontSize: "0.8rem" }}
+                        />
+                      </div>
+
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
-                        <span style={{ fontSize: "0.75rem", color: "var(--color-cyan)" }}>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                           {extractedType === "mission" ? (
-                            <>🪙 +{s.scoreReward} | ❤️ -{s.damagePenalty}</>
+                            <>
+                              <label style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "2px" }}>
+                                🪙
+                                <input
+                                  type="number"
+                                  value={mod.reward}
+                                  onChange={(e) => updateMod("reward", Number(e.target.value))}
+                                  style={{ width: "50px", padding: "2px", backgroundColor: "#1c192d", border: "1.5px solid #000", borderRadius: "4px", color: "#fff", fontSize: "0.75rem", textAlign: "center" }}
+                                />
+                              </label>
+                              <label style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "2px" }}>
+                                ❤️
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  value={mod.damage}
+                                  onChange={(e) => updateMod("damage", Number(e.target.value))}
+                                  style={{ width: "40px", padding: "2px", backgroundColor: "#1c192d", border: "1.5px solid #000", borderRadius: "4px", color: "#fff", fontSize: "0.75rem", textAlign: "center" }}
+                                />
+                              </label>
+                            </>
                           ) : (
-                            <>Soin : +{s.damagePenalty} ❤️</>
+                            <label style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "2px" }}>
+                              Soin ❤️
+                              <input
+                                type="number"
+                                step="0.5"
+                                value={mod.damage}
+                                onChange={(e) => updateMod("damage", Number(e.target.value))}
+                                style={{ width: "40px", padding: "2px", backgroundColor: "#1c192d", border: "1.5px solid #000", borderRadius: "4px", color: "#fff", fontSize: "0.75rem", textAlign: "center" }}
+                              />
+                            </label>
                           )}
-                        </span>
+                        </div>
+
                         <div style={{ display: "flex", gap: "6px" }}>
                           <button
                             type="button"
                             className="btn-cartoon btn-green"
                             style={{ padding: "2px 8px", fontSize: "0.7rem" }}
                             onClick={async () => {
-                              // Valider : insérer dans action_pools
+                              // Valider : insérer dans action_pools avec les modifications du GM
                               const { error: insErr } = await supabase.from("action_pools").insert([
                                 {
                                   game_code: gameCode,
-                                  title: s.actionTitle,
-                                  description: cleanDesc,
-                                  score_reward: extractedType === "mission" ? s.scoreReward : 0,
-                                  damage_penalty: s.damagePenalty,
+                                  title: mod.title,
+                                  description: mod.desc,
+                                  score_reward: extractedType === "mission" ? mod.reward : 0,
+                                  damage_penalty: mod.damage,
                                   is_zombie_only: false,
                                   type: extractedType,
                                   created_by_player: s.playerName
@@ -807,11 +875,8 @@ export default function GMDashboard() {
           )}
 
           {/* Liste défis GM */}
-          <h3 style={{ fontSize: "0.85rem", color: "#d1d5db", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "4px", marginBottom: "8px", textAlign: "left" }}>
-            Défis du GM ({gameState.actionPool.filter(a => !a.createdByPlayer).length})
-          </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "1.5rem" }}>
-            {gameState.actionPool.filter(a => !a.createdByPlayer).map((a) => (
+          {(() => {
+            const renderDefiRow = (a) => (
               <div
                 key={a.id}
                 style={{
@@ -832,8 +897,13 @@ export default function GMDashboard() {
                   <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>{a.title} {a.isZombieOnly && "🧟"}</div>
                   <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>{a.description}</div>
                   <div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#fbbf24", marginTop: "2px" }}>
-                    +{a.scoreReward} 🪙 | -{a.damagePenalty} ❤️
+                    {a.type === "mission" || !a.type ? `+${a.scoreReward} 🪙 | -${a.damagePenalty} ❤️` : `Soin : +${a.damagePenalty} ❤️`}
                   </div>
+                  {a.createdByPlayer && (
+                    <span style={{ fontSize: "0.65rem", color: "var(--color-cyan)", display: "block", marginTop: "2px" }}>
+                      Proposé par {a.createdByPlayer}
+                    </span>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -854,64 +924,66 @@ export default function GMDashboard() {
                   <Trash size={12} />
                 </button>
               </div>
-            ))}
-          </div>
+            );
 
-          {/* Liste défis proposés par les joueurs (validés) */}
-          {gameState.actionPool.filter(a => a.createdByPlayer).length > 0 && (
-            <>
-              <h3 style={{ fontSize: "0.85rem", color: "var(--color-cyan)", borderBottom: "1px solid rgba(0,255,255,0.2)", paddingBottom: "4px", marginBottom: "8px", textAlign: "left" }}>
-                Propositions validées ({gameState.actionPool.filter(a => a.createdByPlayer).length})
-              </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {gameState.actionPool.filter(a => a.createdByPlayer).map((a) => (
-                  <div
-                    key={a.id}
-                    style={{
-                      border: "2px solid rgba(0,255,255,0.3)",
-                      borderRadius: "12px",
-                      padding: "8px 10px",
-                      backgroundColor: "rgba(0,255,255,0.03)",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center"
-                    }}
-                  >
-                    <div 
-                      style={{ textAlign: "left", flex: 1, marginRight: "10px", cursor: "pointer" }}
-                      onClick={() => handleStartEditDefi(a)}
-                      title="Cliquer pour modifier ce défi"
-                    >
-                      <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>{a.title} {a.isZombieOnly && "🧟"}</div>
-                      <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>{a.description}</div>
-                      <div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#fbbf24", marginTop: "2px" }}>
-                        +{a.scoreReward} 🪙 | -{a.damagePenalty} ❤️
-                      </div>
-                      <span style={{ fontSize: "0.65rem", color: "var(--color-cyan)" }}>Proposé par {a.createdByPlayer}</span>
+            const gmDefis = gameState.actionPool.filter(a => !a.createdByPlayer);
+            const playerDefis = gameState.actionPool.filter(a => a.createdByPlayer);
+
+            const gmActiveMissions = gmDefis.filter(a => a.type === "mission" || !a.type);
+            const gmFountainActions = gmDefis.filter(a => a.type === "fountain_action");
+            const gmFountainTruths = gmDefis.filter(a => a.type === "fountain_truth");
+
+            return (
+              <>
+                <h3 style={{ fontSize: "0.85rem", color: "#d1d5db", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "4px", marginBottom: "12px", textAlign: "left" }}>
+                  Défis du GM ({gmDefis.length})
+                </h3>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "1.5rem" }}>
+                  <div>
+                    <h4 style={{ fontSize: "0.75rem", color: "var(--color-purple)", marginBottom: "6px", textAlign: "left", textTransform: "uppercase" }}>Missions Actives 🎯 ({gmActiveMissions.length})</h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {gmActiveMissions.map(renderDefiRow)}
+                      {gmActiveMissions.length === 0 && (
+                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune mission active</span>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteDefi(a.id)}
-                      style={{
-                        backgroundColor: "rgba(239, 68, 68, 0.15)",
-                        border: "2px solid var(--color-red)",
-                        color: "var(--color-red)",
-                        borderRadius: "8px",
-                        width: "28px",
-                        height: "28px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer"
-                      }}
-                    >
-                      <Trash size={12} />
-                    </button>
                   </div>
-                ))}
-              </div>
-            </>
-          )}
+
+                  <div>
+                    <h4 style={{ fontSize: "0.75rem", color: "var(--color-cyan)", marginBottom: "6px", textAlign: "left", textTransform: "uppercase" }}>Actions Fontaine ⛲ ({gmFountainActions.length})</h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {gmFountainActions.map(renderDefiRow)}
+                      {gmFountainActions.length === 0 && (
+                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune action Fontaine</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 style={{ fontSize: "0.75rem", color: "#10b981", marginBottom: "6px", textAlign: "left", textTransform: "uppercase" }}>Vérités Fontaine ⛲ ({gmFountainTruths.length})</h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {gmFountainTruths.map(renderDefiRow)}
+                      {gmFountainTruths.length === 0 && (
+                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune vérité Fontaine</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {playerDefis.length > 0 && (
+                  <>
+                    <h3 style={{ fontSize: "0.85rem", color: "var(--color-cyan)", borderBottom: "1px solid rgba(0,255,255,0.2)", paddingBottom: "4px", marginBottom: "12px", textAlign: "left" }}>
+                      Propositions validées ({playerDefis.length})
+                    </h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {playerDefis.map(renderDefiRow)}
+                    </div>
+                  </>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
 
