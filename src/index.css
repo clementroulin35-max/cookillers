@@ -250,6 +250,58 @@ h1, h2, h3, .cartoon-title {
   }
 }
 
+/* Effet de Secousse d'Écran */
+.screen-shake {
+  animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-2px, 0, 0); }
+  20%, 80% { transform: translate3d(3px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
+  40%, 60% { transform: translate3d(5px, 0, 0); }
+}
+
+/* Animations de Particules de Cookies */
+@keyframes cookie-fly-1 {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
+  100% { transform: translate(-120px, -220px) rotate(360deg) scale(0.3); opacity: 0; }
+}
+@keyframes cookie-fly-2 {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
+  100% { transform: translate(120px, -240px) rotate(-360deg) scale(0.3); opacity: 0; }
+}
+@keyframes cookie-fly-3 {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
+  100% { transform: translate(-60px, -270px) rotate(180deg) scale(0.3); opacity: 0; }
+}
+@keyframes cookie-fly-4 {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
+  100% { transform: translate(60px, -200px) rotate(-180deg) scale(0.3); opacity: 0; }
+}
+@keyframes cookie-fly-5 {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
+  100% { transform: translate(-180px, -170px) rotate(450deg) scale(0.3); opacity: 0; }
+}
+@keyframes cookie-fly-6 {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
+  100% { transform: translate(180px, -180px) rotate(-450deg) scale(0.3); opacity: 0; }
+}
+
+.cookie-particle {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  margin-left: -16px;
+  margin-top: -16px;
+  font-size: 2.2rem;
+  z-index: 100000;
+  pointer-events: none;
+}
+
 /* Modale performances réduites (Low motion) */
 @media (prefers-reduced-motion: reduce) {
   .ecg-line {

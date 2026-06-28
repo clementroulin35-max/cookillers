@@ -89,6 +89,8 @@ export default function PlayerDashboard() {
   const [showCounterModal, setShowCounterModal] = useState(false);
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const [showFountainModal, setShowFountainModal] = useState(false);
+  const [showSkipConfirmModal, setShowSkipConfirmModal] = useState(false);
+  const [showZombieFountainModal, setShowZombieFountainModal] = useState(false);
   
   // États de l'aide contextuelle
   const [isHelpActive, setIsHelpActive] = useState(false);
@@ -135,6 +137,100 @@ export default function PlayerDashboard() {
       });
     }
   }, [gameState.players, getPlayerPhoto, campPhotos]);
+
+  const [triggerScreenShake, setTriggerScreenShake] = useState(false);
+  const [showRedFlash, setShowRedFlash] = useState(false);
+  const [cookieConfettiActive, setCookieConfettiActive] = useState(false);
+
+  const triggerVibration = (pattern) => {
+    if (lowPerfMode) return; // Pas de vibration en mode économie / perf réduite
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (err) {
+        console.warn("Haptic feedback non supporté :", err);
+      }
+    }
+  };
+
+  const triggerDamageEffect = () => {
+    if (lowPerfMode) return;
+    setTriggerScreenShake(true);
+    setShowRedFlash(true);
+    setTimeout(() => {
+      setTriggerScreenShake(false);
+      setShowRedFlash(false);
+    }, 300);
+  };
+
+  const triggerCookieExplosion = () => {
+    if (lowPerfMode) return;
+    setCookieConfettiActive(true);
+    setTimeout(() => {
+      setCookieConfettiActive(false);
+    }, 2000);
+  };
+
+  const prevStats = useRef({
+    lives: player?.lives,
+    isZombie: player?.isZombie,
+    kills: player?.statKillsCount,
+    successCounters: player?.statSuccessfulCounterattacks,
+    failedCounters: player?.statFailedCounterattacks
+  });
+
+  useEffect(() => {
+    if (!player) return;
+    
+    // Pour éviter de déclencher l'effet au tout premier rendu ou reconnexion vide
+    if (prevStats.current.lives === undefined) {
+      prevStats.current = {
+        lives: player.lives,
+        isZombie: player.isZombie,
+        kills: player.statKillsCount,
+        successCounters: player.statSuccessfulCounterattacks,
+        failedCounters: player.statFailedCounterattacks
+      };
+      return;
+    }
+
+    const prev = prevStats.current;
+
+    // Détecter passage Zombie
+    if (player.isZombie && !prev.isZombie) {
+      triggerVibration(800);
+    }
+
+    // Détecter neutralisation cible
+    if (player.statKillsCount > prev.kills) {
+      triggerVibration([100, 50, 100]);
+      triggerCookieExplosion();
+    }
+
+    // Détecter contre-attaque réussie
+    if (player.statSuccessfulCounterattacks > prev.successCounters) {
+      triggerVibration([50, 50, 100, 50, 150]);
+    }
+
+    // Détecter fausse accusation (statFailedCounterattacks a augmenté)
+    if (player.statFailedCounterattacks > prev.failedCounters) {
+      triggerVibration([100, 50, 100, 50, 100]);
+      triggerDamageEffect();
+    } else if (player.lives < prev.lives) {
+      // Perte de vie générale (ex: morsure zombie subie)
+      triggerVibration(200);
+      triggerDamageEffect();
+    }
+
+    // Mettre à jour la ref
+    prevStats.current = {
+      lives: player.lives,
+      isZombie: player.isZombie,
+      kills: player.statKillsCount,
+      successCounters: player.statSuccessfulCounterattacks,
+      failedCounters: player.statFailedCounterattacks
+    };
+  }, [player, lowPerfMode]);
 
   // Mascotte sarcastique
   const [mascotteQuote, setMascotteQuote] = useState("");
@@ -391,8 +487,43 @@ export default function PlayerDashboard() {
   };
 
   return (
-    <div className={`app-container ${isZombie ? "zombie-mode" : ""}`} style={{ paddingBottom: "75px" }}>
+    <div className={`app-container ${isZombie ? "zombie-mode" : ""} ${triggerScreenShake ? "screen-shake" : ""}`} style={{ paddingBottom: "75px" }}>
       
+      {/* Flash Rouge sur Dégâts */}
+      {showRedFlash && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(239, 68, 68, 0.25)",
+          zIndex: 999999,
+          pointerEvents: "none"
+        }} />
+      )}
+
+      {/* Pluie de Cookies (Particules de Confettis) */}
+      {cookieConfettiActive && Array.from({ length: 18 }).map((_, idx) => {
+        const animationNum = (idx % 6) + 1; // fly-1 à fly-6
+        const rotationStart = (idx * 20) % 360;
+        const scale = 0.5 + (idx % 4) * 0.2; // 0.5, 0.7, 0.9, 1.1
+        const delay = (idx * 0.05).toFixed(2);
+        return (
+          <div
+            key={idx}
+            className="cookie-particle"
+            style={{
+              animation: `cookie-fly-${animationNum} 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both`,
+              animationDelay: `${delay}s`,
+              transform: `rotate(${rotationStart}deg) scale(${scale})`
+            }}
+          >
+            🍪
+          </div>
+        );
+      })}
+
       {/* Header global */}
       <header style={{
         display: "flex",
@@ -539,6 +670,23 @@ export default function PlayerDashboard() {
           <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", textShadow: "1.5px 1.5px 0 #000", color: "#fbbf24" }}>
             {player.score}
           </span>
+          {isZombie && (
+            <span 
+              className="rarity-badge" 
+              style={{ 
+                backgroundColor: "var(--color-purple)", 
+                color: "#fff", 
+                fontSize: "0.6rem", 
+                padding: "2px 6px", 
+                marginLeft: "4px",
+                border: "1.5px solid #000",
+                boxShadow: "1px 1px 0 #000",
+                textShadow: "1px 1px 0 #000"
+              }}
+            >
+              x0.5 🪙 (ZOMBIE)
+            </span>
+          )}
           {isHelpActive && (
             <div style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "12px", height: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: "bold" }}>?</div>
           )}
@@ -916,8 +1064,8 @@ export default function PlayerDashboard() {
 
                     {currentAction && (
                       <div style={{ display: "flex", gap: "10px", marginTop: "12px", fontSize: "0.8rem", fontWeight: "bold" }}>
-                        <span style={{ color: "#fbbf24" }}> Récompense : +{currentAction.scoreReward} 🪙</span>
-                        <span style={{ color: "var(--color-red)" }}> Dégâts : -{currentAction.damagePenalty} ❤️</span>
+                        <span style={{ color: "#fbbf24" }}> Récompense : +{isZombie ? Math.floor(currentAction.scoreReward / 2) : currentAction.scoreReward} 🪙</span>
+                        <span style={{ color: "var(--color-red)" }}> Dégâts : -{isZombie ? 0 : currentAction.damagePenalty} ❤️</span>
                       </div>
                     )}
                   </div>
@@ -941,7 +1089,7 @@ export default function PlayerDashboard() {
                   className="btn-cartoon btn-cyan"
                   style={{ flex: 1, height: "48px", padding: "0" }}
                   disabled={player.skips < 1 || pendingHit}
-                  onClick={skipMission}
+                  onClick={() => setShowSkipConfirmModal(true)}
                   title="Brûler la Recette"
                 >
                   Brûler 🌀
@@ -1642,6 +1790,91 @@ export default function PlayerDashboard() {
         )}
       </AnimatePresence>
 
+      {/* MODALE : CONFIRMATION DE SKIP */}
+      <AnimatePresence>
+        {showSkipConfirmModal && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.85)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}>
+            <div className="card-cartoon glow-purple" style={{ width: "100%", maxWidth: "340px", textAlign: "center" }}>
+              <h3 style={{ color: "var(--color-purple)", marginBottom: "1rem" }}>Brûler la Recette ?</h3>
+              <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.2rem", lineHeight: "1.4" }}>
+                Voulez-vous vraiment changer de défi ? Cette action consommera <strong>1 jeton de relance 🌀</strong>.
+                <br />
+                <span style={{ color: "var(--color-cyan)" }}>Solde restant : {player.skips} 🌀</span>
+              </p>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="btn-cartoon btn-cyan"
+                  style={{ flex: 1, height: "44px" }}
+                  onClick={() => {
+                    skipMission();
+                    setShowSkipConfirmModal(false);
+                  }}
+                >
+                  Confirmer 🌀
+                </button>
+                <button
+                  type="button"
+                  className="btn-cartoon"
+                  style={{ flex: 1, height: "44px", backgroundColor: "#4b5563" }}
+                  onClick={() => setShowSkipConfirmModal(false)}
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODALE : ACCÈS INTERDIT AUX ZOMBIES */}
+      <AnimatePresence>
+        {showZombieFountainModal && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.85)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}>
+            <div className="card-cartoon glow-red" style={{ width: "100%", maxWidth: "340px", textAlign: "center" }}>
+              <span style={{ fontSize: "3rem" }}>🧟🔒</span>
+              <h3 style={{ color: "var(--color-red)", margin: "1rem 0" }}>Accès Interdit !</h3>
+              <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.5rem", lineHeight: "1.4" }}>
+                Accès interdit aux zombies. Trouvez le GameMaster pour réclamer une rédemption.
+              </p>
+              <button
+                type="button"
+                className="btn-cartoon btn-red"
+                style={{ width: "100%", height: "44px" }}
+                onClick={() => setShowZombieFountainModal(false)}
+              >
+                Retourner Hanter le Camping
+              </button>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Barre de navigation basse */}
       <nav className="bottom-nav">
         <div
@@ -1652,9 +1885,15 @@ export default function PlayerDashboard() {
         </div>
         <div
           className={`bottom-nav-item ${activeTab === "source" ? "active" : ""}`}
-          onClick={() => setActiveTab("source")}
+          onClick={() => {
+            if (isZombie) {
+              setShowZombieFountainModal(true);
+            } else {
+              setActiveTab("source");
+            }
+          }}
         >
-          <span style={{ fontSize: "1.6rem" }}>⛲</span>
+          <span style={{ fontSize: "1.6rem" }}>{isZombie ? "⛲🔒" : "⛲"}</span>
         </div>
         <div
           className={`bottom-nav-item ${activeTab === "suggestion" ? "active" : ""}`}
