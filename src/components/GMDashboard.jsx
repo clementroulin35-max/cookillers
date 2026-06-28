@@ -55,6 +55,23 @@ export default function GMDashboard() {
   // Filtrer les événements de l'historique en attente (pending)
   const pendingHits = gameState.history.filter(h => h.status === "pending" && h.type === "hit_declared");
   const pendingCounters = gameState.history.filter(h => h.status === "pending" && h.type === "counter_attack_pending");
+
+  const pendingArbitrages = [
+    ...pendingHits.map(h => ({ ...h, arbitrageType: "validation" })),
+    ...pendingCounters.map(c => ({ ...c, arbitrageType: "accusation" }))
+  ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+  const formatEventTime = (isoString) => {
+    if (!isoString) return "";
+    const d = new Date(isoString);
+    return d.toLocaleString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+  };
   const pendingSuggestions = gameState.actionPool.filter(a => a.createdByPlayer !== null && a.scoreReward === 0); // suggestions non arbitrées ? 
   // En fait, dans notre modèle, si created_by_player est rempli, et que le GM doit l'arbitrer :
   // Le joueur suggère un défi. Il est inséré dans action_pools. Pour savoir s'il est pending, on peut regarder si score_reward est à 0 par exemple, ou si on a un flag.
@@ -440,94 +457,100 @@ export default function GMDashboard() {
             Arbitrage des Requêtes 🛡️
           </h2>
 
-          {pendingHits.length === 0 && pendingCounters.length === 0 && (
+          {pendingArbitrages.length === 0 ? (
             <p style={{ textAlign: "center", color: "#9ca3af", fontStyle: "italic", padding: "20px 0" }}>
               Aucune demande de neutralisation ou accusation à trancher pour le moment. Le camping dort.
             </p>
-          )}
-
-          {/* Assassinats / Morsures à trancher */}
-          {pendingHits.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "1.5rem" }}>
-              <h3 style={{ fontSize: "0.9rem", color: "var(--color-purple)", borderBottom: "2px solid var(--border-color)", paddingBottom: "4px" }}>
-                Demandes de Validation ({pendingHits.length})
-              </h3>
-              {pendingHits.map((h) => {
-                const zombieAttack = gameState.players.find(p => p.name === h.playerName)?.isZombie;
-                return (
-                  <div key={h.id} style={{ border: "2px solid #000", borderRadius: "12px", padding: "10px", backgroundColor: "#1e172e", boxShadow: "2px 2px 0 #000" }}>
-                    <p style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
-                      {zombieAttack ? (
-                        <>
-                          <strong>🧟 [Zombie] {getPlayerDisplayName(h.playerName)}</strong> déclare avoir mordu <strong>{getPlayerDisplayName(h.targetName)}</strong> !
-                        </>
-                      ) : (
-                        <>
-                          <strong>⚔️ {getPlayerDisplayName(h.playerName)}</strong> déclare avoir neutralisé <strong>{getPlayerDisplayName(h.targetName)}</strong> !
-                        </>
-                      )}
-                      <br/>
-                      Défi : <em>« {h.actionTitle} »</em>
-                    </p>
-                    {h.hasPhotoProof && (
-                      <span style={{ fontSize: "0.75rem", color: "var(--color-cyan)" }}>📸 Preuve photo jointe</span>
-                    )}
-                    <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
-                      <button
-                        type="button"
-                        className="btn-cartoon btn-green"
-                        style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
-                        onClick={() => zombieAttack ? approveZombieBite(h.id) : approveHit(h.id)}
-                      >
-                        Accepter
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-cartoon btn-red"
-                        style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
-                        onClick={() => rejectHit(h.id)}
-                      >
-                        Rejeter
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Contre-attaques à trancher */}
-          {pendingCounters.length > 0 && (
+          ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <h3 style={{ fontSize: "0.9rem", color: "var(--color-red)", borderBottom: "2px solid var(--border-color)", paddingBottom: "4px" }}>
-                Dénonciations / Accusations ({pendingCounters.length})
-              </h3>
-              {pendingCounters.map((c) => (
-                <div key={c.id} style={{ border: "2px solid #000", borderRadius: "12px", padding: "10px", backgroundColor: "#1e172e", boxShadow: "2px 2px 0 #000" }}>
-                  <p style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
-                    <strong>{getPlayerDisplayName(c.playerName)}</strong> accuse <strong>{getPlayerDisplayName(c.targetName)}</strong> de vouloir lui faire accomplir :<br/>
-                    <em>« {c.actionTitle} »</em>
-                  </p>
-                  <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
-                    <button
-                      type="button"
-                      className="btn-cartoon btn-green"
-                      style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
-                      onClick={() => resolveCounterAttack(c.id, true)}
-                    >
-                      Verdict CORRECT
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-cartoon btn-red"
-                      style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
-                      onClick={() => resolveCounterAttack(c.id, false)}
-                    >
-                      Fausse Accusation
-                    </button>
-                  </div>
-                </div>
-              ))}
+              {pendingArbitrages.map((item) => {
+                if (item.arbitrageType === "validation") {
+                  const zombieAttack = gameState.players.find(p => p.name === item.playerName)?.isZombie;
+                  return (
+                    <div key={item.id} style={{ border: "2px solid #000", borderRadius: "12px", padding: "10px", backgroundColor: "#1e172e", boxShadow: "2px 2px 0 #000", position: "relative" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "6px" }}>
+                        <span className="rarity-badge" style={{ backgroundColor: "var(--color-purple)", color: "#fff", fontSize: "0.65rem", padding: "2px 6px" }}>
+                          Demande de Validation
+                        </span>
+                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: "bold" }}>
+                          🕒 {formatEventTime(item.createdAt)}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
+                        {zombieAttack ? (
+                          <>
+                            <strong>🧟 [Zombie] {getPlayerDisplayName(item.playerName)}</strong> déclare avoir mordu <strong>{getPlayerDisplayName(item.targetName)}</strong> !
+                          </>
+                        ) : (
+                          <>
+                            <strong>⚔️ {getPlayerDisplayName(item.playerName)}</strong> déclare avoir neutralisé <strong>{getPlayerDisplayName(item.targetName)}</strong> !
+                          </>
+                        )}
+                        <br/>
+                        Défi : <em>« {item.actionTitle} »</em>
+                      </p>
+                      {item.hasPhotoProof && (
+                        <div style={{ marginTop: "4px" }}>
+                          <span style={{ fontSize: "0.75rem", color: "var(--color-cyan)" }}>📸 Preuve photo jointe</span>
+                        </div>
+                      )}
+                      <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                        <button
+                          type="button"
+                          className="btn-cartoon btn-green"
+                          style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
+                          onClick={() => zombieAttack ? approveZombieBite(item.id) : approveHit(item.id)}
+                        >
+                          Accepter
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-cartoon btn-red"
+                          style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
+                          onClick={() => rejectHit(item.id)}
+                        >
+                          Rejeter
+                        </button>
+                      </div>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={item.id} style={{ border: "2px solid #000", borderRadius: "12px", padding: "10px", backgroundColor: "#1e172e", boxShadow: "2px 2px 0 #000", position: "relative" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "6px" }}>
+                        <span className="rarity-badge" style={{ backgroundColor: "var(--color-red)", color: "#fff", fontSize: "0.65rem", padding: "2px 6px" }}>
+                          Dénonciation / Accusation
+                        </span>
+                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: "bold" }}>
+                          🕒 {formatEventTime(item.createdAt)}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
+                        <strong>{getPlayerDisplayName(item.playerName)}</strong> accuse <strong>{getPlayerDisplayName(item.targetName)}</strong> de vouloir lui faire accomplir :<br/>
+                        <em>« {item.actionTitle} »</em>
+                      </p>
+                      <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                        <button
+                          type="button"
+                          className="btn-cartoon btn-green"
+                          style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
+                          onClick={() => resolveCounterAttack(item.id, true)}
+                        >
+                          Verdict CORRECT
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-cartoon btn-red"
+                          style={{ flex: 1, padding: "0.4rem", fontSize: "0.8rem" }}
+                          onClick={() => resolveCounterAttack(item.id, false)}
+                        >
+                          Fausse Accusation
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+              })}
             </div>
           )}
         </div>
@@ -626,7 +649,7 @@ export default function GMDashboard() {
                             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                               {/* Reward 🪙 */}
                               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                <span>🪙</span>
+                                <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply", display: "inline-block" }} />
                                 <button
                                   type="button"
                                   className="btn-cartoon"
@@ -843,7 +866,7 @@ export default function GMDashboard() {
                   <div style={{ display: "flex", gap: "16px", justifyContent: "space-between", alignItems: "center" }}>
                     {/* Points 🪙 */}
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1 }}>
-                      <span style={{ fontSize: "1.1rem" }}>🪙</span>
+                      <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2rem", height: "1.2rem", mixBlendMode: "multiply", display: "inline-block" }} />
                       <button
                         type="button"
                         className="btn-cartoon"
@@ -972,8 +995,14 @@ export default function GMDashboard() {
                     {a.type === "fountain_action" ? "Action" : (a.type === "fountain_truth" ? "Vérité" : a.title)} {a.isZombieOnly && "🧟"}
                   </div>
                   <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>{a.description}</div>
-                  <div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#fbbf24", marginTop: "2px" }}>
-                    {a.type === "mission" || !a.type ? `+${a.scoreReward} 🪙 | -${a.damagePenalty} ❤️` : `Soin : +${a.damagePenalty} ❤️`}
+                  <div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#fbbf24", marginTop: "2px", display: "flex", alignItems: "center", gap: "4px" }}>
+                    {a.type === "mission" || !a.type ? (
+                      <>
+                        +{a.scoreReward} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /> | -{a.damagePenalty} ❤️
+                      </>
+                    ) : (
+                      <>Soin : +{a.damagePenalty} ❤️</>
+                    )}
                   </div>
                   {a.createdByPlayer && a.createdByPlayer.toUpperCase() !== "GM" && (
                     <span style={{ fontSize: "0.65rem", color: "var(--color-cyan)", display: "block", marginTop: "2px" }}>
@@ -1129,7 +1158,7 @@ export default function GMDashboard() {
                 {/* Row 1: Score & Vie */}
                 <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>🪙 :</span>
+                    <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2rem", height: "1.2rem", mixBlendMode: "multiply", display: "inline-block" }} /> :
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <button 
                         type="button" 
@@ -1208,7 +1237,7 @@ export default function GMDashboard() {
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>⛲🌀 :</span>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>⛲🔄 :</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <button 
                         type="button" 
@@ -1316,10 +1345,10 @@ export default function GMDashboard() {
                   {/* En-tête de la table */}
                   <div style={{ display: "flex", padding: "8px 12px", borderBottom: "2px solid #000", backgroundColor: "#1c1326", fontWeight: "bold", fontSize: "0.75rem", color: "#9ca3af", textTransform: "uppercase", alignItems: "center" }}>
                     <div style={{ flex: 2, minWidth: "120px", textAlign: "left" }}>Joueur</div>
-                    <div style={{ width: "50px", textAlign: "center" }} title="Score (Biscuits)">🪙</div>
+                    <div style={{ width: "50px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Score (Biscuits)"><img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2rem", height: "1.2rem", mixBlendMode: "multiply" }} /></div>
                     <div style={{ width: "50px", textAlign: "center" }} title="Vitalité / Zombie">❤️</div>
                     <div style={{ width: "50px", textAlign: "center" }} title="Fontaine Utilisations">⛲</div>
-                    <div style={{ width: "55px", textAlign: "center" }} title="Relances Fontaine">⛲🌀</div>
+                    <div style={{ width: "55px", textAlign: "center" }} title="Relances Fontaine">⛲🔄</div>
                     <div style={{ width: "55px", textAlign: "center" }} title="Relances Défi">🎯🌀</div>
                   </div>
                   {/* Lignes des joueurs */}

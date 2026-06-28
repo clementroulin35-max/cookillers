@@ -21,8 +21,8 @@ export default function TutorialOverlay({ onComplete }) {
     },
     {
       selector: '[data-tuto="stats"]',
-      title: "❤️ Vitalité & 🪙 Biscuits",
-      text: "Tes cœurs de vie et ton score en biscuits. Ne meurs pas tout de suite, et tente de gratter le plus de biscuits pour frimer au camping.",
+      title: "❤️ Vitalité & 🍪 Biscuits",
+      text: "Tes cœurs de vie et ton score en biscuits (cookies). Ne meurs pas tout de suite, et tente de gratter le plus de biscuits pour frimer au camping.",
       position: "top"
     },
     {

@@ -225,8 +225,13 @@ h1, h2, h3, .cartoon-title {
 }
 
 .ecg-line.ecg-flatline {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M0,20 L100,20' stroke='%23a855f7' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M0,20 L100,20' stroke='%236b7280' stroke-width='2' fill='none'/%3E%3C/svg%3E");
   animation: none;
+}
+
+.ecg-line.ecg-zombie {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M0,20 L40,20 L43,10 L46,30 L49,20 L52,20 L55,5 L58,35 L61,20 L100,20' stroke='%236b7280' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  animation-duration: 2s;
 }
 
 @keyframes ecg-scroll {

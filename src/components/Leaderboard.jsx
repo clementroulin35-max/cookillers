@@ -11,6 +11,41 @@ export const getRank = (score) => {
   return { icon: "⚔️", label: "Le Touriste en Tongs", css: "rank-civil" };
 };
 
+const PlayerAvatar = ({ name, hasPhoto, style = {}, initialsFontSize = "0.75rem" }) => {
+  const { getPlayerPhoto } = useGame();
+  const [photo, setPhoto] = React.useState(null);
+
+  React.useEffect(() => {
+    if (hasPhoto) {
+      getPlayerPhoto(name).then(setPhoto).catch(console.error);
+    } else {
+      setPhoto(null);
+    }
+  }, [name, hasPhoto, getPlayerPhoto]);
+
+  return (
+    <div style={{
+      borderRadius: "50%",
+      backgroundColor: "#2e2a47",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+      fontWeight: "bold",
+      position: "relative",
+      ...style
+    }}>
+      {photo ? (
+        <img src={photo} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      ) : (
+        <span style={{ fontSize: initialsFontSize, color: "#fff", lineHeight: "1" }}>
+          {name.slice(0, 2).toUpperCase()}
+        </span>
+      )}
+    </div>
+  );
+};
+
 export default function Leaderboard({ players, history, isHelpActive, activeTooltip, triggerTooltip, setActiveTooltip }) {
   const { getHistoryProof } = useGame();
 
@@ -22,6 +57,12 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
     const raw = found ? (found.displayName || found.name) : username;
     return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
   };
+
+  const formatTrophyNames = (namesArray) => {
+    if (!namesArray || namesArray.length === 0) return "Aucun";
+    return namesArray.map(name => getPlayerDisplayName(name)).join(", ");
+  };
+
   const [subTab, setSubTab] = useState("scores"); // scores, trophies, flux
   const [expandedPhoto, setExpandedPhoto] = useState(null);
   const [loadedProofs, setLoadedProofs] = useState({}); // { id: proofString }
@@ -106,22 +147,17 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", minWidth: "80px" }}>
         <div style={{ position: "relative", marginBottom: "8px" }}>
-          <div style={{
-            width: "55px",
-            height: "55px",
-            borderRadius: "50%",
-            border: `3px solid ${colors[rank-1]}`,
-            backgroundColor: "#2e2a47",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden",
-            fontWeight: "bold",
-            fontSize: "1.2rem",
-            filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.3))"
-          }}>
-            {getPlayerDisplayName(player.name).slice(0, 2).toUpperCase()}
-          </div>
+          <PlayerAvatar
+            name={player.name}
+            hasPhoto={player.hasPhoto}
+            initialsFontSize="1.2rem"
+            style={{
+              width: "55px",
+              height: "55px",
+              border: `3px solid ${colors[rank-1]}`,
+              filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.3))"
+            }}
+          />
           {player.isZombie && (
             <>
               <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: "1.1rem", zIndex: 10 }}>🧟</span>
@@ -135,8 +171,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
         <span style={{ fontFamily: "var(--font-title)", fontSize: "0.85rem", textShadow: "1px 1px 0 #000", maxWidth: "80px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {getPlayerDisplayName(player.name)}
         </span>
-        <span style={{ fontSize: "0.8rem", color: "#fbbf24", fontWeight: "bold" }}>
-          {player.effectiveScore} 🪙
+        <span style={{ fontSize: "0.8rem", color: "#fbbf24", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "2px" }}>
+          {player.effectiveScore} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} />
         </span>
         <div style={{
           width: "100%",
@@ -176,8 +212,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
           <span>
             ⚔️ <strong>CONTRAT EXÉCUTÉ</strong><br/>
             <strong>{getPlayerDisplayName(evt.playerName)}</strong> a validé un contrat sur <strong>{getPlayerDisplayName(evt.targetName)}</strong> !<br/>
-            <span style={{ color: "var(--color-purple)", fontSize: "0.85rem", fontWeight: "bold" }}>
-              Difficulté : {diffLabel} (+{evt.scoreReward} 🪙 | -{evt.damagePenalty} ❤️)
+            <span style={{ color: "var(--color-purple)", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "4px", fontWeight: "bold" }}>
+              Difficulté : {diffLabel} (+{evt.scoreReward} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /> | -{evt.damagePenalty} ❤️)
             </span>
             <br/>
             <span style={{ color: "#9ca3af", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
@@ -265,9 +301,9 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
         return (
           <span>
             🧟 <strong>MORSURE ZOMBIE</strong><br/>
-            Un zombie a mordu <strong>{getPlayerDisplayName(evt.targetName)}</strong> ! Le zombie ressuscite et vole <strong>50 🪙</strong>.<br/>
-            <span style={{ color: "var(--color-red)", fontSize: "0.85rem", fontWeight: "bold" }}>
-              Victime : -1.0 ❤️ | -50 🪙
+            Un zombie a mordu <strong>{getPlayerDisplayName(evt.targetName)}</strong> ! Le zombie ressuscite et vole <strong>50 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply", display: "inline-block", verticalAlign: "middle" }} /></strong>.<br/>
+            <span style={{ color: "var(--color-red)", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "4px", fontWeight: "bold" }}>
+              Victime : -1.0 ❤️ | -50 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} />
             </span>
           </span>
         );
@@ -442,7 +478,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
 
           {activeTooltip === "leaderboard_ranks" && (
             <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
-              Le Panthéon des Goinfres. Qui a le sac à Biscuits 🪙 le plus lourd. Les Zombies ont leur score divisé par 2.
+              Le Panthéon des Goinfres. Qui a le sac à Biscuits (Cookies) le plus lourd. Les Zombies ont leur score divisé par 2.
             </div>
           )}
 
@@ -491,22 +527,17 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                       <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", width: "24px", color: "var(--color-purple)" }}>
                         {idx + 1}
                       </span>
-                      <div style={{
-                        position: "relative",
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "50%",
-                        border: `2px solid ${player.isZombie ? "var(--color-red)" : "#000"}`,
-                        backgroundColor: "#2e2a47",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "0.75rem",
-                        fontWeight: "bold",
-                        overflow: "hidden",
-                        flexShrink: 0
-                      }}>
-                        {getPlayerDisplayName(player.name).slice(0, 2).toUpperCase()}
+                      <div style={{ position: "relative", width: "32px", height: "32px", flexShrink: 0 }}>
+                        <PlayerAvatar
+                          name={player.name}
+                          hasPhoto={player.hasPhoto}
+                          initialsFontSize="0.75rem"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            border: `2px solid ${player.isZombie ? "var(--color-red)" : "#000"}`
+                          }}
+                        />
                         {player.isZombie && (
                           <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, pointerEvents: "none" }}>
                             <div style={{ position: "absolute", width: "100%", height: "3px", backgroundColor: "var(--color-red)", transform: "rotate(45deg)", border: "0.5px solid #000" }} />
@@ -528,8 +559,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                     
                     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", width: "80px" }}>
-                        <span style={{ fontWeight: "black", fontSize: "1rem", color: "#fbbf24", textAlign: "right" }}>
-                          {player.effectiveScore} 🪙
+                        <span style={{ fontWeight: "black", fontSize: "1rem", color: "#fbbf24", textAlign: "right", display: "inline-flex", alignItems: "center", gap: "2px" }}>
+                          {player.effectiveScore} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} />
                         </span>
                         {player.isZombie && (
                           <span style={{ fontSize: "0.6rem", color: "var(--color-zombie)", textAlign: "right", whiteSpace: "nowrap" }}>
@@ -558,11 +589,11 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                 <span style={{ fontSize: "2rem" }}>👑</span>
                 <div>
                   <h4 style={{ color: "#fbbf24", fontFamily: "var(--font-title)", fontSize: "1rem" }}>Le Prédateur Alpha</h4>
-                  <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le roi du pogo ayant accumulé le plus grand nombre de 🪙.</p>
+                  <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le roi du pogo ayant accumulé le plus grand nombre de Cookies.</p>
                 </div>
               </div>
-              <div style={{ textAlign: "right", marginTop: "6px", fontSize: "0.9rem", fontStyle: "italic", fontWeight: "bold" }}>
-                {trophies.alphas.join(", ") || "Aucun"}
+              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
+                {formatTrophyNames(trophies.alphas)}
               </div>
             </div>
 
@@ -575,8 +606,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le miraculé ayant conservé le plus grand nombre de ❤️ (vivant).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "right", marginTop: "6px", fontSize: "0.9rem", fontStyle: "italic", fontWeight: "bold" }}>
-                {trophies.survivors.join(", ") || "Aucun"}
+              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
+                {formatTrophyNames(trophies.survivors)}
               </div>
             </div>
 
@@ -589,8 +620,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>La première victime à être passée dans le Mode Moisi (décédée à 0 ❤️).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "right", marginTop: "6px", fontSize: "0.9rem", fontStyle: "italic", fontWeight: "bold" }}>
-                {trophies.patientZero.join(", ") || "Aucun"}
+              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
+                {formatTrophyNames(trophies.patientZero)}
               </div>
             </div>
 
@@ -603,8 +634,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le bourreau ayant infligé le coup de grâce le plus de fois ({trophies.maxKills} kills).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "right", marginTop: "6px", fontSize: "0.9rem", fontStyle: "italic", fontWeight: "bold" }}>
-                {trophies.reapers.join(", ") || "Aucun"}
+              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
+                {formatTrophyNames(trophies.reapers)}
               </div>
             </div>
 
@@ -617,8 +648,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>L'assassin ayant lancé le plus de fausses accusations ({trophies.maxFailedAcc} alertes).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "right", marginTop: "6px", fontSize: "0.9rem", fontStyle: "italic", fontWeight: "bold" }}>
-                {trophies.complotistes.join(", ") || "Aucun"}
+              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
+                {formatTrophyNames(trophies.complotistes)}
               </div>
             </div>
 
@@ -631,8 +662,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le festivalier hyperactif ayant abusé de la relance ({trophies.maxCrazy} relances/abandons).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "right", marginTop: "6px", fontSize: "0.9rem", fontStyle: "italic", fontWeight: "bold" }}>
-                {trophies.crazyPlayers.join(", ") || "Aucun"}
+              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
+                {formatTrophyNames(trophies.crazyPlayers)}
               </div>
             </div>
 
@@ -645,8 +676,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le joueur s'étant abreuvé le plus grand nombre de fois à la Source ({trophies.maxFountain} fois).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "right", marginTop: "6px", fontSize: "0.9rem", fontStyle: "italic", fontWeight: "bold" }}>
-                {trophies.fountainLovers.join(", ") || "Aucun"}
+              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
+                {formatTrophyNames(trophies.fountainLovers)}
               </div>
             </div>
 
@@ -659,8 +690,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le joueur ayant esquivé le plus d'attaques en dénonçant correctement son tueur ({trophies.maxSuccessfulAcc} esquives).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "right", marginTop: "6px", fontSize: "0.9rem", fontStyle: "italic", fontWeight: "bold" }}>
-                {trophies.elusives.join(", ") || "Aucun"}
+              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
+                {formatTrophyNames(trophies.elusives)}
               </div>
             </div>
 

@@ -123,6 +123,7 @@ export default function PlayerDashboard() {
   const [showFountainModal, setShowFountainModal] = useState(false);
   const [showSkipConfirmModal, setShowSkipConfirmModal] = useState(false);
   const [showZombieFountainModal, setShowZombieFountainModal] = useState(false);
+  const [showZombieBiteConfirmModal, setShowZombieBiteConfirmModal] = useState(false);
   const [revealPin, setRevealPin] = useState(false);
   
   // États de l'aide contextuelle
@@ -391,8 +392,8 @@ export default function PlayerDashboard() {
   );
 
   // ECG Line color based on health
-  let ecgClass = "ecg-scroll";
-  if (isZombie) ecgClass = "ecg-flatline";
+  let ecgClass = "";
+  if (isZombie) ecgClass = "ecg-zombie";
   else if (player.lives < 2.0) ecgClass = "ecg-danger";
   else if (player.lives < 4.0) ecgClass = "ecg-medium";
 
@@ -426,30 +427,28 @@ export default function PlayerDashboard() {
   };
 
   // Soumission Déclaration Meurtre
+  const confirmZombieBite = () => {
+    const zombieAction = currentAction || { title: "Morsure Zombie", scoreReward: 50, damagePenalty: 1.0 };
+    declareHit(zombieVictim, zombieAction.title, 50, 1.0);
+    showToast("Morsure déclarée au Grand Juge ! 🧟");
+    setShowZombieBiteConfirmModal(false);
+  };
+
   const handleHitSubmit = () => {
     if (pendingHit) return;
 
-    const targetDisplayName = getPlayerDisplayName(isZombie ? zombieVictim : player.target);
-    const confirmMsg = isZombie
-      ? `Es-tu sûr d'avoir mordu ${targetDisplayName} ? Cette action enverra la preuve au Juge.`
-      : `Es-tu sûr d'avoir exécuté le contrat sur ${targetDisplayName} ? Cette action enverra la preuve au Juge.`;
-
-    if (!window.confirm(confirmMsg)) {
-      return;
-    }
-
-    // Si zombie : morsure, sinon hit normal
     if (isZombie) {
       if (!zombieVictim) {
         showToast("Veuillez sélectionner une victime à mordre ! 🧟");
         return;
       }
-      const zombieAction = currentAction || { title: "Morsure Zombie", scoreReward: 50, damagePenalty: 1.0 };
-      declareHit(zombieVictim, zombieAction.title, 50, 1.0);
-      showToast("Morsure déclarée au Grand Juge !");
+      setShowZombieBiteConfirmModal(true);
     } else {
-      declareHit(player.target, currentAction.title, currentAction.scoreReward, currentAction.damagePenalty);
-      showToast("Neutralisation envoyée au Grand Juge !");
+      const targetDisplayName = getPlayerDisplayName(player.target);
+      if (window.confirm(`Es-tu sûr d'avoir exécuté le contrat sur ${targetDisplayName} ? Cette action enverra la preuve au Juge.`)) {
+        declareHit(player.target, currentAction.title, currentAction.scoreReward, currentAction.damagePenalty);
+        showToast("Neutralisation envoyée au Grand Juge !");
+      }
     }
   };
 
@@ -759,7 +758,7 @@ export default function PlayerDashboard() {
           onClick={() => triggerTooltip("biscuits")}
           style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", position: "relative" }}
         >
-          <span style={{ fontSize: "1.4rem" }}>🪙</span>
+          <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.4rem", height: "1.4rem", verticalAlign: "middle", mixBlendMode: "multiply", display: "inline-block" }} />
           <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", textShadow: "1.5px 1.5px 0 #000", color: "#fbbf24" }}>
             {player.score}
           </span>
@@ -774,10 +773,13 @@ export default function PlayerDashboard() {
                 marginLeft: "4px",
                 border: "1.5px solid #000",
                 boxShadow: "1px 1px 0 #000",
-                textShadow: "1px 1px 0 #000"
+                textShadow: "1px 1px 0 #000",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "2px"
               }}
             >
-              x0.5 🪙 (ZOMBIE)
+              x0.5 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /> (ZOMBIE)
             </span>
           )}
           {isHelpActive && (
@@ -785,7 +787,7 @@ export default function PlayerDashboard() {
           )}
           {activeTooltip === "biscuits" && (
             <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)" }}>
-              Votre solde de 🪙. Augmente avec vos éliminations pour grimper au classement.
+              Votre solde de Biscuits (Cookies). Augmente avec vos éliminations pour grimper au classement.
             </div>
           )}
         </div>
@@ -862,26 +864,6 @@ export default function PlayerDashboard() {
                 const left = 50 + radiusX * Math.cos(angle);
                 const top = 50 + radiusY * Math.sin(angle);
 
-                // Si joueur gelé, il dort sous sa tente
-                if (p.isFrozen) {
-                  return (
-                    <div
-                      key={p.name}
-                      style={{
-                        position: "absolute",
-                        left: `${left}%`,
-                        top: `${top}%`,
-                        transform: "translate(-50%, -50%) scale(0.8)",
-                        zIndex: 4,
-                        fontSize: "1.3rem"
-                      }}
-                      title={`${p.name} cuve sous sa tente`}
-                    >
-                      🏕️❄️
-                    </div>
-                  );
-                }
-
                 const userPhoto = campPhotos[p.name];
 
                 const isSuspecting = gameState.history.some(
@@ -908,24 +890,29 @@ export default function PlayerDashboard() {
                       width: "32px",
                       height: "32px",
                       borderRadius: "50%",
-                      border: `2px solid ${p.isZombie ? "var(--color-zombie)" : "#000"}`,
-                      backgroundColor: p.isZombie ? "rgba(34, 197, 94, 0.2)" : "#3a3463",
+                      border: `2px solid ${p.isZombie ? "var(--color-zombie)" : (p.isFrozen ? "var(--color-cyan)" : "#000")}`,
+                      backgroundColor: p.isZombie ? "rgba(34, 197, 94, 0.2)" : (p.isFrozen ? "rgba(34, 211, 238, 0.2)" : "#3a3463"),
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: "0.7rem",
                       fontWeight: "bold",
                       zIndex: 4,
-                      overflow: "hidden"
+                      overflow: "visible"
                     }}
                     title={p.name}
                   >
-                    {p.isZombie ? (
-                      "🧟"
-                    ) : userPhoto ? (
-                      <img src={userPhoto} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : (
-                      p.name.slice(0, 2).toUpperCase()
+                    <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {p.isZombie ? (
+                        "🧟"
+                      ) : userPhoto ? (
+                        <img src={userPhoto} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        p.name.slice(0, 2).toUpperCase()
+                      )}
+                    </div>
+                    {p.isFrozen && (
+                      <span style={{ position: "absolute", bottom: "-6px", right: "-6px", fontSize: "0.85rem", zIndex: 10 }}>❄️</span>
                     )}
                   </div>
                 );
@@ -970,24 +957,26 @@ export default function PlayerDashboard() {
                     left: 0,
                     width: "100%",
                     height: "100%",
-                    backgroundColor: "rgba(34, 197, 94, 0.4)",
-                    backdropFilter: "blur(4px)",
+                    backgroundColor: "rgba(12, 21, 16, 0.96)",
+                    borderRadius: "12px",
                     zIndex: 30,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    transform: "rotate(-4deg)"
+                    justifyContent: "center"
                   }}>
                     <div style={{
                       backgroundColor: "var(--color-zombie)",
                       color: "#fff",
                       fontFamily: "var(--font-title)",
-                      padding: "8px 24px",
+                      padding: "8px 16px",
                       border: "3px solid #000",
                       boxShadow: "3px 3px 0 #000",
-                      textTransform: "uppercase"
+                      textTransform: "uppercase",
+                      fontSize: "0.8rem",
+                      textAlign: "center",
+                      transform: "rotate(-6deg)"
                     }}>
-                      Morsure en examen 🛡️
+                      MORSURE EN EXAMEN ⚖️
                     </div>
                   </div>
                 )}
@@ -1002,7 +991,7 @@ export default function PlayerDashboard() {
                   {currentAction ? currentAction.description : "Faire prononcer le mot 'Cerveau' à un survivant ou lui faire mimer une marche de zombie."}
                 </p>
                 <div style={{ display: "flex", gap: "12px", fontSize: "0.8rem", fontWeight: "bold", borderTop: "1px solid rgba(34, 197, 94, 0.2)", paddingTop: "8px" }}>
-                  <span style={{ color: "#fbbf24" }}>Récompense : +50 🪙</span>
+                  <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "4px" }}>Récompense : +50 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2em", height: "1.2em", mixBlendMode: "multiply" }} /></span>
                   <span style={{ color: "var(--color-green)" }}>Rédemption : +1.0 ❤️</span>
                 </div>
               </div>
@@ -1224,7 +1213,7 @@ export default function PlayerDashboard() {
 
                     {currentAction && (
                       <div style={{ display: "flex", gap: "10px", marginTop: "12px", fontSize: "0.8rem", fontWeight: "bold" }}>
-                        <span style={{ color: "#fbbf24" }}> Récompense : +{isZombie ? Math.floor(currentAction.scoreReward / 2) : currentAction.scoreReward} 🪙</span>
+                        <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "4px" }}> Récompense : +{isZombie ? Math.floor(currentAction.scoreReward / 2) : currentAction.scoreReward} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2em", height: "1.2em", mixBlendMode: "multiply" }} /></span>
                         <span style={{ color: "var(--color-red)" }}> Dégâts : -{isZombie ? 0 : currentAction.damagePenalty} ❤️</span>
                       </div>
                     )}
@@ -1312,7 +1301,7 @@ export default function PlayerDashboard() {
                 <span style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "12px", height: "12px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: "bold" }}>?</span>
               )}
             </span>
-            <span>Relances de la Source : <strong>{player.fountainRefreshesToday} 🌀</strong></span>
+            <span>Relances de la Source : <strong>{player.fountainRefreshesToday} 🔄</strong></span>
 
             {activeTooltip === "fountain_uses" && (
               <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
@@ -1430,7 +1419,7 @@ export default function PlayerDashboard() {
                       style={{ width: "100%", padding: "0.5rem", marginTop: "12px", backgroundColor: "var(--color-purple)", border: "2px solid #000" }}
                       onClick={handleFountainRefresh}
                     >
-                      Rafraîchir 🌀
+                      Rafraîchir 🔄
                     </button>
                   )}
                 </>
@@ -1556,39 +1545,9 @@ export default function PlayerDashboard() {
       {/* --- ONGLET BOÎTE A IDÉES 💡 (USINE A SÉVICES) --- */}
       {activeTab === "suggestion" && (
         <div className="card-cartoon glow-purple" style={{ margin: "10px", position: "relative" }}>
-          {isHelpActive && (
-            <div 
-              onClick={() => triggerTooltip("suggest_form")} 
-              style={{ 
-                position: "absolute", 
-                top: "4px", 
-                right: "4px", 
-                backgroundColor: "var(--color-cyan)", 
-                color: "#000", 
-                borderRadius: "50%", 
-                width: "16px", 
-                height: "16px", 
-                display: "flex", 
-                alignItems: "center", 
-                justifyContent: "center", 
-                fontSize: "10px", 
-                fontWeight: "bold", 
-                cursor: "pointer",
-                zIndex: 10
-              }}
-            >
-              ?
-            </div>
-          )}
           <h2 style={{ color: "var(--color-purple)", textAlign: "center", width: "100%", marginBottom: "1rem" }}>
             L'Usine à Sévices 💡
           </h2>
-
-          {activeTooltip === "suggest_form" && (
-            <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
-              L'Usine à Sévices. Suggère tes propres idées d'actions et de vérités au Juge. Propose une description croustillante, les Biscuits 🪙 et la perte de ❤️. Si le Juge valide, c'est injecté en jeu.
-            </div>
-          )}
 
           <p style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "1.2rem", lineHeight: "1.4" }}>
             Suggérez vos propres idées de défis secrets au Grand Juge. S'il les valide, elles rejoindront le catalogue de jeu.
@@ -1668,7 +1627,7 @@ export default function PlayerDashboard() {
               /* Sélecteurs Récompense 🪙 et Dégâts ❤️ alignés */
               <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontSize: "1.1rem" }}>🪙</span>
+                  <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2rem", height: "1.2rem", mixBlendMode: "multiply", display: "inline-block" }} />
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.max(50, suggestReward - 50))}><Minus size={12}/></button>
                     <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center" }}>{suggestReward}</span>
@@ -1768,7 +1727,7 @@ export default function PlayerDashboard() {
                       <div style={{ display: "flex", gap: "10px", marginTop: "4px", fontSize: "0.65rem" }}>
                         {(a.type === "mission" || !a.type) ? (
                           <>
-                            <span style={{ color: "#fbbf24" }}>🪙 +{a.scoreReward}</span>
+                            <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "2px" }}><img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /> +{a.scoreReward}</span>
                             <span style={{ color: "var(--color-red)" }}>❤️ -{a.damagePenalty}</span>
                           </>
                         ) : (
@@ -1987,7 +1946,7 @@ export default function PlayerDashboard() {
                   <div style={{ marginBottom: "1rem", padding: "8px", backgroundColor: "rgba(0,0,0,0.2)", borderRadius: "10px", border: "2px solid var(--border-color)", textAlign: "left" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", fontWeight: "bold", marginBottom: "4px" }}>
                       <span style={{ color: "var(--color-cyan)" }}>Rang : {rankIcon} {rankLabel}</span>
-                      {score < 3500 && <span style={{ fontSize: "0.7rem", color: "#9ca3af" }}>{score} / {nextScore} 🪙</span>}
+                      {score < 3500 && <span style={{ fontSize: "0.7rem", color: "#9ca3af", display: "inline-flex", alignItems: "center", gap: "2px" }}>{score} / {nextScore} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /></span>}
                     </div>
                     {score < 3500 ? (
                       <div style={{ width: "100%", height: "8px", backgroundColor: "#110f1e", border: "1.5px solid #000", borderRadius: "6px", overflow: "hidden", boxShadow: "1px 1px 0 #000" }}>
@@ -2031,7 +1990,7 @@ export default function PlayerDashboard() {
                     .map(h => (
                       <div key={h.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "4px" }}>
                         <span>⚔️ {h.targetName}</span>
-                        <span style={{ color: "#fbbf24" }}>+{h.scoreReward} 🪙</span>
+                        <span style={{ color: "#fbbf24", display: "inline-flex", alignItems: "center", gap: "2px" }}>+{h.scoreReward} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /></span>
                       </div>
                     ))
                   }
@@ -2294,8 +2253,8 @@ export default function PlayerDashboard() {
                     showToast("Cible abandonnée. Nouveau contrat pioché ! 🪙");
                   }}
                 >
-                  <span style={{ fontSize: "2rem", marginBottom: "4px" }}>🪙</span>
-                  <span style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem", color: "#fff" }}>-50 🪙</span>
+                  <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "2rem", height: "2rem", marginBottom: "4px", mixBlendMode: "multiply" }} />
+                  <span style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem", color: "#fff", display: "inline-flex", alignItems: "center", gap: "2px" }}>-50 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /></span>
                   <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)" }}>Biscuits</span>
                 </button>
               </div>
@@ -2399,6 +2358,53 @@ export default function PlayerDashboard() {
               >
                 Retourner Hanter le Camping
               </button>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODALE : CONFIRMATION DE MORSURE ZOMBIE */}
+      <AnimatePresence>
+        {showZombieBiteConfirmModal && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.85)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}>
+            <div className="card-cartoon glow-zombie" style={{ width: "100%", maxWidth: "340px", textAlign: "center", border: "3px solid var(--color-zombie)" }}>
+              <h3 style={{ color: "var(--color-zombie)", marginBottom: "1rem", fontFamily: "var(--font-title)" }}>INFECTION EN COURS ? 🧟</h3>
+              <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.2rem", lineHeight: "1.4" }}>
+                Es-tu sûr d'avoir planté tes dents dans <strong>{getPlayerDisplayName(zombieVictim)}</strong> ?
+                <br />
+                <span style={{ color: "var(--color-green)", display: "flex", alignItems: "center", justifyContent: "center", gap: "2px", fontWeight: "bold" }}>Récompense : +50 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /> | Rédemption : +1.0 ❤️</span>
+              </p>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="btn-cartoon btn-red animate-pulse"
+                  style={{ flex: 1, height: "44px", backgroundColor: "#b91c1c", border: "2px solid #000" }}
+                  onClick={confirmZombieBite}
+                >
+                  Mordre !
+                </button>
+                <button
+                  type="button"
+                  className="btn-cartoon"
+                  style={{ flex: 1, height: "44px", backgroundColor: "#4b5563" }}
+                  onClick={() => setShowZombieBiteConfirmModal(false)}
+                >
+                  Annuler
+                </button>
+              </div>
             </div>
           </div>
         )}
