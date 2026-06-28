@@ -431,6 +431,7 @@ export const GameProvider = ({ children }) => {
 
     if (error) throw error;
 
+    localStorage.setItem("cookillers_player_pin", pin);
     setCurrentUser(cleanName);
     return cleanName;
   };
@@ -477,6 +478,7 @@ export const GameProvider = ({ children }) => {
       throw new Error("Code PIN incorrect.");
     }
 
+    localStorage.setItem("cookillers_player_pin", pin);
     setCurrentUser(cleanName);
     return cleanName;
   };

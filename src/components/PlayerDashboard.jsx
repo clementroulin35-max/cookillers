@@ -91,6 +91,7 @@ export default function PlayerDashboard() {
   const [showFountainModal, setShowFountainModal] = useState(false);
   const [showSkipConfirmModal, setShowSkipConfirmModal] = useState(false);
   const [showZombieFountainModal, setShowZombieFountainModal] = useState(false);
+  const [revealPin, setRevealPin] = useState(false);
   
   // États de l'aide contextuelle
   const [isHelpActive, setIsHelpActive] = useState(false);
@@ -1052,6 +1053,25 @@ export default function PlayerDashboard() {
                         <h2 style={{ fontSize: "1.6rem", margin: 0, color: "#fff", transform: "none", textShadow: "2px 2px 0 #000", lineHeight: "1.2" }}>
                           {player.target}
                         </h2>
+                        <button
+                          type="button"
+                          className="btn-cartoon"
+                          onClick={() => setIsMasked(true)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontSize: "0.75rem",
+                            padding: "4px 10px",
+                            marginTop: "6px",
+                            backgroundColor: "#1e1b30",
+                            border: "2px solid #000",
+                            boxShadow: "2px 2px 0 #000"
+                          }}
+                          aria-label="Dissimuler mes Pêchés"
+                        >
+                          <Eye size={12} /> Dissimuler mes Pêchés
+                        </button>
                       </div>
                     </div>
 
@@ -1139,9 +1159,20 @@ export default function PlayerDashboard() {
             Les Zombies 🧟 n'ont pas accès à la Source.
           </p>
 
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", fontSize: "0.85rem" }}>
-            <span>Utilisations aujourd'hui : <strong>{player.fountainUsesToday} / 2</strong></span>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", fontSize: "0.85rem", alignItems: "center", position: "relative" }}>
+            <span onClick={() => triggerTooltip("fountain_uses")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
+              Utilisations aujourd'hui : <strong>{player.fountainUsesToday} / 2</strong>
+              {isHelpActive && (
+                <span style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "12px", height: "12px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: "bold" }}>?</span>
+              )}
+            </span>
             <span>Relances de la Source : <strong>{player.fountainRefreshesToday} 🌀</strong></span>
+
+            {activeTooltip === "fountain_uses" && (
+              <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
+                Vos réserves d'eau quotidiennes. Votre compteur est réinitialisé chaque matin par le Chant du Coq.
+              </div>
+            )}
           </div>
 
           {player.fountainUsesToday >= 2 ? (
@@ -1255,7 +1286,38 @@ export default function PlayerDashboard() {
                   </div>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", position: "relative" }}>
+                  {isHelpActive && (
+                    <div 
+                      onClick={() => triggerTooltip("fountain_draw")} 
+                      style={{ 
+                        position: "absolute", 
+                        top: "-10px", 
+                        right: "-10px", 
+                        backgroundColor: "var(--color-cyan)", 
+                        color: "#000", 
+                        borderRadius: "50%", 
+                        width: "16px", 
+                        height: "16px", 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center", 
+                        fontSize: "10px", 
+                        fontWeight: "bold", 
+                        cursor: "pointer", 
+                        zIndex: 10 
+                      }}
+                    >
+                      ?
+                    </div>
+                  )}
+
+                  {activeTooltip === "fountain_draw" && (
+                    <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
+                      Choisis ton poison. L'Action requiert une preuve photo (appareil photo requis), la Vérité une confession écrite. Pas de mensonge devant la Source.
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     className="btn-cartoon btn-cyan"
@@ -1281,9 +1343,38 @@ export default function PlayerDashboard() {
       {/* --- ONGLET BOÎTE A IDÉES 💡 (USINE A SÉVICES) --- */}
       {activeTab === "suggestion" && (
         <div className="card-cartoon glow-purple" style={{ margin: "10px" }}>
-          <h2 style={{ color: "var(--color-purple)", textAlign: "center", width: "100%", marginBottom: "1rem" }}>
+          <h2 style={{ color: "var(--color-purple)", textAlign: "center", width: "100%", marginBottom: "1rem", position: "relative" }}>
             L'Usine à Sévices 💡
+            {isHelpActive && (
+              <span 
+                onClick={() => triggerTooltip("suggest_form")} 
+                style={{ 
+                  position: "absolute", 
+                  top: "0px", 
+                  right: "10px", 
+                  backgroundColor: "var(--color-cyan)", 
+                  color: "#000", 
+                  borderRadius: "50%", 
+                  width: "16px", 
+                  height: "16px", 
+                  display: "inline-flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  fontSize: "10px", 
+                  fontWeight: "bold", 
+                  cursor: "pointer" 
+                }}
+              >
+                ?
+              </span>
+            )}
           </h2>
+
+          {activeTooltip === "suggest_form" && (
+            <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)" }}>
+              L'Usine à Sévices. Suggère tes propres idées d'actions et de vérités au Juge. Propose un titre, une description croustillante, les Biscuits 🪙 et la perte de ❤️. Si le Juge valide, c'est injecté en jeu.
+            </div>
+          )}
 
           <p style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "1.2rem", lineHeight: "1.4" }}>
             Suggérez vos propres idées de défis secrets au Grand Juge. S'il les valide, elles rejoindront le catalogue de jeu.
@@ -1363,7 +1454,7 @@ export default function PlayerDashboard() {
               /* Sélecteurs Récompense 🪙 et Dégâts ❤️ */
               <div style={{ display: "flex", gap: "12px" }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: "0.8rem", color: "#fbbf24" }}>Biscuits 🪙 :</label>
+                  <label style={{ fontSize: "0.8rem", color: "#fbbf24" }}>🪙 :</label>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
                     <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.max(50, suggestReward - 50))}><Minus size={12}/></button>
                     <span style={{ fontFamily: "var(--font-title)" }}>{suggestReward}</span>
@@ -1372,7 +1463,7 @@ export default function PlayerDashboard() {
                 </div>
 
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: "0.8rem", color: "var(--color-red)" }}>Dégâts ❤️ :</label>
+                  <label style={{ fontSize: "0.8rem", color: "var(--color-red)" }}>❤️ :</label>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
                     <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestDamage(Math.max(0.5, suggestDamage - 0.5))}><Minus size={12}/></button>
                     <span style={{ fontFamily: "var(--font-title)" }}>{suggestDamage}</span>
@@ -1446,7 +1537,14 @@ export default function PlayerDashboard() {
 
       {/* --- ONGLET CLASSEMENT 🏆 --- */}
       {activeTab === "classement" && (
-        <Leaderboard players={gameState.players} history={gameState.history} />
+        <Leaderboard 
+          players={gameState.players} 
+          history={gameState.history} 
+          isHelpActive={isHelpActive}
+          activeTooltip={activeTooltip}
+          triggerTooltip={triggerTooltip}
+          setActiveTooltip={setActiveTooltip}
+        />
       )}
 
       {/* Mascotte interactive Cookie Assassin */}
@@ -1581,9 +1679,17 @@ export default function PlayerDashboard() {
 
               <div style={{ marginBottom: "1rem" }}>
                 <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{player.name}</span>
-                <span style={{ display: "block", fontSize: "0.8rem", color: "#9ca3af" }}>
-                  PIN Secret : ****
-                </span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: "0.8rem", color: "#9ca3af", marginTop: "4px" }}>
+                  <span>PIN Secret : {revealPin ? (localStorage.getItem("cookillers_player_pin") || "****") : "****"}</span>
+                  <button
+                    type="button"
+                    onClick={() => setRevealPin(!revealPin)}
+                    style={{ background: "none", border: "none", color: "var(--color-cyan)", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
+                    title="Révéler le PIN"
+                  >
+                    {revealPin ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
               </div>
 
               {/* Option performance réduite */}
@@ -1624,8 +1730,69 @@ export default function PlayerDashboard() {
                   {player.statKillsCount === 0 && (
                     <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Aucune victime pour l'instant. Les couteaux sont neufs.</span>
                   )}
+                </div>
               </div>
-            </div>
+
+              {/* Journal de mission personnel */}
+              <div style={{ textAlign: "left", marginTop: "1.2rem" }}>
+                <h4 style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem", color: "var(--color-cyan)", borderBottom: "2px solid var(--border-color)", paddingBottom: "4px" }}>
+                  Journal de Mission 📖
+                </h4>
+                <div style={{ maxHeight: "120px", overflowY: "auto", marginTop: "8px", fontSize: "0.75rem", display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {gameState.history
+                    .filter(h => h.playerName === player.name)
+                    .map(h => {
+                      let text = "";
+                      let icon = "ℹ️";
+                      const timeStr = new Date(h.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      
+                      if (h.type === "hit_declared") {
+                        text = `Infiltration en cours (Hit envoyé sur ${h.targetName}) ⏳`;
+                        icon = "🎯";
+                      } else if (h.type === "hit_approved") {
+                        text = `Contrat validé (Cible ${h.targetName} neutralisée) ⚔️`;
+                        icon = "⚔️";
+                      } else if (h.type === "hit_rejected") {
+                        text = `Contrat sur ${h.targetName} rejeté par le Juge ❌`;
+                        icon = "❌";
+                      } else if (h.type === "counter_attack_pending") {
+                        text = `Dénonciation envoyée au Bureau des Rumeurs ⚠️`;
+                        icon = "⚠️";
+                      } else if (h.type === "counter_attack_correct") {
+                        text = `Dénonciation confirmée correcte (Tueur repoussé) 🛡️`;
+                        icon = "🛡️";
+                      } else if (h.type === "counter_attack_incorrect") {
+                        text = `Fausse accusation de meurtre (-0.5 ❤️) ⚠️`;
+                        icon = "⚠️";
+                      } else if (h.type === "skip_mission") {
+                        text = `Recette brûlée 🌀`;
+                        icon = "🌀";
+                      } else if (h.type === "fountain_use") {
+                        text = `Abreuvé à la Source (Soin) ⛲`;
+                        icon = "⛲";
+                      } else if (h.type === "zombie_bite") {
+                        text = `Morsure de rédemption sur ${h.targetName} 🧟`;
+                        icon = "🧟";
+                      } else if (h.type === "abandon_target") {
+                        text = `Contrat abandonné 🏳️`;
+                        icon = "🏳️";
+                      }
+
+                      if (!text) return null;
+
+                      return (
+                        <div key={h.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "4px" }}>
+                          <span>{icon} {text}</span>
+                          <span style={{ color: "#9ca3af", fontSize: "0.65rem" }}>{timeStr}</span>
+                        </div>
+                      );
+                    })
+                  }
+                  {gameState.history.filter(h => h.playerName === player.name).length === 0 && (
+                    <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Journal vide. Aucune action enregistrée pour le moment.</span>
+                  )}
+                </div>
+              </div>
           </div>
         </div>
         )}
@@ -1878,10 +2045,11 @@ export default function PlayerDashboard() {
       {/* Barre de navigation basse */}
       <nav className="bottom-nav">
         <div
-          className={`bottom-nav-item ${activeTab === "contrat" ? "active" : ""}`}
-          onClick={() => setActiveTab("contrat")}
+          className={`bottom-nav-item ${activeTab === "suggestion" ? "active" : ""}`}
+          onClick={() => setActiveTab("suggestion")}
+          aria-label="Proposer un défi"
         >
-          <span style={{ fontSize: "1.6rem" }}>🎯</span>
+          <span style={{ fontSize: "1.6rem" }}>💡</span>
         </div>
         <div
           className={`bottom-nav-item ${activeTab === "source" ? "active" : ""}`}
@@ -1892,18 +2060,21 @@ export default function PlayerDashboard() {
               setActiveTab("source");
             }
           }}
+          aria-label="Soins à la Source"
         >
           <span style={{ fontSize: "1.6rem" }}>{isZombie ? "⛲🔒" : "⛲"}</span>
         </div>
         <div
-          className={`bottom-nav-item ${activeTab === "suggestion" ? "active" : ""}`}
-          onClick={() => setActiveTab("suggestion")}
+          className={`bottom-nav-item ${activeTab === "contrat" ? "active" : ""}`}
+          onClick={() => setActiveTab("contrat")}
+          aria-label="Fiche de Contrat"
         >
-          <span style={{ fontSize: "1.6rem" }}>💡</span>
+          <span style={{ fontSize: "1.6rem" }}>🎯</span>
         </div>
         <div
           className={`bottom-nav-item ${activeTab === "classement" ? "active" : ""}`}
           onClick={() => setActiveTab("classement")}
+          aria-label="Classement et Flux d'actualités"
         >
           <span style={{ fontSize: "1.6rem" }}>🏆</span>
         </div>

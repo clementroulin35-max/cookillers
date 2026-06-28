@@ -313,6 +313,13 @@ h1, h2, h3, .cartoon-title {
   .prop-2d {
     transition: none !important;
   }
+  .cookie-particle {
+    animation: none !important;
+    display: none !important;
+  }
+  .screen-shake {
+    animation: none !important;
+  }
 }
 
 .low-perf-mode .ecg-line {
@@ -325,6 +332,15 @@ h1, h2, h3, .cartoon-title {
 
 .low-perf-mode .prop-2d {
   transition: none !important;
+}
+
+.low-perf-mode .cookie-particle {
+  animation: none !important;
+  display: none !important;
+}
+
+.low-perf-mode .screen-shake {
+  animation: none !important;
 }
 
 /* Pavé Numérique PIN style Cartoon */

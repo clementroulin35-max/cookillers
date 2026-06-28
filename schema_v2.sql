@@ -64,7 +64,8 @@ CREATE TABLE public.action_pools (
     score_reward integer NOT NULL,
     damage_penalty numeric(3,1) NOT NULL,
     is_zombie_only boolean DEFAULT false NOT NULL,
-    created_by_player varchar(50)
+    created_by_player varchar(50),
+    type varchar(30) DEFAULT 'mission' NOT NULL
 );
 
 -- Table history

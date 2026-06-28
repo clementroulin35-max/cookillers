@@ -11,7 +11,7 @@ export const getRank = (score) => {
   return { icon: "⚔️", label: "Le Touriste en Tongs", css: "rank-civil" };
 };
 
-export default function Leaderboard({ players, history }) {
+export default function Leaderboard({ players, history, isHelpActive, activeTooltip, triggerTooltip, setActiveTooltip }) {
   const { getHistoryProof } = useGame();
   const [subTab, setSubTab] = useState("scores"); // scores, trophies, flux
   const [expandedPhoto, setExpandedPhoto] = useState(null);
@@ -307,31 +307,130 @@ export default function Leaderboard({ players, history }) {
         </h2>
 
         {/* Sous-onglets */}
-        <div style={{ display: "flex", gap: "8px", marginBottom: "1.2rem" }}>
-          <button
-            type="button"
-            className={`btn-cartoon ${subTab === "scores" ? "btn-purple" : "btn-disabled"}`}
-            style={{ flex: 1, padding: "0.5rem", fontSize: "0.8rem" }}
-            onClick={() => setSubTab("scores")}
-          >
-            <AlignJustify size={16} /> Scores
-          </button>
-          <button
-            type="button"
-            className={`btn-cartoon ${subTab === "trophies" ? "btn-purple" : "btn-disabled"}`}
-            style={{ flex: 1, padding: "0.5rem", fontSize: "0.8rem" }}
-            onClick={() => setSubTab("trophies")}
-          >
-            <Award size={16} /> Trophées
-          </button>
-          <button
-            type="button"
-            className={`btn-cartoon ${subTab === "flux" ? "btn-purple" : "btn-disabled"}`}
-            style={{ flex: 1, padding: "0.5rem", fontSize: "0.8rem" }}
-            onClick={() => setSubTab("flux")}
-          >
-            <Activity size={16} /> Flux
-          </button>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "1.2rem", position: "relative" }}>
+          
+          <div style={{ flex: 1, position: "relative" }}>
+            <button
+              type="button"
+              className={`btn-cartoon ${subTab === "scores" ? "btn-purple" : "btn-disabled"}`}
+              style={{ width: "100%", padding: "0.5rem", fontSize: "0.8rem" }}
+              onClick={() => setSubTab("scores")}
+            >
+              <AlignJustify size={16} /> Scores
+            </button>
+            {isHelpActive && (
+              <span 
+                onClick={() => triggerTooltip("leaderboard_ranks")} 
+                style={{ 
+                  position: "absolute", 
+                  top: "-6px", 
+                  right: "-2px", 
+                  backgroundColor: "var(--color-cyan)", 
+                  color: "#000", 
+                  borderRadius: "50%", 
+                  width: "14px", 
+                  height: "14px", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  fontSize: "8px", 
+                  fontWeight: "bold", 
+                  cursor: "pointer",
+                  zIndex: 10
+                }}
+              >
+                ?
+              </span>
+            )}
+          </div>
+
+          <div style={{ flex: 1, position: "relative" }}>
+            <button
+              type="button"
+              className={`btn-cartoon ${subTab === "trophies" ? "btn-purple" : "btn-disabled"}`}
+              style={{ width: "100%", padding: "0.5rem", fontSize: "0.8rem" }}
+              onClick={() => setSubTab("trophies")}
+            >
+              <Award size={16} /> Trophées
+            </button>
+            {isHelpActive && (
+              <span 
+                onClick={() => triggerTooltip("leaderboard_trophies")} 
+                style={{ 
+                  position: "absolute", 
+                  top: "-6px", 
+                  right: "-2px", 
+                  backgroundColor: "var(--color-cyan)", 
+                  color: "#000", 
+                  borderRadius: "50%", 
+                  width: "14px", 
+                  height: "14px", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  fontSize: "8px", 
+                  fontWeight: "bold", 
+                  cursor: "pointer",
+                  zIndex: 10
+                }}
+              >
+                ?
+              </span>
+            )}
+          </div>
+
+          <div style={{ flex: 1, position: "relative" }}>
+            <button
+              type="button"
+              className={`btn-cartoon ${subTab === "flux" ? "btn-purple" : "btn-disabled"}`}
+              style={{ width: "100%", padding: "0.5rem", fontSize: "0.8rem" }}
+              onClick={() => setSubTab("flux")}
+            >
+              <Activity size={16} /> Flux
+            </button>
+            {isHelpActive && (
+              <span 
+                onClick={() => triggerTooltip("leaderboard_feed")} 
+                style={{ 
+                  position: "absolute", 
+                  top: "-6px", 
+                  right: "-2px", 
+                  backgroundColor: "var(--color-cyan)", 
+                  color: "#000", 
+                  borderRadius: "50%", 
+                  width: "14px", 
+                  height: "14px", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  fontSize: "8px", 
+                  fontWeight: "bold", 
+                  cursor: "pointer",
+                  zIndex: 10
+                }}
+              >
+                ?
+              </span>
+            )}
+          </div>
+
+          {activeTooltip === "leaderboard_ranks" && (
+            <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
+              Le Panthéon des Goinfres. Qui a le sac à Biscuits 🪙 le plus lourd. Les Zombies ont leur score divisé par 2.
+            </div>
+          )}
+
+          {activeTooltip === "leaderboard_trophies" && (
+            <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
+              Les 8 distinctions spéciales du festival. Vise le 'Patient Zéro' ou 'Le Faucheur du Camping' pour la gloire éternelle.
+            </div>
+          )}
+
+          {activeTooltip === "leaderboard_feed" && (
+            <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
+              Le Journal des Ragots. Les faits d'armes marquent le fil. L'identité des tueurs et les défis secrets y sont anonymisés pour protéger le bluff.
+            </div>
+          )}
         </div>
 
         {/* 1. SCORES & PODIUM */}

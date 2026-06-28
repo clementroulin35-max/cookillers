@@ -980,7 +980,7 @@ export default function GMDashboard() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: "0.75rem", color: "#fbbf24" }}>Biscuits 🪙 :</label>
+                    <label style={{ fontSize: "0.75rem", color: "#fbbf24" }}>🪙 :</label>
                     <input
                       type="number"
                       value={editScore}
@@ -989,7 +989,7 @@ export default function GMDashboard() {
                     />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: "0.75rem", color: "var(--color-red)" }}>Vitalité ❤️ :</label>
+                    <label style={{ fontSize: "0.75rem", color: "var(--color-red)" }}>❤️ :</label>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
                       <button 
                         type="button" 
@@ -1108,16 +1108,16 @@ export default function GMDashboard() {
       {/* Barre de navigation basse GM */}
       <nav className="bottom-nav" style={{ backgroundColor: "#1e1012" }}>
         <div
-          className={`bottom-nav-item ${gmTab === "arbitrage" ? "active" : ""}`}
-          onClick={() => setGmTab("arbitrage")}
-        >
-          <span style={{ fontSize: "1.6rem" }}>🛡️</span>
-        </div>
-        <div
           className={`bottom-nav-item ${gmTab === "defis" ? "active" : ""}`}
           onClick={() => setGmTab("defis")}
         >
           <span style={{ fontSize: "1.6rem" }}>📖</span>
+        </div>
+        <div
+          className={`bottom-nav-item ${gmTab === "arbitrage" ? "active" : ""}`}
+          onClick={() => setGmTab("arbitrage")}
+        >
+          <span style={{ fontSize: "1.6rem" }}>🛡️</span>
         </div>
         <div
           className={`bottom-nav-item ${gmTab === "partage" ? "active" : ""}`}
