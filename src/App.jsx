@@ -124,11 +124,13 @@ function MainAppContent() {
       if (pin.length !== 4) return;
       try {
         if (isRegistering) {
-          await registerPlayer(nickname, pin);
-          showToast(`Bienvenue au campement, ${nickname} ! 🏕️`);
+          const registeredName = await registerPlayer(nickname, pin);
+          const greetName = registeredName.charAt(0).toUpperCase() + registeredName.slice(1).toLowerCase();
+          showToast(`Bienvenue au campement, ${greetName} ! 🏕️`);
         } else {
-          await loginPlayer(nickname, pin);
-          showToast(`Heureux de te revoir, ${nickname} ! 🔪`);
+          const loggedName = await loginPlayer(nickname, pin);
+          const greetName = loggedName.charAt(0).toUpperCase() + loggedName.slice(1).toLowerCase();
+          showToast(`Heureux de te revoir, ${greetName} ! 🔪`);
         }
       } catch (err) {
         setError(err.message);

@@ -108,7 +108,8 @@ export default function PlayerDashboard() {
     if (username.toUpperCase() === "GM") return "GM";
     if (username.toUpperCase() === "SYSTEM") return "System";
     const found = gameState.players.find(p => p.name.toUpperCase() === username.toUpperCase());
-    return found ? (found.displayName || found.name) : username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+    const raw = found ? (found.displayName || found.name) : username;
+    return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
   };
 
   // Onglets : 'contrat', 'source', 'suggestion', 'classement'
@@ -1440,8 +1441,8 @@ export default function PlayerDashboard() {
                       onClick={() => triggerTooltip("fountain_draw")} 
                       style={{ 
                         position: "absolute", 
-                        top: "-10px", 
-                        right: "-10px", 
+                        top: "4px", 
+                        right: "4px", 
                         backgroundColor: "var(--color-cyan)", 
                         color: "#000", 
                         borderRadius: "50%", 
@@ -1560,8 +1561,8 @@ export default function PlayerDashboard() {
               onClick={() => triggerTooltip("suggest_form")} 
               style={{ 
                 position: "absolute", 
-                top: "-10px", 
-                right: "-10px", 
+                top: "4px", 
+                right: "4px", 
                 backgroundColor: "var(--color-cyan)", 
                 color: "#000", 
                 borderRadius: "50%", 
@@ -2329,7 +2330,7 @@ export default function PlayerDashboard() {
                     setShowSkipConfirmModal(false);
                   }}
                 >
-                  Confirmer 🌀
+                  Confirmer
                 </button>
                 <button
                   type="button"

@@ -13,6 +13,15 @@ export const getRank = (score) => {
 
 export default function Leaderboard({ players, history, isHelpActive, activeTooltip, triggerTooltip, setActiveTooltip }) {
   const { getHistoryProof } = useGame();
+
+  const getPlayerDisplayName = (username) => {
+    if (!username) return "";
+    if (username.toUpperCase() === "GM") return "GM";
+    if (username.toUpperCase() === "SYSTEM") return "System";
+    const found = players.find(p => p.name.toUpperCase() === username.toUpperCase());
+    const raw = found ? (found.displayName || found.name) : username;
+    return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+  };
   const [subTab, setSubTab] = useState("scores"); // scores, trophies, flux
   const [expandedPhoto, setExpandedPhoto] = useState(null);
   const [loadedProofs, setLoadedProofs] = useState({}); // { id: proofString }
@@ -111,7 +120,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
             fontSize: "1.2rem",
             filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.3))"
           }}>
-            {player.name.slice(0, 2).toUpperCase()}
+            {getPlayerDisplayName(player.name).slice(0, 2).toUpperCase()}
           </div>
           {player.isZombie && (
             <>
@@ -124,7 +133,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
           )}
         </div>
         <span style={{ fontFamily: "var(--font-title)", fontSize: "0.85rem", textShadow: "1px 1px 0 #000", maxWidth: "80px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {player.name}
+          {getPlayerDisplayName(player.name)}
         </span>
         <span style={{ fontSize: "0.8rem", color: "#fbbf24", fontWeight: "bold" }}>
           {player.effectiveScore} 🪙
@@ -166,7 +175,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
         return (
           <span>
             ⚔️ <strong>CONTRAT EXÉCUTÉ</strong><br/>
-            <strong>{evt.playerName}</strong> a validé un contrat sur <strong>{evt.targetName}</strong> !<br/>
+            <strong>{getPlayerDisplayName(evt.playerName)}</strong> a validé un contrat sur <strong>{getPlayerDisplayName(evt.targetName)}</strong> !<br/>
             <span style={{ color: "var(--color-purple)", fontSize: "0.85rem", fontWeight: "bold" }}>
               Difficulté : {diffLabel} (+{evt.scoreReward} 🪙 | -{evt.damagePenalty} ❤️)
             </span>
@@ -179,14 +188,14 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
       case "counter_attack_pending":
         return (
           <span style={{ fontStyle: "italic", color: "#9ca3af" }}>
-            ⚠️ Dénonciation en cours ! Le bureau des rumeurs examine l'accusation lancée par <strong>{evt.playerName}</strong>.
+            ⚠️ Dénonciation en cours ! Le bureau des rumeurs examine l'accusation lancée par <strong>{getPlayerDisplayName(evt.playerName)}</strong>.
           </span>
         );
       case "counter_attack_correct":
         return (
           <span>
             🛡️ <strong>ASSASSIN REPOUSSÉ</strong><br/>
-            <strong>{evt.playerName}</strong> a démasqué son traqueur ! La tentative d'assassinat échoue. L'action du tueur est brûlée.<br/>
+            <strong>{getPlayerDisplayName(evt.playerName)}</strong> a démasqué son traqueur ! La tentative d'assassinat échoue. L'action du tueur est brûlée.<br/>
             <span style={{ color: "#9ca3af", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
               <EyeOff size={12} /> L'identité du tueur et le défi restent anonymes.
             </span>
@@ -196,7 +205,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
         return (
           <span>
             ⚠️ <strong>ALERTE PARANOÏA</strong><br/>
-            <strong>{evt.playerName}</strong> a lancé une fausse accusation ! La paranoïa lui coûte cher.<br/>
+            <strong>{getPlayerDisplayName(evt.playerName)}</strong> a lancé une fausse accusation ! La paranoïa lui coûte cher.<br/>
             <span style={{ color: "var(--color-red)", fontSize: "0.85rem", fontWeight: "bold" }}>
               Pénalité : -0.5 ❤️
             </span>
@@ -212,7 +221,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
         return (
           <span>
             ⛲ <strong>SOIN SOURCE</strong><br/>
-            <strong>{evt.playerName}</strong> s'est ressourcé.<br/>
+            <strong>{getPlayerDisplayName(evt.playerName)}</strong> s'est ressourcé.<br/>
             <span style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: "bold" }}>
               {tierLabel} (+{Math.abs(evt.damagePenalty)} ❤️)
             </span>
@@ -256,7 +265,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
         return (
           <span>
             🧟 <strong>MORSURE ZOMBIE</strong><br/>
-            Un zombie a mordu <strong>{evt.targetName}</strong> ! Le zombie ressuscite et vole <strong>50 🪙</strong>.<br/>
+            Un zombie a mordu <strong>{getPlayerDisplayName(evt.targetName)}</strong> ! Le zombie ressuscite et vole <strong>50 🪙</strong>.<br/>
             <span style={{ color: "var(--color-red)", fontSize: "0.85rem", fontWeight: "bold" }}>
               Victime : -1.0 ❤️ | -50 🪙
             </span>
@@ -497,7 +506,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                         overflow: "hidden",
                         flexShrink: 0
                       }}>
-                        {player.name.slice(0, 2).toUpperCase()}
+                        {getPlayerDisplayName(player.name).slice(0, 2).toUpperCase()}
                         {player.isZombie && (
                           <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, pointerEvents: "none" }}>
                             <div style={{ position: "absolute", width: "100%", height: "3px", backgroundColor: "var(--color-red)", transform: "rotate(45deg)", border: "0.5px solid #000" }} />
@@ -507,7 +516,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                       </div>
                       <div style={{ display: "flex", flexDirection: "column" }}>
                         <span style={{ fontWeight: "bold", fontSize: "1rem", display: "flex", alignItems: "center", gap: "6px" }}>
-                          {player.name}
+                          {getPlayerDisplayName(player.name)}
                           {player.isZombie && <span>🧟</span>}
                           {player.isFrozen && <span title="Gelé / Exfiltré">❄️</span>}
                         </span>

@@ -101,7 +101,8 @@ export default function GMDashboard() {
     if (username.toUpperCase() === "GM") return "GM";
     if (username.toUpperCase() === "SYSTEM") return "System";
     const found = gameState.players.find(p => p.name.toUpperCase() === username.toUpperCase());
-    return found ? (found.displayName || found.name) : username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+    const raw = found ? (found.displayName || found.name) : username;
+    return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
   };
   // Action : Le Chant du Coq
   const handleRoosterCrow = async () => {
@@ -902,25 +903,6 @@ export default function GMDashboard() {
                   <button type="submit" className="btn-cartoon btn-green" style={{ flex: 1, padding: "0.5rem" }}>
                     {editingDefi ? "Sauvegarder" : "Injecter"}
                   </button>
-                  {editingDefi && (
-                    <button
-                      type="button"
-                      className="btn-cartoon btn-red"
-                      style={{ flex: 1, padding: "0.5rem" }}
-                      onClick={() => {
-                        setEditingDefi(null);
-                        setDefiTitle("");
-                        setDefiDesc("");
-                        setDefiReward(100);
-                        setDefiDamage(1.5);
-                        setDefiZombieOnly(false);
-                        setDefiType("mission");
-                        setShowAddDefiForm(false);
-                      }}
-                    >
-                      Annuler
-                    </button>
-                  )}
                 </div>
               </div>
             </form>
@@ -946,14 +928,16 @@ export default function GMDashboard() {
                   onClick={() => handleStartEditDefi(a)}
                   title="Cliquer pour modifier ce défi"
                 >
-                  <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>{a.title} {a.isZombieOnly && "🧟"}</div>
+                  <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>
+                    {a.type === "fountain_action" ? "Action" : (a.type === "fountain_truth" ? "Vérité" : a.title)} {a.isZombieOnly && "🧟"}
+                  </div>
                   <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>{a.description}</div>
                   <div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#fbbf24", marginTop: "2px" }}>
                     {a.type === "mission" || !a.type ? `+${a.scoreReward} 🪙 | -${a.damagePenalty} ❤️` : `Soin : +${a.damagePenalty} ❤️`}
                   </div>
-                  {a.createdByPlayer && (
+                  {a.createdByPlayer && a.createdByPlayer.toUpperCase() !== "GM" && (
                     <span style={{ fontSize: "0.65rem", color: "var(--color-cyan)", display: "block", marginTop: "2px" }}>
-                      Proposé par {a.createdByPlayer}
+                      Proposé par {getPlayerDisplayName(a.createdByPlayer)}
                     </span>
                   )}
                 </div>
@@ -1083,12 +1067,20 @@ export default function GMDashboard() {
             Gestion Mode Dieu 👥
           </h2>
 
-          {editingPlayer ? (
-            <div style={{ border: "2px solid var(--color-purple)", padding: "12px", borderRadius: "12px", backgroundColor: "#1d1933", textAlign: "left" }}>
-              <h3 style={{ fontSize: "1.1rem", marginBottom: "8px", transform: "none", textShadow: "none" }}>Modifier {editingPlayer}</h3>
+          {editingPlayer ? (() => {
+            const p = gameState.players.find(pl => pl.name === editingPlayer);
+            const currentMission = p ? gameState.actionPool.find(a => a.id === p.actionId) : null;
+            const currentMissionTitle = currentMission ? currentMission.title : "Aucune";
+            return (
+              <div style={{ border: "2px solid var(--color-purple)", padding: "12px", borderRadius: "12px", backgroundColor: "#1d1933", textAlign: "left" }}>
+                <h3 style={{ fontSize: "1.1rem", marginBottom: "6px", transform: "none", textShadow: "none" }}>Modifier {getPlayerDisplayName(editingPlayer)}</h3>
+                <div style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "8px" }}>
+                  <div>Cible : <strong>{p ? (getPlayerDisplayName(p.target) || "Aucune") : "Aucune"}</strong></div>
+                  <div style={{ marginTop: "4px" }}>Mission en cours : <strong>{currentMissionTitle}</strong></div>
+                </div>
               
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap", marginBottom: "8px" }}>
+                <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", marginBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>🪙 :</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -1142,7 +1134,8 @@ export default function GMDashboard() {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "20px", margin: "4px 0" }}>
+                <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+                <div style={{ display: "flex", gap: "20px", margin: "4px 0", justifyContent: "center" }}>
                   <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", cursor: "pointer" }}>
                     <input
                       type="checkbox"
@@ -1159,6 +1152,8 @@ export default function GMDashboard() {
                     /> Exfiltré (Gelé) ❄️
                   </label>
                 </div>
+
+                <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
 
                 {/* Reset PIN de secours */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "4px" }}>
@@ -1177,6 +1172,8 @@ export default function GMDashboard() {
                   )}
                 </div>
 
+                <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+
                 <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
                   <button type="button" className="btn-cartoon btn-green" style={{ flex: 1, padding: "0.5rem" }} onClick={handleGodSave}>Sauver</button>
                   <button type="button" className="btn-cartoon btn-red" style={{ flex: 1, padding: "0.5rem" }} onClick={() => handleRemovePlayer(editingPlayer)}>Bannir</button>
@@ -1184,7 +1181,8 @@ export default function GMDashboard() {
                 <button type="button" className="btn-cartoon" style={{ padding: "0.4rem", backgroundColor: "#4b5563" }} onClick={() => setEditingPlayer(null)}>Annuler</button>
               </div>
             </div>
-          ) : (
+            );
+          })() : (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {gameState.players.map((p) => (
                 <div
@@ -1211,15 +1209,15 @@ export default function GMDashboard() {
                 >
                   <div style={{ textAlign: "left" }}>
                     <div style={{ fontWeight: "bold" }}>
-                      {p.displayName || p.name} {p.isZombie && "🧟"} {p.isFrozen && "❄️"}
+                      {getPlayerDisplayName(p.name)} {p.isZombie && "🧟"} {p.isFrozen && "❄️"}
                     </div>
                     <span style={{ fontSize: "0.7rem", color: "#9ca3af" }}>
                       Cible : {getPlayerDisplayName(p.target) || "Aucune"}
                     </span>
                   </div>
-                  <div style={{ display: "flex", gap: "10px", fontSize: "0.9rem" }}>
-                    <span style={{ color: "#fbbf24" }}>{p.score} 🪙</span>
-                    <span>{p.isZombie ? "🧟" : `${p.lives} ❤️`}</span>
+                  <div style={{ display: "flex", gap: "12px", fontSize: "0.9rem", alignItems: "center" }}>
+                    <div style={{ color: "#fbbf24", width: "70px", textAlign: "right" }}>{p.score} 🪙</div>
+                    <div style={{ width: "75px", textAlign: "right" }}>{p.isZombie ? "🧟" : `${p.lives} ❤️`}</div>
                   </div>
                 </div>
               ))}
