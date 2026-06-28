@@ -52,8 +52,26 @@ const FOUNTAIN_POOL = [
   { type: "verite", tier: 3, title: "Si ta vie amoureuse était un film, quel en serait le titre ?", gain: 3.0 },
 ];
 
-const getRandomFountainChallenge = (requestedType, tier) => {
+const getRandomFountainChallenge = (requestedType, tier, actionPool) => {
+  const dbType = requestedType === "action" ? "fountain_action" : "fountain_truth";
+  const targetGain = tier === 3 ? 3.0 : tier === 2 ? 1.5 : 0.5;
+  if (actionPool && actionPool.length > 0) {
+    const available = actionPool.filter(a => a.type === dbType && Number(a.damagePenalty) === targetGain);
+    if (available.length > 0) {
+      const selected = available[Math.floor(Math.random() * available.length)];
+      return { title: selected.title, desc: selected.description, gain: Number(selected.damagePenalty), id: selected.id };
+    }
+    const fallbackList = actionPool.filter(a => a.type === dbType);
+    if (fallbackList.length > 0) {
+      const selected = fallbackList[Math.floor(Math.random() * fallbackList.length)];
+      return { title: selected.title, desc: selected.description, gain: Number(selected.damagePenalty), id: selected.id };
+    }
+  }
   const available = FOUNTAIN_POOL.filter(p => p.tier === tier && p.type === requestedType);
+  if (available.length === 0) {
+    const allHardcoded = FOUNTAIN_POOL.filter(p => p.type === requestedType);
+    return allHardcoded[Math.floor(Math.random() * allHardcoded.length)];
+  }
   return available[Math.floor(Math.random() * available.length)];
 };
 
@@ -452,7 +470,7 @@ export default function PlayerDashboard() {
   // Puiser un défi de la fontaine (Action ou Vérité)
   const handleFountainDraw = (requestedType) => {
     const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
-    const challenge = getRandomFountainChallenge(requestedType, tier);
+    const challenge = getRandomFountainChallenge(requestedType, tier, gameState.actionPool);
     setFountainChoice(challenge);
     setFountainType(requestedType);
   };
@@ -477,7 +495,7 @@ export default function PlayerDashboard() {
     } else {
       // Regénérer un défi du même type avec le tier adapté
       const tier = player.fountainTotalUses >= 5 ? 3 : player.fountainTotalUses >= 3 ? 2 : 1;
-      const challenge = getRandomFountainChallenge(fountainType, tier);
+      const challenge = getRandomFountainChallenge(fountainType, tier, gameState.actionPool);
       setFountainChoice(challenge);
       manualRefresh();
       showToast("Nouveau défi de la Source pioché ! 🌀");
@@ -485,13 +503,18 @@ export default function PlayerDashboard() {
   };
 
   const handleSuggestSubmit = () => {
-    if (!suggestTitle || !suggestDesc) {
-      showToast("Titre et description requis !");
+    if (suggestType === "mission" && !suggestTitle) {
+      showToast("Titre requis !");
       return;
     }
+    if (!suggestDesc) {
+      showToast("Description requise !");
+      return;
+    }
+    const finalTitle = suggestType === "mission" ? suggestTitle : (suggestDesc.slice(0, 35) + "...");
     const encodedDesc = suggestType + "|" + suggestDesc;
     const finalReward = suggestType === "mission" ? suggestReward : 0;
-    suggestAction(suggestTitle, encodedDesc, finalReward, suggestDamage);
+    suggestAction(finalTitle, encodedDesc, finalReward, suggestDamage);
     setSuggestTitle("");
     setSuggestDesc("");
     setSuggestType("mission");
@@ -585,11 +608,8 @@ export default function PlayerDashboard() {
         </div>
 
         {/* Logo mini */}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <img src={mascotteLogo} alt="Mascotte" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
-          <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", textShadow: "1.5px 1.5px 0 #000", letterSpacing: "0.03em" }}>
-            Cookillers
-          </span>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <img src={mascotteLogo} alt="Mascotte" style={{ width: "42px", height: "42px", objectFit: "contain", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }} />
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -651,7 +671,7 @@ export default function PlayerDashboard() {
           >
             <div className={`ecg-line ${ecgClass}`} />
             {isHelpActive && (
-              <div style={{ position: "absolute", right: "6px", top: "4px", backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "16px", height: "16px", display: "flex", alignItems: "center", justifyItems: "center", fontSize: "10px", fontWeight: "bold", cursor: "pointer", paddingLeft: "5px" }}>?</div>
+              <div style={{ position: "absolute", left: "6px", top: "4px", backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: "bold", cursor: "pointer" }}>?</div>
             )}
             {activeTooltip === "ecg" && (
               <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)" }}>
@@ -1141,25 +1161,6 @@ export default function PlayerDashboard() {
                         <h2 style={{ fontSize: "1.6rem", margin: 0, color: "#fff", transform: "none", textShadow: "2px 2px 0 #000", lineHeight: "1.2" }}>
                           {player.target}
                         </h2>
-                        <button
-                          type="button"
-                          className="btn-cartoon"
-                          onClick={() => setIsMasked(true)}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            fontSize: "0.75rem",
-                            padding: "4px 10px",
-                            marginTop: "6px",
-                            backgroundColor: "#1e1b30",
-                            border: "2px solid #000",
-                            boxShadow: "2px 2px 0 #000"
-                          }}
-                          aria-label="Dissimuler mes Pêchés"
-                        >
-                          <Eye size={12} /> Dissimuler mes Pêchés
-                        </button>
                       </div>
                     </div>
 
@@ -1430,37 +1431,38 @@ export default function PlayerDashboard() {
 
       {/* --- ONGLET BOÎTE A IDÉES 💡 (USINE A SÉVICES) --- */}
       {activeTab === "suggestion" && (
-        <div className="card-cartoon glow-purple" style={{ margin: "10px" }}>
-          <h2 style={{ color: "var(--color-purple)", textAlign: "center", width: "100%", marginBottom: "1rem", position: "relative" }}>
+        <div className="card-cartoon glow-purple" style={{ margin: "10px", position: "relative" }}>
+          {isHelpActive && (
+            <div 
+              onClick={() => triggerTooltip("suggest_form")} 
+              style={{ 
+                position: "absolute", 
+                top: "-10px", 
+                right: "-10px", 
+                backgroundColor: "var(--color-cyan)", 
+                color: "#000", 
+                borderRadius: "50%", 
+                width: "16px", 
+                height: "16px", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                fontSize: "10px", 
+                fontWeight: "bold", 
+                cursor: "pointer",
+                zIndex: 10
+              }}
+            >
+              ?
+            </div>
+          )}
+          <h2 style={{ color: "var(--color-purple)", textAlign: "center", width: "100%", marginBottom: "1rem" }}>
             L'Usine à Sévices 💡
-            {isHelpActive && (
-              <span 
-                onClick={() => triggerTooltip("suggest_form")} 
-                style={{ 
-                  position: "absolute", 
-                  top: "0px", 
-                  right: "10px", 
-                  backgroundColor: "var(--color-cyan)", 
-                  color: "#000", 
-                  borderRadius: "50%", 
-                  width: "16px", 
-                  height: "16px", 
-                  display: "inline-flex", 
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  fontSize: "10px", 
-                  fontWeight: "bold", 
-                  cursor: "pointer" 
-                }}
-              >
-                ?
-              </span>
-            )}
           </h2>
 
           {activeTooltip === "suggest_form" && (
-            <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)" }}>
-              L'Usine à Sévices. Suggère tes propres idées d'actions et de vérités au Juge. Propose un titre, une description croustillante, les Biscuits 🪙 et la perte de ❤️. Si le Juge valide, c'est injecté en jeu.
+            <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
+              L'Usine à Sévices. Suggère tes propres idées d'actions et de vérités au Juge. Propose une description croustillante, les Biscuits 🪙 et la perte de ❤️. Si le Juge valide, c'est injecté en jeu.
             </div>
           )}
 
@@ -1483,14 +1485,14 @@ export default function PlayerDashboard() {
                 style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: suggestType === "fountain_action" ? "var(--color-purple)" : "#100e1f", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
                 onClick={() => { setSuggestType("fountain_action"); setSuggestReward(0); setSuggestDamage(0.5); }}
               >
-                Action ⛲
+                Action ⚡
               </button>
               <button
                 type="button"
                 style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: suggestType === "fountain_truth" ? "var(--color-purple)" : "#100e1f", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
                 onClick={() => { setSuggestType("fountain_truth"); setSuggestReward(0); setSuggestDamage(0.5); }}
               >
-                Vérité ⛲
+                Vérité 💬
               </button>
             </div>
 
@@ -1539,22 +1541,22 @@ export default function PlayerDashboard() {
             </div>
 
             {suggestType === "mission" ? (
-              /* Sélecteurs Récompense 🪙 et Dégâts ❤️ */
-              <div style={{ display: "flex", gap: "12px" }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: "0.8rem", color: "#fbbf24" }}>🪙 :</label>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+              /* Sélecteurs Récompense 🪙 et Dégâts ❤️ alignés */
+              <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "1.1rem" }}>🪙</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.max(50, suggestReward - 50))}><Minus size={12}/></button>
-                    <span style={{ fontFamily: "var(--font-title)" }}>{suggestReward}</span>
+                    <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center" }}>{suggestReward}</span>
                     <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.min(600, suggestReward + 50))}><Plus size={12}/></button>
                   </div>
                 </div>
 
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: "0.8rem", color: "var(--color-red)" }}>❤️ :</label>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "1.1rem" }}>❤️</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestDamage(Math.max(0.5, suggestDamage - 0.5))}><Minus size={12}/></button>
-                    <span style={{ fontFamily: "var(--font-title)" }}>{suggestDamage}</span>
+                    <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center" }}>{suggestDamage}</span>
                     <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestDamage(Math.min(4.0, suggestDamage + 0.5))}><Plus size={12}/></button>
                   </div>
                 </div>

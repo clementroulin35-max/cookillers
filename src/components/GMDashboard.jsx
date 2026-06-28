@@ -146,7 +146,13 @@ export default function GMDashboard() {
         setDefiZombieOnly(false);
         setDefiType("mission");
         setShowAddDefiForm(false);
-        showToast("Défi mis à jour ! 📖");
+        if (defiType === "fountain_truth") {
+          showToast("Vérité Fontaine mise à jour ! 💬");
+        } else if (defiType === "fountain_action") {
+          showToast("Action Fontaine mise à jour ! ⚡");
+        } else {
+          showToast("Défi mis à jour ! 🎯");
+        }
         manualRefresh();
       }
     } else {
@@ -175,7 +181,13 @@ export default function GMDashboard() {
         setDefiZombieOnly(false);
         setDefiType("mission");
         setShowAddDefiForm(false);
-        showToast("Nouveau défi injecté dans la pool ! 📖");
+        if (defiType === "fountain_truth") {
+          showToast("Nouvelle vérité Fontaine injectée dans la pool ! 💬");
+        } else if (defiType === "fountain_action") {
+          showToast("Nouvelle action Fontaine injectée dans la pool ! ⚡");
+        } else {
+          showToast("Nouveau défi injecté dans la pool ! 🎯");
+        }
         manualRefresh();
       }
     }
@@ -487,10 +499,10 @@ export default function GMDashboard() {
                   let typeLabel = "🎯 Mission";
                   let typeColor = "var(--color-purple)";
                   if (extractedType === "fountain_action") {
-                    typeLabel = "⛲ Action Source";
+                    typeLabel = "⚡ Action Source";
                     typeColor = "var(--color-cyan)";
                   } else if (extractedType === "fountain_truth") {
-                    typeLabel = "⛲ Vérité Source";
+                    typeLabel = "💬 Vérité Source";
                     typeColor = "#10b981";
                   }
 
@@ -587,12 +599,21 @@ export default function GMDashboard() {
                             className="btn-cartoon btn-green"
                             style={{ padding: "2px 8px", fontSize: "0.7rem" }}
                             onClick={async () => {
+                              if (!mod.desc || !mod.desc.trim()) {
+                                showToast("La description ne peut pas être vide !");
+                                return;
+                              }
+                              if (extractedType === "mission" && (!mod.title || !mod.title.trim())) {
+                                showToast("Le titre est requis pour une mission !");
+                                return;
+                              }
+                              const finalTitle = extractedType === "mission" ? mod.title : (mod.desc.slice(0, 35) + "...");
                               // Valider : insérer dans action_pools avec les modifications du GM
                               const { error: insErr } = await supabase.from("action_pools").insert([
                                 {
                                   game_code: gameCode,
-                                  title: mod.title,
-                                  description: mod.desc,
+                                  title: finalTitle,
+                                  description: mod.desc.trim(),
                                   score_reward: extractedType === "mission" ? mod.reward : 0,
                                   damage_penalty: mod.damage,
                                   is_zombie_only: false,
@@ -674,14 +695,14 @@ export default function GMDashboard() {
                     style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: defiType === "fountain_action" ? "var(--color-cyan)" : "#100e1f", color: defiType === "fountain_action" ? "#000" : "#fff", fontWeight: "bold", cursor: "pointer" }}
                     onClick={() => { setDefiType("fountain_action"); setDefiReward(0); setDefiDamage(0.5); }}
                   >
-                    Action ⛲
+                    Action ⚡
                   </button>
                   <button
                     type="button"
                     style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: defiType === "fountain_truth" ? "var(--color-cyan)" : "#100e1f", color: defiType === "fountain_truth" ? "#000" : "#fff", fontWeight: "bold", cursor: "pointer" }}
                     onClick={() => { setDefiType("fountain_truth"); setDefiReward(0); setDefiDamage(0.5); }}
                   >
-                    Vérité ⛲
+                    Vérité 💬
                   </button>
                 </div>
 
@@ -841,17 +862,14 @@ export default function GMDashboard() {
               </div>
             );
 
-            const gmDefis = gameState.actionPool.filter(a => !a.createdByPlayer);
-            const playerDefis = gameState.actionPool.filter(a => a.createdByPlayer);
-
-            const gmActiveMissions = gmDefis.filter(a => a.type === "mission" || !a.type);
-            const gmFountainActions = gmDefis.filter(a => a.type === "fountain_action");
-            const gmFountainTruths = gmDefis.filter(a => a.type === "fountain_truth");
+            const gmActiveMissions = gameState.actionPool.filter(a => a.type === "mission" || !a.type);
+            const gmFountainActions = gameState.actionPool.filter(a => a.type === "fountain_action");
+            const gmFountainTruths = gameState.actionPool.filter(a => a.type === "fountain_truth");
 
             return (
               <>
                 <h3 style={{ fontSize: "0.85rem", color: "#d1d5db", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "4px", marginBottom: "12px", textAlign: "left" }}>
-                  Défis du GM ({gmDefis.length})
+                  Pool Globale de Défis ({gameState.actionPool.length})
                 </h3>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "1.5rem" }}>
@@ -866,7 +884,7 @@ export default function GMDashboard() {
                   </div>
 
                   <div>
-                    <h4 style={{ fontSize: "0.75rem", color: "var(--color-cyan)", marginBottom: "6px", textAlign: "left", textTransform: "uppercase" }}>Actions Fontaine ⛲ ({gmFountainActions.length})</h4>
+                    <h4 style={{ fontSize: "0.75rem", color: "var(--color-cyan)", marginBottom: "6px", textAlign: "left", textTransform: "uppercase" }}>Actions Fontaine ⚡ ({gmFountainActions.length})</h4>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                       {gmFountainActions.map(renderDefiRow)}
                       {gmFountainActions.length === 0 && (
@@ -876,7 +894,7 @@ export default function GMDashboard() {
                   </div>
 
                   <div>
-                    <h4 style={{ fontSize: "0.75rem", color: "#10b981", marginBottom: "6px", textAlign: "left", textTransform: "uppercase" }}>Vérités Fontaine ⛲ ({gmFountainTruths.length})</h4>
+                    <h4 style={{ fontSize: "0.75rem", color: "#10b981", marginBottom: "6px", textAlign: "left", textTransform: "uppercase" }}>Vérités Fontaine 💬 ({gmFountainTruths.length})</h4>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                       {gmFountainTruths.map(renderDefiRow)}
                       {gmFountainTruths.length === 0 && (
@@ -885,17 +903,6 @@ export default function GMDashboard() {
                     </div>
                   </div>
                 </div>
-
-                {playerDefis.length > 0 && (
-                  <>
-                    <h3 style={{ fontSize: "0.85rem", color: "var(--color-cyan)", borderBottom: "1px solid rgba(0,255,255,0.2)", paddingBottom: "4px", marginBottom: "12px", textAlign: "left" }}>
-                      Propositions validées ({playerDefis.length})
-                    </h3>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      {playerDefis.map(renderDefiRow)}
-                    </div>
-                  </>
-                )}
               </>
             );
           })()}

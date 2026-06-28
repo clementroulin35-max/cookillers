@@ -212,6 +212,10 @@ SECURITY DEFINER
 AS $$
 DECLARE
     v_status text;
+    v_has_target boolean;
+    v_active_count integer;
+    v_random_player record;
+    v_action_id integer;
 BEGIN
     SELECT status INTO v_status FROM public.games WHERE game_code = p_game_code;
     IF NOT FOUND THEN
@@ -229,6 +233,57 @@ BEGIN
     )
     ON CONFLICT (game_code, name) DO UPDATE 
     SET pin_hash = EXCLUDED.pin_hash;
+
+    -- Si la partie a déjà commencé, on intègre automatiquement le joueur
+    IF v_status = 'active' THEN
+        SELECT (target IS NOT NULL) INTO v_has_target 
+        FROM public.players 
+        WHERE game_code = p_game_code AND name = p_name;
+
+        IF v_has_target IS NULL OR v_has_target = false THEN
+            -- Compter les autres joueurs actifs
+            SELECT count(*) INTO v_active_count 
+            FROM public.players 
+            WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != p_name;
+
+            IF v_active_count = 0 THEN
+                UPDATE public.players 
+                SET target = p_name 
+                WHERE game_code = p_game_code AND name = p_name;
+            ELSE
+                SELECT name, target INTO v_random_player
+                FROM public.players
+                WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != p_name
+                ORDER BY random()
+                LIMIT 1;
+
+                IF FOUND THEN
+                    UPDATE public.players
+                    SET target = p_name
+                    WHERE game_code = p_game_code AND name = v_random_player.name;
+
+                    UPDATE public.players
+                    SET target = v_random_player.target
+                    WHERE game_code = p_game_code AND name = p_name;
+                ELSE
+                    UPDATE public.players 
+                    SET target = p_name 
+                    WHERE game_code = p_game_code AND name = p_name;
+                END IF;
+            END IF;
+
+            -- Assigner une mission de base
+            SELECT id INTO v_action_id
+            FROM public.action_pools
+            WHERE game_code = p_game_code AND is_zombie_only = false AND (type = 'mission' OR type IS NULL)
+            ORDER BY random()
+            LIMIT 1;
+
+            UPDATE public.players
+            SET action_id = v_action_id
+            WHERE game_code = p_game_code AND name = p_name;
+        END IF;
+    END IF;
 
     UPDATE public.games SET state_version = state_version + 1 WHERE game_code = p_game_code;
     RETURN true;
@@ -273,7 +328,7 @@ BEGIN
 
         SELECT id INTO v_action_id
         FROM public.action_pools
-        WHERE game_code = p_game_code AND is_zombie_only = false
+        WHERE game_code = p_game_code AND is_zombie_only = false AND (type = 'mission' OR type IS NULL)
         ORDER BY random()
         LIMIT 1;
 
@@ -359,7 +414,7 @@ BEGIN
 
     SELECT id INTO v_new_action_id
     FROM public.action_pools
-    WHERE game_code = r_hist.game_code AND is_zombie_only = false
+    WHERE game_code = r_hist.game_code AND is_zombie_only = false AND (type = 'mission' OR type IS NULL)
     ORDER BY random()
     LIMIT 1;
 
@@ -453,7 +508,7 @@ BEGIN
 
         SELECT id INTO v_new_action_id
         FROM public.action_pools
-        WHERE game_code = r_hist.game_code AND is_zombie_only = false
+        WHERE game_code = r_hist.game_code AND is_zombie_only = false AND (type = 'mission' OR type IS NULL)
         ORDER BY random()
         LIMIT 1;
 
@@ -587,7 +642,7 @@ BEGIN
 
     SELECT id INTO v_action_id
     FROM public.action_pools
-    WHERE game_code = r_hist.game_code AND is_zombie_only = false
+    WHERE game_code = r_hist.game_code AND is_zombie_only = false AND (type = 'mission' OR type IS NULL)
     ORDER BY random()
     LIMIT 1;
 
@@ -725,7 +780,7 @@ BEGIN
 
     SELECT id INTO v_action_id
     FROM public.action_pools
-    WHERE game_code = p_game_code AND is_zombie_only = false
+    WHERE game_code = p_game_code AND is_zombie_only = false AND (type = 'mission' OR type IS NULL)
     ORDER BY random()
     LIMIT 1;
 
@@ -870,7 +925,7 @@ BEGIN
 
     SELECT id INTO v_new_action_id
     FROM public.action_pools
-    WHERE game_code = p_game_code AND is_zombie_only = false
+    WHERE game_code = p_game_code AND is_zombie_only = false AND (type = 'mission' OR type IS NULL)
     ORDER BY random()
     LIMIT 1;
 
@@ -904,7 +959,7 @@ DECLARE
     v_killer_name varchar(50);
     v_current_target varchar(50);
     v_random_player record;
-    v_active_count integer;
+    v_action_id integer;
 BEGIN
     SELECT score, lives, target INTO v_score, v_lives, v_current_target
     FROM public.players
@@ -932,50 +987,75 @@ BEGIN
         RAISE EXCEPTION 'Type de pénalité inconnu';
     END IF;
 
+    -- Trouver le tueur actuel de p_name
     SELECT name INTO v_killer_name 
     FROM public.players 
     WHERE game_code = p_game_code AND target = p_name AND is_frozen = false AND is_zombie = false;
 
+    -- Trouver une liaison X -> Y à briser (excluant p_name, les gelés, les zombies, et garantissant que Y != v_current_target)
+    SELECT name, target INTO v_random_player
+    FROM public.players
+    WHERE game_code = p_game_code 
+      AND name != p_name
+      AND target IS NOT NULL 
+      AND target != p_name
+      AND target != v_current_target
+      AND is_frozen = false 
+      AND is_zombie = false
+    ORDER BY random()
+    LIMIT 1;
+
+    -- Repli si aucun n'évite la cible précédente (ex: seulement 2-3 joueurs actifs)
+    IF NOT FOUND THEN
+        SELECT name, target INTO v_random_player
+        FROM public.players
+        WHERE game_code = p_game_code 
+          AND name != p_name
+          AND target IS NOT NULL 
+          AND target != p_name
+          AND is_frozen = false 
+          AND is_zombie = false
+        ORDER BY random()
+        LIMIT 1;
+    END IF;
+
+    -- Court-circuiter p_name en connectant son tueur à sa cible actuelle
     IF v_killer_name IS NOT NULL AND v_killer_name != p_name THEN
         UPDATE public.players 
         SET target = v_current_target 
         WHERE game_code = p_game_code AND name = v_killer_name;
     END IF;
 
-    UPDATE public.players
-    SET score = v_score,
-        lives = v_lives,
-        stat_abandon_count = stat_abandon_count + 1
-    WHERE game_code = p_game_code AND name = p_name;
+    -- Insérer p_name dans la nouvelle liaison
+    IF v_random_player.name IS NOT NULL THEN
+        -- Le joueur aléatoire cible maintenant p_name
+        UPDATE public.players
+        SET target = p_name
+        WHERE game_code = p_game_code AND name = v_random_player.name;
 
-    SELECT count(*) INTO v_active_count 
-    FROM public.players 
-    WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != p_name;
-
-    IF v_active_count = 0 THEN
-        UPDATE public.players 
-        SET target = name 
-        WHERE game_code = p_game_code AND name = p_name;
-    ELSE
-        SELECT name, target INTO v_random_player
-        FROM public.players
-        WHERE game_code = p_game_code AND target IS NOT NULL AND is_frozen = false AND is_zombie = false AND name != p_name
+        -- Assigner une nouvelle mission de type 'mission'
+        SELECT id INTO v_action_id
+        FROM public.action_pools
+        WHERE game_code = p_game_code AND is_zombie_only = false AND (type = 'mission' OR type IS NULL)
         ORDER BY random()
         LIMIT 1;
 
-        IF FOUND THEN
-            UPDATE public.players
-            SET target = p_name
-            WHERE game_code = p_game_code AND name = v_random_player.name;
-
-            UPDATE public.players
-            SET target = v_random_player.target
-            WHERE game_code = p_game_code AND name = p_name;
-        ELSE
-            UPDATE public.players 
-            SET target = name 
-            WHERE game_code = p_game_code AND name = p_name;
-        END IF;
+        -- p_name cible la cible historique du joueur aléatoire
+        UPDATE public.players
+        SET target = v_random_player.target,
+            action_id = v_action_id,
+            score = v_score,
+            lives = v_lives,
+            stat_abandon_count = stat_abandon_count + 1
+        WHERE game_code = p_game_code AND name = p_name;
+    ELSE
+        -- Repli par défaut : auto-ciblage
+        UPDATE public.players 
+        SET target = name,
+            score = v_score,
+            lives = v_lives,
+            stat_abandon_count = stat_abandon_count + 1
+        WHERE game_code = p_game_code AND name = p_name;
     END IF;
 
     INSERT INTO public.history (game_code, player_name, type, status, score_reward, damage_penalty)
@@ -1142,7 +1222,7 @@ BEGIN
 
     SELECT id INTO v_action_id
     FROM public.action_pools
-    WHERE game_code = p_game_code AND is_zombie_only = false
+    WHERE game_code = p_game_code AND is_zombie_only = false AND (type = 'mission' OR type IS NULL)
     ORDER BY random()
     LIMIT 1;
 

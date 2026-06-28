@@ -11,6 +11,15 @@ const initialGameState = {
   actionPool: [],
 };
 
+export const formatPlayerName = (name) => {
+  if (!name) return "";
+  const trimmed = name.trim();
+  if (!trimmed) return "";
+  if (trimmed.toUpperCase() === "GM") return "GM";
+  if (trimmed.toUpperCase() === "SYSTEM") return "System";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+};
+
 export const GameProvider = ({ children }) => {
   const [gameCode, setGameCode] = useState(() => {
     return localStorage.getItem("cookillers_game_code") || null;
@@ -346,29 +355,76 @@ export const GameProvider = ({ children }) => {
       // Pool de base de Cookillers
       const defaultActions = [
         // Rareté Commun (50 à 90 🪙 | -0.5 ❤️)
-        { title: "Le Vol de Style 🕶️", description: "Faire porter à ta cible l'un de tes accessoires pendant au moins 1h.", score_reward: 70, damage_penalty: 0.5, is_zombie_only: false },
-        { title: "L'Ami VIP 🤝", description: "Faire faire un selfie à ta cible avec un bénévole du festival.", score_reward: 80, damage_penalty: 0.5, is_zombie_only: false },
-        { title: "La Crème de la Crème 🧴", description: "Faire appliquer de la crème solaire sur le visage ou les bras de la cible.", score_reward: 90, damage_penalty: 0.5, is_zombie_only: false },
-        { title: "Gros Bluff 🤫", description: "Faire répéter à ta cible : 'Le camping est hanté par des cookies géants' sans rigoler.", score_reward: 60, damage_penalty: 0.5, is_zombie_only: false },
+        { title: "Le Vol de Style 🕶️", description: "Faire porter à ta cible l'un de tes accessoires pendant au moins 1h.", score_reward: 70, damage_penalty: 0.5, is_zombie_only: false, type: "mission" },
+        { title: "L'Ami VIP 🤝", description: "Faire faire un selfie à ta cible avec un bénévole du festival.", score_reward: 80, damage_penalty: 0.5, is_zombie_only: false, type: "mission" },
+        { title: "La Crème de la Crème 🧴", description: "Faire appliquer de la crème solaire sur le visage ou les bras de la cible.", score_reward: 90, damage_penalty: 0.5, is_zombie_only: false, type: "mission" },
+        { title: "Gros Bluff 🤫", description: "Faire répéter à ta cible : 'Le camping est hanté par des cookies géants' sans rigoler.", score_reward: 60, damage_penalty: 0.5, is_zombie_only: false, type: "mission" },
         
         // Rareté Standard (100 à 190 🪙 | -1.5 ❤️)
-        { title: "Le Duel Shifumi ⚔️", description: "Proposer un Shifumi à ta cible et la battre en 2 manches gagnantes.", score_reward: 130, damage_penalty: 1.5, is_zombie_only: false },
-        { title: "Le Syndrome Zombie 🧟‍♂️", description: "Faire crier le mot 'Cerveau' à ta cible au milieu d'une phrase hors contexte.", score_reward: 150, damage_penalty: 1.5, is_zombie_only: false },
-        { title: "Le Check Secret 🫱🏼‍🫲🏼", description: "Créer et faire exécuter un check personnalisé complexe à ta cible en 1v1.", score_reward: 180, damage_penalty: 1.5, is_zombie_only: false },
+        { title: "Le Duel Shifumi ⚔️", description: "Proposer un Shifumi à ta cible et la battre en 2 manches gagnantes.", score_reward: 130, damage_penalty: 1.5, is_zombie_only: false, type: "mission" },
+        { title: "Le Syndrome Zombie 🧟‍♂️", description: "Faire crier le mot 'Cerveau' à ta cible au milieu d'une phrase hors contexte.", score_reward: 150, damage_penalty: 1.5, is_zombie_only: false, type: "mission" },
+        { title: "Le Check Secret 🫱🏼‍🫲🏼", description: "Créer et faire exécuter un check personnalisé complexe à ta cible en 1v1.", score_reward: 180, damage_penalty: 1.5, is_zombie_only: false, type: "mission" },
         
         // Rareté Élite (200 à 390 🪙 | -2.5 ❤️)
-        { title: "L'Apéro Fatal 🍻", description: "Faire boire un shot d'un coup à la cible (Alcool ou Soft).", score_reward: 250, damage_penalty: 2.5, is_zombie_only: false },
-        { title: "La Chenille du Camping 🐛", description: "Faire lancer ou rejoindre une chenille à ta cible avec au moins 3 inconnus.", score_reward: 350, damage_penalty: 2.5, is_zombie_only: false },
-        { title: "Le Hamac Partagé ⛺", description: "Faire faire une sieste de 10 min à ta cible dans le même hamac que toi.", score_reward: 320, damage_penalty: 2.5, is_zombie_only: false },
+        { title: "L'Apéro Fatal 🍻", description: "Faire boire un shot d'un coup à la cible (Alcool ou Soft).", score_reward: 250, damage_penalty: 2.5, is_zombie_only: false, type: "mission" },
+        { title: "La Chenille du Camping 🐛", description: "Faire lancer ou rejoindre une chenille à ta cible avec au moins 3 inconnus.", score_reward: 350, damage_penalty: 2.5, is_zombie_only: false, type: "mission" },
+        { title: "Le Hamac Partagé ⛺", description: "Faire faire une sieste de 10 min à ta cible dans le même hamac que toi.", score_reward: 320, damage_penalty: 2.5, is_zombie_only: false, type: "mission" },
 
         // Rareté Légendaire (400 à 600 🪙 | -4.0 ❤️)
-        { title: "L'Animateur du Pogo 📣", description: "Faire lancer une Hola à la cible au milieu de la foule, suivie par au moins 3 inconnus.", score_reward: 550, damage_penalty: 4.0, is_zombie_only: false },
-        { title: "Le Saute-Mouton Humide 🐑", description: "Faire faire un saute-mouton à ta cible au milieu de la foule du camping.", score_reward: 500, damage_penalty: 4.0, is_zombie_only: false },
-        { title: "L'Étoile de Mer 🪼", description: "Faire faire l'étoile de mer au sol à ta cible pendant 20 secondes.", score_reward: 520, damage_penalty: 4.0, is_zombie_only: false },
+        { title: "L'Animateur du Pogo 📣", description: "Faire lancer une Hola à la cible au milieu de la foule, suivie par au moins 3 inconnus.", score_reward: 550, damage_penalty: 4.0, is_zombie_only: false, type: "mission" },
+        { title: "Le Saute-Mouton Humide 🐑", description: "Faire faire un saute-mouton à ta cible au milieu de la foule du camping.", score_reward: 500, damage_penalty: 4.0, is_zombie_only: false, type: "mission" },
+        { title: "L'Étoile de Mer 🪼", description: "Faire faire l'étoile de mer au sol à ta cible pendant 20 secondes.", score_reward: 520, damage_penalty: 4.0, is_zombie_only: false, type: "mission" },
 
         // Défis Zombie spéciaux
-        { title: "L'Infection Zombie 🪦", description: "Faire prononcer le mot 'Zombie' à un survivant en le fixant avec insistance.", score_reward: 50, damage_penalty: 1.0, is_zombie_only: true },
-        { title: "La Marche Gluante 🧟‍♀️", description: "Faire mimer une marche de zombie complète à ta victime pendant 10 secondes.", score_reward: 50, damage_penalty: 1.0, is_zombie_only: true }
+        { title: "L'Infection Zombie 🪦", description: "Faire prononcer le mot 'Zombie' à un survivant en le fixant avec insistance.", score_reward: 50, damage_penalty: 1.0, is_zombie_only: true, type: "mission" },
+        { title: "La Marche Gluante 🧟‍♀️", description: "Faire mimer une marche de zombie complète à ta victime pendant 10 secondes.", score_reward: 50, damage_penalty: 1.0, is_zombie_only: true, type: "mission" },
+
+        // Fountain Actions Tier 1 (damage_penalty: 0.5)
+        { title: "Compliment Sincère", description: "Faire un compliment sincère à un inconnu.", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_action" },
+        { title: "Gorgée Sec", description: "Boire un verre d'eau cul-sec en public.", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_action" },
+        { title: "Nettoyage Express", description: "Ranger 3 déchets qui traînent par terre.", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_action" },
+        { title: "Je n'ai jamais", description: "Lancer une partie de 'Je n'ai jamais...' au camp avec au moins 3 personnes.", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_action" },
+        { title: "Maître du Pouce", description: "Désigner un 'Maître du Pouce' : chaque fois que tu poses ton pouce sur la table, tout le monde doit faire de même.", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_action" },
+        { title: "Bras de Fer", description: "Faire un bras de fer avec un autre joueur.", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_action" },
+
+        // Fountain Actions Tier 2 (damage_penalty: 1.5)
+        { title: "Blague Nulle", description: "Raconter une blague nulle à un groupe d'inconnus.", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_action" },
+        { title: "Check Handshake", description: "Faire un check de la main créatif avec quelqu'un.", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_action" },
+        { title: "Accent Étranger", description: "Parler pendant 5 minutes avec un accent étranger.", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_action" },
+        { title: "Shifumi King's Cup", description: "Remplir un verre au milieu de la table ('King's Cup'), puis défier quelqu'un au Shifumi.", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_action" },
+        { title: "Règle Absurde", description: "Inventer une règle absurde pour le camp pendant 30 min.", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_action" },
+        { title: "Flip Cup Master", description: "Réussir un 'Flip Cup' (retourner un gobelet pour qu'il retombe à l'envers) 3 fois de suite.", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_action" },
+
+        // Fountain Actions Tier 3 (damage_penalty: 3.0)
+        { title: "Refrain Public", description: "Chanter le refrain d'une chanson connue en plein milieu du camp.", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_action" },
+        { title: "Série Pompes", description: "Faire une séance de 10 pompes devant une scène.", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_action" },
+        { title: "Massage Clandestin", description: "Convaincre un inconnu de te faire un massage de 15 secondes.", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_action" },
+        { title: "Duel Bière Pong", description: "Défier un voisin de tente à un duel de 'Bière Pong'.", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_action" },
+        { title: "Cascade Collective", description: "Faire une 'cascade' (chanson à boire) avec au moins 4 personnes où chacun boit consécutivement.", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_action" },
+
+        // Fountain Truths Tier 1 (damage_penalty: 0.5)
+        { title: "Chanson Honteuse", description: "Quelle est ta chanson préférée honteuse ?", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Défaut de Festival", description: "Quel est ton pire défaut en festival ?", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Mensonge Verre", description: "As-tu déjà menti pour éviter de boire un verre ?", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Surnom Ridicule", description: "Quel est le surnom le plus ridicule qu'on t'ait jamais donné ?", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Échange de Corps", description: "Si tu devais échanger ton corps avec un joueur ici, qui choisirais-tu ?", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Excuse Annulation", description: "Quelle est la pire excuse que tu as sortie pour annuler une soirée ?", score_reward: 0, damage_penalty: 0.5, is_zombie_only: false, type: "fountain_truth" },
+
+        // Fountain Truths Tier 2 (damage_penalty: 1.5)
+        { title: "Style Vestimentaire Douteux", description: "Quel joueur ici présent a le style vestimentaire le plus douteux ?", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Absurdité Festival", description: "Quelle est la chose la plus absurde que tu aies faite en festival ?", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Faux Fan", description: "As-tu déjà fait semblant de connaître un groupe de musique ?", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Premier Arrêté", description: "Qui dans ce groupe serait le premier à se faire arrêter par la police ?", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Plaisir Coupable", description: "Quel est ton plus grand plaisir coupable inavouable ?", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Crush Secret", description: "As-tu déjà eu un crush secret sur un(e) ami(e) d'un joueur présent ?", score_reward: 0, damage_penalty: 1.5, is_zombie_only: false, type: "fountain_truth" },
+
+        // Fountain Truths Tier 3 (damage_penalty: 3.0)
+        { title: "Cible Préférée", description: "Quel joueur du groupe as-tu le plus envie d'éliminer et pourquoi ?", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Secret Inavouable", description: "As-tu un secret inavouable que personne ici ne connaît ?", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Pire Phobie Camping", description: "Quelle est ta pire phobie ou situation embarrassante vécue au camping ?", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Mensonge Avoué", description: "Si tu devais avouer un énorme mensonge dit à un joueur du groupe, ce serait quoi ?", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Pire Bêtise Alcool", description: "Quelle est la pire bêtise que tu aies commise sous l'effet de l'alcool ?", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_truth" },
+        { title: "Titre de Film", description: "Si ta vie amoureuse était un film, quel en serait le titre ?", score_reward: 0, damage_penalty: 3.0, is_zombie_only: false, type: "fountain_truth" }
       ];
 
       const actionsToInsert = defaultActions.map(a => ({
@@ -377,7 +433,8 @@ export const GameProvider = ({ children }) => {
         description: a.description,
         score_reward: a.score_reward,
         damage_penalty: a.damage_penalty,
-        is_zombie_only: a.is_zombie_only
+        is_zombie_only: a.is_zombie_only,
+        type: a.type || "mission"
       }));
 
       const { error: poolError } = await supabase
@@ -417,32 +474,33 @@ export const GameProvider = ({ children }) => {
 
   const registerPlayer = async (name, pin) => {
     if (!gameCode) return;
-    const cleanName = name.trim();
-    if (!cleanName) throw new Error("Pseudo requis");
+    const formattedName = formatPlayerName(name);
+    if (!formattedName) throw new Error("Pseudo requis");
 
-    const pinHash = await sha256(cleanName.toLowerCase() + pin + "cookillers_salt_2026");
+    const pinHash = await sha256(formattedName.toLowerCase() + pin + "cookillers_salt_2026");
 
     // Appel du RPC join_and_initialize_player
     const { error } = await supabase.rpc("join_and_initialize_player", {
       p_game_code: gameCode,
-      p_name: cleanName,
+      p_name: formattedName,
       p_pin_hash: pinHash
     });
 
     if (error) throw error;
 
     localStorage.setItem("cookillers_player_pin", pin);
-    setCurrentUser(cleanName);
-    return cleanName;
+    setCurrentUser(formattedName);
+    await fetchGameState(gameCode);
+    return formattedName;
   };
 
   const loginPlayer = async (name, pin) => {
     if (!gameCode) return;
-    const cleanName = name.trim();
-    if (!cleanName) throw new Error("Pseudo requis");
+    const formattedName = formatPlayerName(name);
+    if (!formattedName) throw new Error("Pseudo requis");
 
     // S'il s'agit du GM
-    if (cleanName === "GM") {
+    if (formattedName === "GM") {
       const { data: gameData, error: gameError } = await supabase
         .from("games")
         .select("gm_pin")
@@ -452,6 +510,7 @@ export const GameProvider = ({ children }) => {
       if (gameError) throw gameError;
       if (gameData && gameData.gm_pin === pin) {
         setCurrentUser("GM");
+        await fetchGameState(gameCode);
         return "GM";
       } else {
         throw new Error("Code PIN GM incorrect.");
@@ -459,19 +518,19 @@ export const GameProvider = ({ children }) => {
     }
 
     // Hashage du PIN avec le même sel client
-    const pinHash = await sha256(cleanName.toLowerCase() + pin + "cookillers_salt_2026");
+    const pinHash = await sha256(formattedName.toLowerCase() + pin + "cookillers_salt_2026");
 
     // Récupérer le joueur
     const { data: player, error } = await supabase
       .from("players")
       .select("pin_hash")
       .eq("game_code", gameCode)
-      .eq("name", cleanName)
+      .eq("name", formattedName)
       .maybeSingle();
 
     if (error) throw error;
     if (!player) {
-      throw new Error(`Le joueur "${cleanName}" n'est pas inscrit.`);
+      throw new Error(`Le joueur "${formattedName}" n'est pas inscrit.`);
     }
 
     if (player.pin_hash !== pinHash) {
@@ -479,8 +538,9 @@ export const GameProvider = ({ children }) => {
     }
 
     localStorage.setItem("cookillers_player_pin", pin);
-    setCurrentUser(cleanName);
-    return cleanName;
+    setCurrentUser(formattedName);
+    await fetchGameState(gameCode);
+    return formattedName;
   };
 
   const logOut = () => {
