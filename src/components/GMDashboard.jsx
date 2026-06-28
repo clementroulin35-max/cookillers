@@ -73,7 +73,13 @@ export default function GMDashboard() {
 
   // Action : Terminer la chasse
   const handleFinishGame = async () => {
-    if (confirm("Voulez-vous vraiment clore la chasse aux cookies ? Cela fige le classement final et décerne les trophées.")) {
+    const userInput = window.prompt("⚠️ ATTENTION : Voulez-vous vraiment clore la chasse aux cookies ? Le classement sera figé et les trophées décernés.\n\nPour confirmer, veuillez saisir :\ncookillers2026");
+    if (userInput === null) return;
+    if (userInput !== "cookillers2026") {
+      showToast("Code incorrect. Action annulée. ❌");
+      return;
+    }
+    if (true) {
       // Mettre à jour games status à 'finished'
       const { error } = await supabase
         .from("games")
@@ -564,27 +570,51 @@ export default function GMDashboard() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
                         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                           {extractedType === "mission" ? (
-                            <>
-                              <label style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "2px" }}>
-                                🪙
-                                <input
-                                  type="number"
-                                  value={mod.reward}
-                                  onChange={(e) => updateMod("reward", Number(e.target.value))}
-                                  style={{ width: "50px", padding: "2px", backgroundColor: "#1c192d", border: "1.5px solid #000", borderRadius: "4px", color: "#fff", fontSize: "0.75rem", textAlign: "center" }}
-                                />
-                              </label>
-                              <label style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "2px" }}>
-                                ❤️
-                                <input
-                                  type="number"
-                                  step="0.5"
-                                  value={mod.damage}
-                                  onChange={(e) => updateMod("damage", Number(e.target.value))}
-                                  style={{ width: "40px", padding: "2px", backgroundColor: "#1c192d", border: "1.5px solid #000", borderRadius: "4px", color: "#fff", fontSize: "0.75rem", textAlign: "center" }}
-                                />
-                              </label>
-                            </>
+                            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                              {/* Reward 🪙 */}
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                <span>🪙</span>
+                                <button
+                                  type="button"
+                                  className="btn-cartoon"
+                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                  onClick={() => updateMod("reward", Math.max(50, mod.reward - 50))}
+                                >
+                                  -
+                                </button>
+                                <span style={{ fontFamily: "var(--font-title)", minWidth: "30px", textAlign: "center", fontSize: "0.8rem", color: "#fff" }}>{mod.reward}</span>
+                                <button
+                                  type="button"
+                                  className="btn-cartoon"
+                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                  onClick={() => updateMod("reward", Math.min(600, mod.reward + 50))}
+                                >
+                                  +
+                                </button>
+                              </div>
+
+                              {/* Damage ❤️ */}
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                <span>❤️</span>
+                                <button
+                                  type="button"
+                                  className="btn-cartoon"
+                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                  onClick={() => updateMod("damage", Math.max(0.5, mod.damage - 0.5))}
+                                >
+                                  -
+                                </button>
+                                <span style={{ fontFamily: "var(--font-title)", minWidth: "25px", textAlign: "center", fontSize: "0.8rem", color: "#fff" }}>{mod.damage}</span>
+                                <button
+                                  type="button"
+                                  className="btn-cartoon"
+                                  style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "#fff", color: "#000", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
+                                  onClick={() => updateMod("damage", Math.min(7.0, mod.damage + 0.5))}
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
                           ) : (
                             /* Soin Fontaine pour action/verité : Sélection 3 étoiles */
                             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -757,25 +787,49 @@ export default function GMDashboard() {
                 />
                 
                 {defiType === "mission" ? (
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
-                      <span style={{ position: "absolute", left: "8px", fontSize: "1rem", pointerEvents: "none" }}>🪙</span>
-                      <input
-                        type="number"
-                        value={defiReward}
-                        onChange={(e) => setDefiReward(Number(e.target.value))}
-                        style={{ width: "100%", padding: "6px 6px 6px 30px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
-                      />
+                  <div style={{ display: "flex", gap: "16px", justifyContent: "space-between", alignItems: "center" }}>
+                    {/* Points 🪙 */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1 }}>
+                      <span style={{ fontSize: "1.1rem" }}>🪙</span>
+                      <button
+                        type="button"
+                        className="btn-cartoon"
+                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        onClick={() => setDefiReward(Math.max(50, defiReward - 50))}
+                      >
+                        -
+                      </button>
+                      <span style={{ fontFamily: "var(--font-title)", minWidth: "45px", textAlign: "center", color: "#fff", fontSize: "0.95rem" }}>{defiReward}</span>
+                      <button
+                        type="button"
+                        className="btn-cartoon"
+                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        onClick={() => setDefiReward(Math.min(600, defiReward + 50))}
+                      >
+                        +
+                      </button>
                     </div>
-                    <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
-                      <span style={{ position: "absolute", left: "8px", fontSize: "1rem", pointerEvents: "none" }}>❤️</span>
-                      <input
-                        type="number"
-                        step="0.5"
-                        value={defiDamage}
-                        onChange={(e) => setDefiDamage(Number(e.target.value))}
-                        style={{ width: "100%", padding: "6px 6px 6px 30px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
-                      />
+
+                    {/* Dégâts ❤️ */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1 }}>
+                      <span style={{ fontSize: "1.1rem" }}>❤️</span>
+                      <button
+                        type="button"
+                        className="btn-cartoon"
+                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        onClick={() => setDefiDamage(Math.max(0.5, defiDamage - 0.5))}
+                      >
+                        -
+                      </button>
+                      <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center", color: "#fff", fontSize: "0.95rem" }}>{defiDamage}</span>
+                      <button
+                        type="button"
+                        className="btn-cartoon"
+                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "#fff", color: "#000", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        onClick={() => setDefiDamage(Math.min(7.0, defiDamage + 0.5))}
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
                  ) : (

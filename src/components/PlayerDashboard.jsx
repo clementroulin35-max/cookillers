@@ -1303,7 +1303,8 @@ export default function PlayerDashboard() {
           ) : (
             <div>
               {fountainChoice ? (
-                <div style={{ border: "2px solid var(--color-cyan)", borderRadius: "12px", padding: "12px", backgroundColor: "rgba(34, 211, 238, 0.03)" }}>
+                <>
+                  <div style={{ border: "2px solid var(--color-cyan)", borderRadius: "12px", padding: "12px", backgroundColor: "rgba(34, 211, 238, 0.03)" }}>
                   <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--color-cyan)", fontWeight: "bold" }}>
                     Défi de la Source :
                   </span>
@@ -1362,42 +1363,47 @@ export default function PlayerDashboard() {
                           <label htmlFor="fountain-cam" className="btn-cartoon btn-cyan" style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", cursor: "pointer" }}>
                             <Camera size={16} /> Ouvrir Appareil Photo
                           </label>
-                          {fountainPhotoProof && <span style={{ fontSize: "1.5rem" }}>✅</span>}
+                            {fountainPhotoProof && (
+                              <div style={{ position: "relative", width: "48px", height: "48px", border: "2px solid #000", borderRadius: "6px", overflow: "hidden", boxShadow: "1px 1px 0 #000" }}>
+                                <img src={fountainPhotoProof} alt="Preuve" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                <span style={{ position: "absolute", bottom: "1px", right: "1px", fontSize: "0.8rem", textShadow: "1px 1px 0 #000" }}>✅</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
+                      )}
+
+                      <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+                        <button
+                          type="button"
+                          className="btn-cartoon btn-green"
+                          style={{ flex: 1, padding: "0.5rem" }}
+                          onClick={handleFountainSubmit}
+                        >
+                          Valider Soin
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-cartoon"
+                          style={{ flex: 1, padding: "0.5rem", backgroundColor: "#4b5563" }}
+                          onClick={() => setFountainChoice(null)}
+                        >
+                          Retour
+                        </button>
                       </div>
-                    )}
-
-                    {player.fountainRefreshesToday > 0 && (
-                      <button
-                        type="button"
-                        className="btn-cartoon"
-                        style={{ width: "100%", padding: "0.5rem", marginBottom: "10px", backgroundColor: "var(--color-purple)", border: "2px solid #000" }}
-                        onClick={handleFountainRefresh}
-                      >
-                        Changer de Recette 🌀
-                      </button>
-                    )}
-
-                    <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
-                      <button
-                        type="button"
-                        className="btn-cartoon btn-green"
-                        style={{ flex: 1, padding: "0.5rem" }}
-                        onClick={handleFountainSubmit}
-                      >
-                        Valider Soin
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-cartoon"
-                        style={{ flex: 1, padding: "0.5rem", backgroundColor: "#4b5563" }}
-                        onClick={() => setFountainChoice(null)}
-                      >
-                        Retour
-                      </button>
                     </div>
                   </div>
-                </div>
+                  {player.fountainRefreshesToday > 0 && (
+                    <button
+                      type="button"
+                      className="btn-cartoon"
+                      style={{ width: "100%", padding: "0.5rem", marginTop: "12px", backgroundColor: "var(--color-purple)", border: "2px solid #000" }}
+                      onClick={handleFountainRefresh}
+                    >
+                      Rafraîchir 🌀
+                    </button>
+                  )}
+                </>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px", position: "relative" }}>
                   {isHelpActive && (
@@ -1431,21 +1437,77 @@ export default function PlayerDashboard() {
                     </div>
                   )}
 
-                  <button
-                    type="button"
-                    className="btn-cartoon btn-cyan"
-                    onClick={() => handleFountainDraw("action")}
-                  >
-                    Puiser une Action (+{player.fountainTotalUses >= 5 ? "3.0" : player.fountainTotalUses >= 3 ? "1.5" : "0.5"} ❤️)
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", gap: "20px", marginTop: "15px", marginBottom: "15px" }}>
+                    {/* Left card: Puiser Action */}
+                    <button
+                      type="button"
+                      className="card-cartoon glow-cyan"
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "16px 8px",
+                        cursor: "pointer",
+                        backgroundColor: "#161b2e",
+                        border: "3px solid #000",
+                        height: "120px"
+                      }}
+                      onClick={() => handleFountainDraw("action")}
+                    >
+                      <span style={{ fontSize: "2rem", marginBottom: "4px" }}>⚡</span>
+                      <span style={{ fontFamily: "var(--font-title)", fontSize: "0.85rem", color: "#fff" }}>Action</span>
+                      <span style={{ fontSize: "0.75rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
+                        +{player.fountainTotalUses >= 5 ? "3.0" : player.fountainTotalUses >= 3 ? "1.5" : "0.5"} ❤️
+                      </span>
+                    </button>
 
-                  <button
-                    type="button"
-                    className="btn-cartoon btn-cyan"
-                    onClick={() => handleFountainDraw("verite")}
-                  >
-                    Puiser une Vérité (+{player.fountainTotalUses >= 5 ? "3.0" : player.fountainTotalUses >= 3 ? "1.5" : "0.5"} ❤️)
-                  </button>
+                    {/* Center: VS text */}
+                    <div style={{
+                      position: "absolute",
+                      left: "50%",
+                      top: "50%",
+                      transform: "translate(-50%, -50%) rotate(-12deg)",
+                      backgroundColor: "var(--color-cyan)",
+                      color: "#000",
+                      fontFamily: "var(--font-title)",
+                      fontSize: "1.6rem",
+                      padding: "4px 10px",
+                      border: "3px solid #000",
+                      boxShadow: "2px 2px 0 #000",
+                      zIndex: 10,
+                      borderRadius: "6px",
+                      pointerEvents: "none"
+                    }}>
+                      VS
+                    </div>
+
+                    {/* Right card: Puiser Vérité */}
+                    <button
+                      type="button"
+                      className="card-cartoon glow-green"
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "16px 8px",
+                        cursor: "pointer",
+                        backgroundColor: "#161b2e",
+                        border: "3px solid #000",
+                        height: "120px"
+                      }}
+                      onClick={() => handleFountainDraw("verite")}
+                    >
+                      <span style={{ fontSize: "2rem", marginBottom: "4px" }}>💬</span>
+                      <span style={{ fontFamily: "var(--font-title)", fontSize: "0.85rem", color: "#fff" }}>Vérité</span>
+                      <span style={{ fontSize: "0.75rem", color: "#10b981", fontWeight: "bold" }}>
+                        +{player.fountainTotalUses >= 5 ? "3.0" : player.fountainTotalUses >= 3 ? "1.5" : "0.5"} ❤️
+                      </span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -2093,11 +2155,25 @@ export default function PlayerDashboard() {
                 Choisissez votre sacrifice :
               </p>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", gap: "20px", marginTop: "15px", marginBottom: "15px" }}>
+                {/* Left option: Heart */}
                 <button
                   type="button"
-                  className="btn-cartoon btn-red"
-                  style={{ height: "44px" }}
+                  className={`card-cartoon ${player.lives <= 0.5 ? "btn-disabled" : "glow-red"}`}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "16px 8px",
+                    cursor: player.lives <= 0.5 ? "not-allowed" : "pointer",
+                    backgroundColor: "#221a36",
+                    border: "3px solid #000",
+                    opacity: player.lives <= 0.5 ? 0.5 : 1,
+                    minWidth: "120px",
+                    height: "120px"
+                  }}
                   disabled={player.lives <= 0.5}
                   onClick={() => {
                     abandonTarget("life");
@@ -2105,13 +2181,49 @@ export default function PlayerDashboard() {
                     showToast("Cible abandonnée. Nouveau contrat pioché ! 💔");
                   }}
                 >
-                  Sacrifier -0.5 ❤️
+                  <span style={{ fontSize: "2rem", marginBottom: "4px" }}>❤️</span>
+                  <span style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem", color: "#fff" }}>-0.5 ❤️</span>
+                  <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)" }}>Sacrifice</span>
                 </button>
 
+                {/* Center: VS text */}
+                <div style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%) rotate(-12deg)",
+                  backgroundColor: "var(--color-red)",
+                  color: "#fff",
+                  fontFamily: "var(--font-title)",
+                  fontSize: "1.6rem",
+                  padding: "4px 10px",
+                  border: "3px solid #000",
+                  boxShadow: "2px 2px 0 #000",
+                  zIndex: 10,
+                  borderRadius: "6px",
+                  pointerEvents: "none"
+                }}>
+                  VS
+                </div>
+
+                {/* Right option: Biscuits */}
                 <button
                   type="button"
-                  className="btn-cartoon btn-red"
-                  style={{ height: "44px" }}
+                  className={`card-cartoon ${player.score < 50 ? "btn-disabled" : "glow-yellow"}`}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "16px 8px",
+                    cursor: player.score < 50 ? "not-allowed" : "pointer",
+                    backgroundColor: "#221a36",
+                    border: "3px solid #000",
+                    opacity: player.score < 50 ? 0.5 : 1,
+                    minWidth: "120px",
+                    height: "120px"
+                  }}
                   disabled={player.score < 50}
                   onClick={() => {
                     abandonTarget("score");
@@ -2119,7 +2231,9 @@ export default function PlayerDashboard() {
                     showToast("Cible abandonnée. Nouveau contrat pioché ! 🪙");
                   }}
                 >
-                  Payer -50 🪙
+                  <span style={{ fontSize: "2rem", marginBottom: "4px" }}>🪙</span>
+                  <span style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem", color: "#fff" }}>-50 🪙</span>
+                  <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)" }}>Biscuits</span>
                 </button>
               </div>
 

@@ -478,6 +478,19 @@ export const GameProvider = ({ children }) => {
     if (!cleanName) throw new Error("Pseudo requis");
     const dbName = cleanName.toUpperCase();
 
+    // Vérifier si le pseudo existe déjà dans ce salon (insensible à la casse)
+    const { data: existingPlayer, error: checkError } = await supabase
+      .from("players")
+      .select("name")
+      .eq("game_code", gameCode)
+      .eq("name", dbName)
+      .maybeSingle();
+
+    if (checkError) throw checkError;
+    if (existingPlayer) {
+      throw new Error("Ce pseudo est déjà utilisé dans cette partie !");
+    }
+
     const pinHash = await sha256(cleanName.toLowerCase() + pin + "cookillers_salt_2026");
 
     // Appel du RPC join_and_initialize_player
