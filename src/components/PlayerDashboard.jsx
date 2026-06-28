@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { useGame } from "../context/GameContext";
 import { supabase } from "../services/supabaseClient";
 import Leaderboard, { getRank } from "./Leaderboard";
@@ -76,6 +76,91 @@ const getRandomFountainChallenge = (requestedType, tier, actionPool) => {
   return available[Math.floor(Math.random() * available.length)];
 };
 
+const CampfireAvatar = ({ p, idx, total, isMe, campPhoto, radarClass, handleAvatarDragEnd, getPlayerDisplayName, campfireContainerRef, resetKey }) => {
+  const controls = useAnimation();
+  
+  const angle = (idx * 2 * Math.PI) / Math.max(1, total);
+  const radiusX = 35; 
+  const radiusY = 22; 
+  const left = 50 + radiusX * Math.cos(angle);
+  const top = 50 + radiusY * Math.sin(angle);
+
+  useEffect(() => {
+    if (resetKey > 0) {
+      controls.start({ x: 0, y: 0, transition: { type: "spring", stiffness: 300, damping: 20 } });
+    }
+  }, [resetKey, controls]);
+
+  return (
+    <motion.div
+      key={p.name}
+      className={radarClass}
+      drag={!isMe}
+      dragConstraints={campfireContainerRef}
+      dragElastic={0.1}
+      dragMomentum={false}
+      animate={controls}
+      onDragEnd={async (event, info) => {
+        handleAvatarDragEnd(p, info);
+        await controls.start({ x: 0, y: 0, transition: { type: "spring", stiffness: 300, damping: 20 } });
+      }}
+      style={{
+        position: "absolute",
+        left: `${left}%`,
+        top: `${top}%`,
+        transform: "translate(-50%, -50%)",
+        width: "48px",
+        height: "48px",
+        borderRadius: "50%",
+        border: `2px solid ${p.isZombie ? "var(--color-zombie)" : (p.isFrozen ? "var(--color-cyan)" : "#000")}`,
+        backgroundColor: p.isZombie ? "rgba(74, 222, 128, 0.2)" : (p.isFrozen ? "rgba(34, 211, 238, 0.2)" : "#3a3463"),
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "0.95rem",
+        fontWeight: "bold",
+        zIndex: 10,
+        cursor: isMe ? "default" : "grab",
+        touchAction: "none",
+        userSelect: "none",
+        WebkitUserSelect: "none"
+      }}
+      title={p.displayName || p.name}
+    >
+      <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+        {campPhoto ? (
+          <img src={campPhoto} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
+        ) : (
+          <span style={{ pointerEvents: "none" }}>
+            {p.displayName ? p.displayName.slice(0, 2).toUpperCase() : p.name.slice(0, 2).toUpperCase()}
+          </span>
+        )}
+      </div>
+      {p.isFrozen && (
+        <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12, pointerEvents: "none" }}>❄️</span>
+      )}
+      {p.isZombie && (
+        <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12, pointerEvents: "none" }}>🧟</span>
+      )}
+      <span style={{
+        position: "absolute",
+        top: "52px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        fontSize: "0.7rem",
+        fontStyle: "italic",
+        color: "#ffffff",
+        textShadow: "1px 1px 0 #000",
+        pointerEvents: "none",
+        whiteSpace: "nowrap",
+        zIndex: 15
+      }}>
+        {getPlayerDisplayName(p.name)}
+      </span>
+    </motion.div>
+  );
+};
+
 export default function PlayerDashboard() {
   const {
     currentUser,
@@ -125,6 +210,7 @@ export default function PlayerDashboard() {
   const [showZombieFountainModal, setShowZombieFountainModal] = useState(false);
   const [showZombieBiteConfirmModal, setShowZombieBiteConfirmModal] = useState(false);
   const [revealPin, setRevealPin] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
   const campfireContainerRef = useRef(null);
   const fireRef = useRef(null);
   
@@ -776,7 +862,7 @@ export default function PlayerDashboard() {
       })()}
 
       {/* Barre de Vitalité & Biscuits standardisée */}
-      <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 12px", alignItems: "center" }}>
+      <div data-tuto="vitalite" style={{ display: "flex", justifyContent: "space-between", padding: "4px 12px", alignItems: "center" }}>
         {/* Vitalité ❤️ */}
         <div 
           onClick={() => triggerTooltip("health")}
@@ -862,6 +948,7 @@ export default function PlayerDashboard() {
           {/* Hub Le Campement des Assassins 2D */}
           <div 
             ref={campfireContainerRef}
+            data-tuto="campement"
             style={{
               height: "180px",
               margin: "8px 10px",
@@ -889,9 +976,12 @@ export default function PlayerDashboard() {
             {/* Feu de camp animé au centre (interactif) */}
             <div 
               className="fire-camp"
-              onClick={() => showToast("Aïe, c'est chaud ! Ne mettez pas les doigts dans le feu... 🔥")}
+              onClick={() => {
+                setResetKey(prev => prev + 1);
+                showToast("Positions réinitialisées ! 🔥");
+              }}
               style={{
-                zIndex: 5,
+                zIndex: 2, // Low z-index so avatars slide over it!
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -918,7 +1008,7 @@ export default function PlayerDashboard() {
                 height: "90px",
                 borderRadius: "50%",
                 border: "2px dashed rgba(249, 115, 22, 0.4)",
-                zIndex: 3,
+                zIndex: 1,
                 pointerEvents: "none"
               }}
             />
@@ -976,96 +1066,41 @@ export default function PlayerDashboard() {
             )}
 
             {/* Cercle d'avatars des joueurs autour du feu */}
-            <div style={{ position: "absolute", width: "100%", height: "100%", zIndex: 4 }}>
-              {gameState.players.map((p, idx) => {
-                const angle = (idx * 2 * Math.PI) / Math.max(1, gameState.players.length);
-                const radiusX = 35; // Rayon horizontal en %
-                const radiusY = 22; // Rayon vertical en % pour s'adapter au cadre
-                const left = 50 + radiusX * Math.cos(angle);
-                const top = 50 + radiusY * Math.sin(angle);
+            <div style={{ position: "absolute", width: "100%", height: "100%", zIndex: 15 }}>
+              {(() => {
+                const sortedCampPlayers = [...gameState.players].sort((a, b) => a.name.localeCompare(b.name));
+                return sortedCampPlayers.map((p, idx) => {
+                  const userPhoto = campPhotos[p.name];
+                  const isSuspecting = gameState.history.some(
+                    h => h.playerName === p.name && h.type === "counter_attack_pending" && h.status === "pending"
+                  );
+                  const isAccused = gameState.history.some(
+                    h => h.targetName === p.name && h.type === "counter_attack_pending" && h.status === "pending"
+                  );
 
-                const userPhoto = campPhotos[p.name];
+                  let radarClass = "";
+                  if (isSuspecting) radarClass = "radar-cyan";
+                  else if (isAccused) radarClass = "radar-orange";
 
-                const isSuspecting = gameState.history.some(
-                  h => h.playerName === p.name && h.type === "counter_attack_pending" && h.status === "pending"
-                );
+                  const isMe = p.name === player.name;
 
-                const isAccused = gameState.history.some(
-                  h => h.targetName === p.name && h.type === "counter_attack_pending" && h.status === "pending"
-                );
-
-                let radarClass = "";
-                if (isSuspecting) radarClass = "radar-cyan";
-                else if (isAccused) radarClass = "radar-orange";
-
-                const isMe = p.name === player.name;
-
-                return (
-                  <motion.div
-                    key={p.name}
-                    className={radarClass}
-                    drag={!isMe}
-                    dragConstraints={campfireContainerRef}
-                    dragElastic={0.1}
-                    dragMomentum={false}
-                    animate={{ x: 0, y: 0 }}
-                    onDragEnd={(event, info) => handleAvatarDragEnd(p, info)}
-                    style={{
-                      position: "absolute",
-                      left: `${left}%`,
-                      top: `${top}%`,
-                      transform: "translate(-50%, -50%)",
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      border: `2px solid ${p.isZombie ? "var(--color-zombie)" : (p.isFrozen ? "var(--color-cyan)" : "#000")}`,
-                      backgroundColor: p.isZombie ? "rgba(74, 222, 128, 0.2)" : (p.isFrozen ? "rgba(34, 211, 238, 0.2)" : "#3a3463"),
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.95rem",
-                      fontWeight: "bold",
-                      zIndex: 10,
-                      cursor: isMe ? "default" : "grab",
-                      touchAction: "none",
-                      userSelect: "none",
-                      WebkitUserSelect: "none"
-                    }}
-                    title={p.displayName || p.name}
-                  >
-                    <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                      {userPhoto ? (
-                        <img src={userPhoto} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
-                      ) : (
-                        <span style={{ pointerEvents: "none" }}>
-                          {p.displayName ? p.displayName.slice(0, 2).toUpperCase() : p.name.slice(0, 2).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    {p.isFrozen && (
-                      <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12, pointerEvents: "none" }}>❄️</span>
-                    )}
-                    {p.isZombie && (
-                      <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12, pointerEvents: "none" }}>🧟</span>
-                    )}
-                    <span style={{
-                      position: "absolute",
-                      top: "52px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      fontSize: "0.7rem",
-                      fontStyle: "italic",
-                      color: "#ffffff",
-                      textShadow: "1px 1px 0 #000",
-                      pointerEvents: "none",
-                      whiteSpace: "nowrap",
-                      zIndex: 15
-                    }}>
-                      {getPlayerDisplayName(p.name)}
-                    </span>
-                  </motion.div>
-                );
-              })}
+                  return (
+                    <CampfireAvatar
+                      key={p.name}
+                      p={p}
+                      idx={idx}
+                      total={sortedCampPlayers.length}
+                      isMe={isMe}
+                      campPhoto={userPhoto}
+                      radarClass={radarClass}
+                      handleAvatarDragEnd={handleAvatarDragEnd}
+                      getPlayerDisplayName={getPlayerDisplayName}
+                      campfireContainerRef={campfireContainerRef}
+                      resetKey={resetKey}
+                    />
+                  );
+                });
+              })()}
             </div>
           </div>
 
@@ -2644,6 +2679,7 @@ export default function PlayerDashboard() {
           className={`bottom-nav-item ${activeTab === "suggestion" ? "active" : ""}`}
           onClick={() => setActiveTab("suggestion")}
           aria-label="Proposer un défi"
+          data-tuto="nav-suggestion"
         >
           <span style={{ fontSize: "1.6rem" }}>💡</span>
         </div>
@@ -2657,6 +2693,7 @@ export default function PlayerDashboard() {
             }
           }}
           aria-label="Soins à la Source"
+          data-tuto="nav-source"
         >
           <span style={{ fontSize: "1.6rem" }}>{isZombie ? "⛲🔒" : "⛲"}</span>
         </div>
@@ -2664,6 +2701,7 @@ export default function PlayerDashboard() {
           className={`bottom-nav-item ${activeTab === "contrat" ? "active" : ""}`}
           onClick={() => setActiveTab("contrat")}
           aria-label="Fiche de Contrat"
+          data-tuto="nav-contrat"
         >
           <span style={{ fontSize: "1.6rem" }}>🎯</span>
         </div>
@@ -2671,6 +2709,7 @@ export default function PlayerDashboard() {
           className={`bottom-nav-item ${activeTab === "classement" ? "active" : ""}`}
           onClick={() => setActiveTab("classement")}
           aria-label="Classement et Flux d'actualités"
+          data-tuto="nav-classement"
         >
           <span style={{ fontSize: "1.6rem" }}>🏆</span>
         </div>

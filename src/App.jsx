@@ -33,17 +33,39 @@ function MainAppContent() {
 
   const [showTuto, setShowTuto] = useState(false);
 
-  // Gérer le tutoriel de premier démarrage
+  // Gérer le tutoriel de premier démarrage (via DB 'init' ou fallback LocalStorage)
   useEffect(() => {
     if (gameState.started && currentUser && currentUser !== "GM") {
-      const tutoDone = localStorage.getItem("cookillers_tuto_done") === "true";
-      if (!tutoDone) {
+      const cleanUser = currentUser.toUpperCase();
+      const playerObj = gameState.players.find(p => p.name.toUpperCase() === cleanUser);
+      const tutoDoneLocal = localStorage.getItem(`cookillers_tuto_done_${cleanUser}`) === "true";
+      
+      const needsTuto = playerObj ? playerObj.init : !tutoDoneLocal;
+      
+      if (needsTuto && !tutoDoneLocal) {
         setShowTuto(true);
       }
     } else {
       setShowTuto(false);
     }
-  }, [gameState.started, currentUser]);
+  }, [gameState.started, currentUser, gameState.players]);
+
+  const handleTutoComplete = async () => {
+    setShowTuto(false);
+    if (currentUser && currentUser !== "GM" && gameCode) {
+      const cleanUser = currentUser.toUpperCase();
+      localStorage.setItem(`cookillers_tuto_done_${cleanUser}`, "true");
+      try {
+        await supabase
+          .from("players")
+          .update({ init: false })
+          .eq("game_code", gameCode)
+          .eq("name", cleanUser);
+      } catch (err) {
+        console.error("Failed to complete tutorial in database:", err);
+      }
+    }
+  };
 
   // Connexion automatique via URL (?join=CODE)
   useEffect(() => {
@@ -492,7 +514,7 @@ function MainAppContent() {
 
       {/* Tutoriel de premier démarrage en overlay */}
       {showTuto && (
-        <TutorialOverlay onComplete={() => setShowTuto(false)} />
+        <TutorialOverlay onComplete={handleTutoComplete} />
       )}
     </div>
   );

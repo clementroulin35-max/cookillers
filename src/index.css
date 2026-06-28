@@ -246,11 +246,11 @@ h1, h2, h3, .cartoon-title {
 
 @keyframes fire-crackling {
   0% {
-    transform: scale(0.98) rotate(-1deg);
+    transform: translate(-50%, -50%) scale(0.98) rotate(-1deg);
     filter: drop-shadow(0 8px 15px rgba(245, 158, 11, 0.4));
   }
   100% {
-    transform: scale(1.03) rotate(1deg);
+    transform: translate(-50%, -50%) scale(1.03) rotate(1deg);
     filter: drop-shadow(0 10px 25px rgba(239, 68, 68, 0.6));
   }
 }

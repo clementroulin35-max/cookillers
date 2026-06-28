@@ -9,26 +9,44 @@ export default function TutorialOverlay({ onComplete }) {
   const steps = [
     {
       selector: '[data-tuto="contrat"]',
-      title: "🎯 La Prochaine Victime",
-      text: "Voici ta proie du moment et le piège absurde à lui tendre. Fais ça discrètement, on n'est pas chez les barbares.",
-      position: "top"
-    },
-    {
-      selector: '[data-tuto="masque"]',
-      title: "👁️ Dissimuler mes Pêchés",
-      text: "Quelqu'un regarde par-dessus ton épaule ? Touche l'œil pour dissimuler instantanément tes petits secrets.",
+      title: "🎯 La Cible Secrète",
+      text: "Voici ta proie du moment et le piège absurde à lui tendre. Fais ça discrètement ! Si quelqu'un regarde, clique n'importe où sur cet encart pour le masquer instantanément.",
       position: "bottom"
     },
     {
-      selector: '[data-tuto="stats"]',
+      selector: '[data-tuto="campement"]',
+      title: "⛺ Le Campement",
+      text: "Retrouve tous les joueurs autour du feu. Tu penses être suivi ? Fais glisser la bulle du suspect directement dans le feu 🔥 pour l'accuser ! Les zombies 🧟 et gelés ❄️ ne peuvent pas être accusés.",
+      position: "bottom"
+    },
+    {
+      selector: '[data-tuto="vitalite"]',
       title: "❤️ Vitalité & 🍪 Biscuits",
-      text: "Tes cœurs de vie et ton score en biscuits (cookies). Ne meurs pas tout de suite, et tente de gratter le plus de biscuits pour frimer au camping.",
+      text: "Garde un œil sur tes cœurs de vie et ton score en biscuits (cookies). Si tes cœurs tombent à 0, tu décèdes et passes zombie 🧟 !",
+      position: "bottom"
+    },
+    {
+      selector: '[data-tuto="nav-contrat"]',
+      title: "🎯 L'Écran Mission",
+      text: "Ton écran principal pour gérer ton contrat actif, tes abandons, et lancer des accusations.",
       position: "top"
     },
     {
-      selector: '[data-tuto="contre-attaque"]',
-      title: "⚠️ Dénonciation / Paranoïa",
-      text: "Un mec te colle de trop près en souriant bizarrement ? Dénonce-le ici. Mais gaffe, les fausses accusations coûtent cher en santé.",
+      selector: '[data-tuto="nav-source"]',
+      title: "⛲ La Fontaine de Vie",
+      text: "Rends-toi ici pour réaliser des actions ou vérités amusantes et regagner des cœurs ❤️ en cas de coup dur.",
+      position: "top"
+    },
+    {
+      selector: '[data-tuto="nav-suggestion"]',
+      title: "💡 L'Usine à Sévices",
+      text: "Propose de nouvelles idées de pièges absurdes ou vote pour les défis proposés par les autres joueurs.",
+      position: "top"
+    },
+    {
+      selector: '[data-tuto="nav-classement"]',
+      title: "🏆 Le Classement",
+      text: "Suis le classement général des survivants et des zombies en temps réel, ainsi que le flux des actualités du jeu.",
       position: "top"
     }
   ];

@@ -32,6 +32,7 @@ CREATE TABLE public.players (
     action_id integer,
     photo text, -- Photo de profil Base64 (compression client < 100ko)
     is_frozen boolean DEFAULT false NOT NULL,
+    init boolean DEFAULT true NOT NULL,
     
     -- États de la Source de Vie (Fontaine)
     fountain_uses_today integer DEFAULT 0 NOT NULL,
@@ -139,6 +140,7 @@ BEGIN
         'target', target,
         'actionId', action_id,
         'isFrozen', is_frozen,
+        'init', init,
         'fountainUsesToday', fountain_uses_today,
         'fountainRefreshesToday', fountain_refreshes_today,
         'fountainTotalUses', fountain_total_uses,
