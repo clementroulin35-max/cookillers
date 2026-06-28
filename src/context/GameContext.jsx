@@ -69,6 +69,20 @@ export const GameProvider = ({ children }) => {
         return;
       }
 
+      const mappedPool = (data.actionPool || []).map(a => {
+        if (!a.type) {
+          if (a.scoreReward === 0) {
+            const desc = a.description || "";
+            if (desc.trim().endsWith("?") || (a.title && a.title.toLowerCase().includes("vérité")) || (a.title && a.title.toLowerCase().includes("confess"))) {
+              return { ...a, type: "fountain_truth" };
+            }
+            return { ...a, type: "fountain_action" };
+          }
+          return { ...a, type: "mission" };
+        }
+        return a;
+      });
+
       const formattedState = {
         started: data.game.status === "active" || data.game.status === "finished",
         status: data.game.status,
@@ -76,7 +90,7 @@ export const GameProvider = ({ children }) => {
         startTime: data.game.startTime,
         endTime: data.game.endTime,
         players: data.players || [],
-        actionPool: data.actionPool || [],
+        actionPool: mappedPool,
         history: data.history || []
       };
 
@@ -483,7 +497,7 @@ export const GameProvider = ({ children }) => {
       .from("players")
       .select("name")
       .eq("game_code", gameCode)
-      .eq("name", dbName)
+      .ilike("name", cleanName)
       .maybeSingle();
 
     if (checkError) throw checkError;
@@ -538,9 +552,9 @@ export const GameProvider = ({ children }) => {
     // Récupérer le joueur
     const { data: player, error } = await supabase
       .from("players")
-      .select("pin_hash")
+      .select("name, pin_hash")
       .eq("game_code", gameCode)
-      .eq("name", dbName)
+      .ilike("name", cleanName)
       .maybeSingle();
 
     if (error) throw error;
@@ -553,7 +567,7 @@ export const GameProvider = ({ children }) => {
     }
 
     localStorage.setItem("cookillers_player_pin", pin);
-    setCurrentUser(dbName);
+    setCurrentUser(player.name);
     await fetchGameState(gameCode);
     return dbName;
   };

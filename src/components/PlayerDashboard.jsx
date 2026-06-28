@@ -6,6 +6,7 @@ import Leaderboard, { getRank } from "./Leaderboard";
 import { AlertCircle, Eye, EyeOff, HelpCircle, Send, Plus, Minus, Camera, X, LogOut } from "lucide-react";
 import tombstoneZombie from "../../DA/Sans_titre_1-removebg-preview.png";
 import mascotteLogo from "../../DA/mascotte_logo_app.png";
+import headerTitle from "../../DA/header_title.png";
 import { vibrateLight, vibrateMedium, vibrateSuccess, vibrateFailure, vibrateDeath } from "../utils/haptic";
 
 const FOUNTAIN_POOL = [
@@ -98,8 +99,8 @@ export default function PlayerDashboard() {
     showToast
   } = useGame();
 
-  const player = gameState.players.find(p => p.name === currentUser);
-  const targetPlayerObj = player ? gameState.players.find(p => p.name === player.target) : null;
+  const player = gameState.players.find(p => currentUser && p.name.toUpperCase() === currentUser.toUpperCase());
+  const targetPlayerObj = player && player.target ? gameState.players.find(p => p.name.toUpperCase() === player.target.toUpperCase()) : null;
   const isTargetFrozen = targetPlayerObj ? targetPlayerObj.isFrozen : false;
 
   const getPlayerDisplayName = (username) => {
@@ -378,14 +379,14 @@ export default function PlayerDashboard() {
 
   const isZombie = player.isZombie;
   const currentAction = gameState.actionPool.find(a => a.id === player.actionId);
-  const myKiller = gameState.players.find(p => p.target === player.name);
+  const myKiller = gameState.players.find(p => p.target && p.target.toUpperCase() === player.name.toUpperCase());
 
   // Vérifier si un arbitrage est déjà en cours dans l'historique
   const pendingHit = gameState.history.find(
-    h => h.playerName === player.name && h.status === "pending" && h.type === "hit_declared"
+    h => h.playerName && h.playerName.toUpperCase() === player.name.toUpperCase() && h.status === "pending" && h.type === "hit_declared"
   );
   const pendingCounter = gameState.history.find(
-    h => h.playerName === player.name && h.status === "pending" && h.type === "counter_attack_pending"
+    h => h.playerName && h.playerName.toUpperCase() === player.name.toUpperCase() && h.status === "pending" && h.type === "counter_attack_pending"
   );
 
   // ECG Line color based on health
@@ -626,8 +627,8 @@ export default function PlayerDashboard() {
         </div>
 
         {/* Logo mini */}
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <img src={mascotteLogo} alt="Mascotte" style={{ width: "42px", height: "42px", objectFit: "contain", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <img src={headerTitle} alt="Cookillers" style={{ height: "45px", maxWidth: "160px", objectFit: "contain", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }} />
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

@@ -748,21 +748,21 @@ export default function GMDashboard() {
                   <button
                     type="button"
                     style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: defiType === "mission" ? "var(--color-cyan)" : "#100e1f", color: defiType === "mission" ? "#000" : "#fff", fontWeight: "bold", cursor: "pointer" }}
-                    onClick={() => { setDefiType("mission"); setDefiReward(100); setDefiDamage(1.5); }}
+                    onClick={() => { setDefiType("mission"); setDefiTitle(""); setDefiReward(100); setDefiDamage(1.5); }}
                   >
                     Mission 🎯
                   </button>
                   <button
                     type="button"
                     style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: defiType === "fountain_action" ? "var(--color-cyan)" : "#100e1f", color: defiType === "fountain_action" ? "#000" : "#fff", fontWeight: "bold", cursor: "pointer" }}
-                    onClick={() => { setDefiType("fountain_action"); setDefiReward(0); setDefiDamage(0.5); }}
+                    onClick={() => { setDefiType("fountain_action"); setDefiTitle(""); setDefiReward(0); setDefiDamage(0.5); }}
                   >
                     Action ⚡
                   </button>
                   <button
                     type="button"
                     style={{ flex: 1, padding: "6px", fontSize: "0.7rem", border: "2px solid #000", borderRadius: "8px", backgroundColor: defiType === "fountain_truth" ? "var(--color-cyan)" : "#100e1f", color: defiType === "fountain_truth" ? "#000" : "#fff", fontWeight: "bold", cursor: "pointer" }}
-                    onClick={() => { setDefiType("fountain_truth"); setDefiReward(0); setDefiDamage(0.5); }}
+                    onClick={() => { setDefiType("fountain_truth"); setDefiTitle(""); setDefiReward(0); setDefiDamage(0.5); }}
                   >
                     Vérité 💬
                   </button>
@@ -1076,19 +1076,37 @@ export default function GMDashboard() {
               <h3 style={{ fontSize: "1.1rem", marginBottom: "8px", transform: "none", textShadow: "none" }}>Modifier {editingPlayer}</h3>
               
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: "0.75rem", color: "#fbbf24" }}>🪙 :</label>
-                    <input
-                      type="number"
-                      value={editScore}
-                      onChange={(e) => setEditScore(Number(e.target.value))}
-                      style={{ width: "100%", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff" }}
-                    />
+                <div style={{ display: "flex", gap: "16px", alignItems: "flex-end", flexWrap: "wrap", marginBottom: "8px" }}>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", color: "#fbbf24", display: "block", marginBottom: "4px" }}>🪙 :</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        onClick={() => setEditScore(prev => Math.max(0, prev - 50))}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        value={editScore}
+                        onChange={(e) => setEditScore(Number(e.target.value))}
+                        style={{ width: "60px", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff", textAlign: "center" }}
+                      />
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        onClick={() => setEditScore(prev => prev + 50)}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: "0.75rem", color: "var(--color-red)" }}>❤️ :</label>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", color: "var(--color-red)", display: "block", marginBottom: "4px" }}>❤️ :</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <button 
                         type="button" 
                         className="btn-cartoon" 
