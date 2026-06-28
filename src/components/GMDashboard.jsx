@@ -1142,14 +1142,23 @@ export default function GMDashboard() {
             const currentMissionTitle = currentMission ? currentMission.title : "Aucune";
             const currentMissionDesc = currentMission ? currentMission.description : "";
             return (
-              <div style={{ border: "2px solid var(--color-purple)", padding: "12px", borderRadius: "12px", backgroundColor: "#1d1933", textAlign: "left" }}>
+              <div style={{ border: "2px solid var(--color-purple)", padding: "12px", borderRadius: "12px", backgroundColor: "#1d1933", textAlign: "left", position: "relative" }}>
+                <button 
+                  type="button" 
+                  onClick={() => setEditingPlayer(null)}
+                  style={{ position: "absolute", top: "10px", right: "10px", background: "none", border: "none", color: "#9ca3af", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                  title="Fermer"
+                >
+                  <X size={20}/>
+                </button>
+
                 <h3 style={{ fontSize: "1.1rem", marginBottom: "6px", transform: "none", textShadow: "none" }}>Modifier {getPlayerDisplayName(editingPlayer)}</h3>
                 <div style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "8px" }}>
                   <div>Cible : <strong style={{ color: "#fbbf24" }}>{p ? (getPlayerDisplayName(p.target) || "Aucune") : "Aucune"}</strong></div>
-                  <div style={{ marginTop: "4px" }}>Mission en cours : <strong>{currentMissionTitle}</strong></div>
+                  <div style={{ marginTop: "4px" }}>Mission en cours : <strong style={{ color: "#ffffff" }}>{currentMissionTitle}</strong></div>
                   {currentMissionDesc && (
-                    <div style={{ marginTop: "4px", fontSize: "0.75rem", fontStyle: "italic", color: "#ffffff" }}>
-                      Description : {currentMissionDesc}
+                    <div style={{ marginTop: "4px", fontSize: "0.75rem", fontStyle: "italic", color: "#9ca3af" }}>
+                      Description : <span style={{ color: "#ffffff", fontStyle: "normal" }}>{currentMissionDesc}</span>
                     </div>
                   )}
                 </div>
@@ -1158,7 +1167,7 @@ export default function GMDashboard() {
                 {/* 1. SCORE */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
-                    <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem", verticalAlign: "middle" }} /> :
+                    <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "2.0rem", height: "2.0rem", verticalAlign: "middle" }} />
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button 
@@ -1190,7 +1199,7 @@ export default function GMDashboard() {
                 {/* 2. VITALITÉ */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
-                    <span>❤️ :</span>
+                    <span style={{ fontSize: "1.8rem", display: "inline-block", lineHeight: 1 }}>❤️</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button 
@@ -1220,7 +1229,7 @@ export default function GMDashboard() {
                 {/* 3. RELANCES FONTAINE (🔄) */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
-                    <span>🔄 :</span>
+                    <span style={{ fontSize: "1.8rem", display: "inline-block", lineHeight: 1 }}>🔄</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button 
@@ -1249,7 +1258,7 @@ export default function GMDashboard() {
                 {/* 4. FONTAINE UTILISATIONS (⛲) */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
-                    <span>⛲ :</span>
+                    <span style={{ fontSize: "1.8rem", display: "inline-block", lineHeight: 1 }}>⛲</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button 
@@ -1279,7 +1288,7 @@ export default function GMDashboard() {
                 {/* 5. RELANCES DÉFI (🌀) */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
-                    <span>🌀 :</span>
+                    <span style={{ fontSize: "1.8rem", display: "inline-block", lineHeight: 1 }}>🌀</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button 
@@ -1326,7 +1335,10 @@ export default function GMDashboard() {
                       fontSize: "1.8rem",
                       cursor: "pointer",
                       boxShadow: editZombie ? "0 0 10px rgba(74, 222, 128, 0.4), 2px 2px 0 #000" : "2px 2px 0 #000",
-                      transition: "all 0.2s ease"
+                      transition: "all 0.2s ease",
+                      padding: 0,
+                      lineHeight: "50px",
+                      textAlign: "center"
                     }}
                   >
                     🧟
@@ -1352,7 +1364,10 @@ export default function GMDashboard() {
                       fontSize: "1.8rem",
                       cursor: "pointer",
                       boxShadow: editFrozen ? "0 0 10px rgba(34, 211, 238, 0.4), 2px 2px 0 #000" : "2px 2px 0 #000",
-                      transition: "all 0.2s ease"
+                      transition: "all 0.2s ease",
+                      padding: 0,
+                      lineHeight: "50px",
+                      textAlign: "center"
                     }}
                   >
                     ❄️
@@ -1388,7 +1403,6 @@ export default function GMDashboard() {
                   <button type="button" className="btn-cartoon btn-green" style={{ flex: 1, padding: "0.5rem" }} onClick={handleGodSave}>Sauver</button>
                   <button type="button" className="btn-cartoon btn-red" style={{ flex: 1, padding: "0.5rem" }} onClick={() => handleRemovePlayer(editingPlayer)}>Bannir</button>
                 </div>
-                <button type="button" className="btn-cartoon" style={{ padding: "0.4rem", backgroundColor: "#4b5563" }} onClick={() => setEditingPlayer(null)}>Annuler</button>
               </div>
             );
           })() : (

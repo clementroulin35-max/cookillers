@@ -125,6 +125,8 @@ export default function PlayerDashboard() {
   const [showZombieFountainModal, setShowZombieFountainModal] = useState(false);
   const [showZombieBiteConfirmModal, setShowZombieBiteConfirmModal] = useState(false);
   const [revealPin, setRevealPin] = useState(false);
+  const campfireContainerRef = useRef(null);
+  const fireRef = useRef(null);
   
   // États de l'aide contextuelle
   const [isHelpActive, setIsHelpActive] = useState(false);
@@ -462,6 +464,45 @@ export default function PlayerDashboard() {
     setShowCounterModal(false);
     setCounterAction("");
     showToast("Accusation lancée auprès des Juges. Croisez les doigts.");
+  };
+
+  const handleAvatarDragEnd = (p, info) => {
+    if (p.isZombie || p.isFrozen) {
+      const fireRect = fireRef.current?.getBoundingClientRect();
+      if (fireRect) {
+        const dragX = info.point.x;
+        const dragY = info.point.y;
+        const inFire = (
+          dragX >= fireRect.left &&
+          dragX <= fireRect.right &&
+          dragY >= fireRect.top &&
+          dragY <= fireRect.bottom
+        );
+        if (inFire) {
+          showToast(`Impossible d'accuser un Zombie 🧟 ou un joueur Gelé ❄️ !`);
+          vibrateFailure();
+        }
+      }
+      return;
+    }
+
+    const fireRect = fireRef.current?.getBoundingClientRect();
+    if (fireRect) {
+      const dragX = info.point.x;
+      const dragY = info.point.y;
+      const inFire = (
+        dragX >= fireRect.left &&
+        dragX <= fireRect.right &&
+        dragY >= fireRect.top &&
+        dragY <= fireRect.bottom
+      );
+
+      if (inFire) {
+        setCounterSuspect(p.name);
+        setShowCounterModal(true);
+        vibrateMedium();
+      }
+    }
   };
 
   // Helper pour piocher / récupérer le couple Action / Vérité de la Fontaine de façon persistante
@@ -819,19 +860,22 @@ export default function PlayerDashboard() {
         <div style={{ display: "flex", flexDirection: "column" }}>
           
           {/* Hub Le Campement des Assassins 2D */}
-          <div style={{
-            height: "180px",
-            margin: "8px 10px",
-            border: "3px solid #000",
-            borderRadius: "16px",
-            boxShadow: "4px 4px 0 #000",
-            backgroundColor: "#0d0a1b",
-            position: "relative",
-            overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}>
+          <div 
+            ref={campfireContainerRef}
+            style={{
+              height: "180px",
+              margin: "8px 10px",
+              border: "3px solid #000",
+              borderRadius: "16px",
+              boxShadow: "4px 4px 0 #000",
+              backgroundColor: "#0d0a1b",
+              position: "relative",
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
             {/* Arrière-plan psychédélique avec parallaxe */}
             <div style={{
               position: "absolute",
@@ -844,6 +888,7 @@ export default function PlayerDashboard() {
 
             {/* Feu de camp animé au centre (interactif) */}
             <div 
+              ref={fireRef}
               className="fire-camp"
               onClick={() => showToast("Aïe, c'est chaud ! Ne mettez pas les doigts dans le feu... 🔥")}
               style={{
@@ -880,43 +925,53 @@ export default function PlayerDashboard() {
                 if (isSuspecting) radarClass = "radar-cyan";
                 else if (isAccused) radarClass = "radar-orange";
 
+                const isMe = p.name === player.name;
+
                 return (
-                  <div
+                  <motion.div
                     key={p.name}
                     className={radarClass}
+                    drag={!isMe}
+                    dragConstraints={campfireContainerRef}
+                    dragElastic={0.1}
+                    dragMomentum={false}
+                    animate={{ x: 0, y: 0 }}
+                    onDragEnd={(event, info) => handleAvatarDragEnd(p, info)}
                     style={{
                       position: "absolute",
                       left: `${left}%`,
                       top: `${top}%`,
-                      transform: "translate(-50%, -50%) scale(0.85)",
-                      width: "32px",
-                      height: "32px",
+                      transform: "translate(-50%, -50%)",
+                      width: "48px",
+                      height: "48px",
                       borderRadius: "50%",
                       border: `2px solid ${p.isZombie ? "var(--color-zombie)" : (p.isFrozen ? "var(--color-cyan)" : "#000")}`,
-                      backgroundColor: p.isZombie ? "rgba(34, 197, 94, 0.2)" : (p.isFrozen ? "rgba(34, 211, 238, 0.2)" : "#3a3463"),
+                      backgroundColor: p.isZombie ? "rgba(74, 222, 128, 0.2)" : (p.isFrozen ? "rgba(34, 211, 238, 0.2)" : "#3a3463"),
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: "0.7rem",
+                      fontSize: "0.95rem",
                       fontWeight: "bold",
-                      zIndex: 4,
-                      overflow: "visible"
+                      zIndex: 10,
+                      cursor: isMe ? "default" : "grab",
+                      touchAction: "none"
                     }}
-                    title={p.name}
+                    title={p.displayName || p.name}
                   >
                     <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {p.isZombie ? (
-                        "🧟"
-                      ) : userPhoto ? (
+                      {userPhoto ? (
                         <img src={userPhoto} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       ) : (
-                        p.name.slice(0, 2).toUpperCase()
+                        p.displayName ? p.displayName.slice(0, 2).toUpperCase() : p.name.slice(0, 2).toUpperCase()
                       )}
                     </div>
                     {p.isFrozen && (
-                      <span style={{ position: "absolute", bottom: "-6px", right: "-6px", fontSize: "0.85rem", zIndex: 10 }}>❄️</span>
+                      <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12 }}>❄️</span>
                     )}
-                  </div>
+                    {p.isZombie && (
+                      <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12 }}>🧟</span>
+                    )}
+                  </motion.div>
                 );
               })}
             </div>
@@ -961,7 +1016,7 @@ export default function PlayerDashboard() {
                     height: "100%",
                     backgroundColor: "#0c1510",
                     borderRadius: "12px",
-                    zIndex: 10005,
+                    zIndex: 30,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center"
@@ -976,7 +1031,9 @@ export default function PlayerDashboard() {
                       textTransform: "uppercase",
                       fontSize: "0.8rem",
                       textAlign: "center",
-                      transform: "rotate(-6deg)"
+                      transform: "rotate(-6deg)",
+                      position: "relative",
+                      zIndex: 100
                     }}>
                       MORSURE EN EXAMEN ⚖️
                     </div>
@@ -1224,41 +1281,21 @@ export default function PlayerDashboard() {
               )}
 
               {/* Boutons d'Action Contrat */}
-              <div style={{ display: "flex", gap: "12px", padding: "0 10px", marginTop: "6px" }}>
+              {/* Ligne 1: Contrat Exécuté */}
+              <div style={{ padding: "0 10px", marginTop: "12px" }}>
                 <button
                   type="button"
                   className={`btn-cartoon ${isTargetFrozen ? "btn-disabled" : "btn-green"}`}
-                  style={{ flex: 2, height: "48px" }}
+                  style={{ width: "100%", height: "48px" }}
                   disabled={pendingHit || isTargetFrozen}
                   onClick={handleHitSubmit}
                 >
                   {isTargetFrozen ? "Cible Gelée ❄️" : "⚔️ Contrat Exécuté"}
                 </button>
-
-                <button
-                  type="button"
-                  className="btn-cartoon btn-cyan"
-                  style={{ flex: 1, height: "48px", padding: "0" }}
-                  disabled={player.skips < 1 || pendingHit}
-                  onClick={() => setShowSkipConfirmModal(true)}
-                  title="Brûler la Recette"
-                >
-                  Brûler 🌀
-                </button>
               </div>
 
-              {/* Boutons secondaires : Dénonciation & Abandon */}
+              {/* Ligne 2: Abandonner Cible & Brûler mission */}
               <div style={{ display: "flex", gap: "12px", padding: "0 10px", marginTop: "12px" }}>
-                <button
-                  type="button"
-                  className="btn-cartoon btn-red"
-                  data-tuto="contre-attaque"
-                  style={{ flex: 1, fontSize: "0.85rem", height: "40px" }}
-                  onClick={() => setShowCounterModal(true)}
-                >
-                  ⚠️ Bureau des Rumeurs
-                </button>
-
                 <button
                   type="button"
                   className="btn-cartoon"
@@ -1273,6 +1310,17 @@ export default function PlayerDashboard() {
                   onClick={() => setShowAbandonModal(true)}
                 >
                   🏳️ Abandonner Cible
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-cartoon btn-cyan"
+                  style={{ flex: 1, height: "40px", fontSize: "0.85rem", padding: "0" }}
+                  disabled={player.skips < 1 || pendingHit}
+                  onClick={() => setShowSkipConfirmModal(true)}
+                  title="Brûler la Recette"
+                >
+                  Brûler mission 🌀
                 </button>
               </div>
             </div>
@@ -2115,26 +2163,11 @@ export default function PlayerDashboard() {
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", textAlign: "left" }}>
-                <div>
-                  <label style={{ fontSize: "0.8rem" }}>Qui est votre assassin suspecté ?</label>
-                  <select
-                    value={counterSuspect}
-                    onChange={(e) => setCounterSuspect(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "8px",
-                      borderRadius: "8px",
-                      backgroundColor: "#1a172e",
-                      color: "#fff",
-                      border: "2px solid #000",
-                      marginTop: "2px"
-                    }}
-                  >
-                    <option value="">-- Sélectionner le suspect --</option>
-                    {gameState.players.filter(p => p.name !== player.name && !p.isFrozen).map(p => (
-                      <option key={p.name} value={p.name}>{getPlayerDisplayName(p.name)}</option>
-                    ))}
-                  </select>
+                <div style={{ backgroundColor: "#151124", padding: "10px", borderRadius: "8px", border: "2px solid #000", marginBottom: "6px" }}>
+                  <span style={{ fontSize: "0.85rem", color: "#9ca3af" }}>Suspect accusé :</span>
+                  <div style={{ fontSize: "1.15rem", fontWeight: "bold", color: "var(--color-red)", marginTop: "2px" }}>
+                    {getPlayerDisplayName(counterSuspect)}
+                  </div>
                 </div>
 
                 <div>
