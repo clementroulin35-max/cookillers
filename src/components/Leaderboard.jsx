@@ -172,7 +172,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
           {getPlayerDisplayName(player.name)}
         </span>
         <span style={{ fontSize: "0.8rem", color: "#fbbf24", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "2px" }}>
-          {player.effectiveScore} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} />
+          {player.effectiveScore} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
         </span>
         <div style={{
           width: "100%",
@@ -213,7 +213,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
             ⚔️ <strong>CONTRAT EXÉCUTÉ</strong><br/>
             <strong>{getPlayerDisplayName(evt.playerName)}</strong> a validé un contrat sur <strong>{getPlayerDisplayName(evt.targetName)}</strong> !<br/>
             <span style={{ color: "var(--color-purple)", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "4px", fontWeight: "bold" }}>
-              Difficulté : {diffLabel} (+{evt.scoreReward} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /> | -{evt.damagePenalty} ❤️)
+              Difficulté : {diffLabel} (+{evt.scoreReward} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} /> | -{evt.damagePenalty} ❤️)
             </span>
             <br/>
             <span style={{ color: "#9ca3af", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
@@ -301,9 +301,9 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
         return (
           <span>
             🧟 <strong>MORSURE ZOMBIE</strong><br/>
-            Un zombie a mordu <strong>{getPlayerDisplayName(evt.targetName)}</strong> ! Le zombie ressuscite et vole <strong>50 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply", display: "inline-block", verticalAlign: "middle" }} /></strong>.<br/>
+            Un zombie a mordu <strong>{getPlayerDisplayName(evt.targetName)}</strong> ! Le zombie ressuscite et vole <strong>50 <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", display: "inline-block", verticalAlign: "middle" }} /></strong>.<br/>
             <span style={{ color: "var(--color-red)", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "4px", fontWeight: "bold" }}>
-              Victime : -1.0 ❤️ | -50 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} />
+              Victime : -1.0 ❤️ | -50 <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
             </span>
           </span>
         );
@@ -560,7 +560,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", width: "80px" }}>
                         <span style={{ fontWeight: "black", fontSize: "1rem", color: "#fbbf24", textAlign: "right", display: "inline-flex", alignItems: "center", gap: "2px" }}>
-                          {player.effectiveScore} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} />
+                          {player.effectiveScore} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
                         </span>
                         {player.isZombie && (
                           <span style={{ fontSize: "0.6rem", color: "var(--color-zombie)", textAlign: "right", whiteSpace: "nowrap" }}>

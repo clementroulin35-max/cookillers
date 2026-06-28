@@ -547,6 +547,8 @@ export default function PlayerDashboard() {
 
       const challenge = fountainType === "action" ? actionCh : veriteCh;
       setFountainChoice(challenge);
+      setFountainPhotoProof("");
+      setFountainTextProof("");
       manualRefresh();
       showToast("Nouveau défi de la Source pioché ! 🌀");
     }
@@ -758,7 +760,7 @@ export default function PlayerDashboard() {
           onClick={() => triggerTooltip("biscuits")}
           style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", position: "relative" }}
         >
-          <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.4rem", height: "1.4rem", verticalAlign: "middle", mixBlendMode: "multiply", display: "inline-block" }} />
+          <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.8rem", height: "1.8rem", verticalAlign: "middle", display: "inline-block" }} />
           <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", textShadow: "1.5px 1.5px 0 #000", color: "#fbbf24" }}>
             {player.score}
           </span>
@@ -779,7 +781,7 @@ export default function PlayerDashboard() {
                 gap: "2px"
               }}
             >
-              x0.5 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /> (ZOMBIE)
+              x0.5 <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} /> (ZOMBIE)
             </span>
           )}
           {isHelpActive && (
@@ -957,9 +959,9 @@ export default function PlayerDashboard() {
                     left: 0,
                     width: "100%",
                     height: "100%",
-                    backgroundColor: "rgba(12, 21, 16, 0.96)",
+                    backgroundColor: "#0c1510",
                     borderRadius: "12px",
-                    zIndex: 30,
+                    zIndex: 10005,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center"
@@ -991,7 +993,7 @@ export default function PlayerDashboard() {
                   {currentAction ? currentAction.description : "Faire prononcer le mot 'Cerveau' à un survivant ou lui faire mimer une marche de zombie."}
                 </p>
                 <div style={{ display: "flex", gap: "12px", fontSize: "0.8rem", fontWeight: "bold", borderTop: "1px solid rgba(34, 197, 94, 0.2)", paddingTop: "8px" }}>
-                  <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "4px" }}>Récompense : +50 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2em", height: "1.2em", mixBlendMode: "multiply" }} /></span>
+                  <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "4px" }}>Récompense : +50 <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5em", height: "1.5em", verticalAlign: "middle" }} /></span>
                   <span style={{ color: "var(--color-green)" }}>Rédemption : +1.0 ❤️</span>
                 </div>
               </div>
@@ -1213,7 +1215,7 @@ export default function PlayerDashboard() {
 
                     {currentAction && (
                       <div style={{ display: "flex", gap: "10px", marginTop: "12px", fontSize: "0.8rem", fontWeight: "bold" }}>
-                        <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "4px" }}> Récompense : +{isZombie ? Math.floor(currentAction.scoreReward / 2) : currentAction.scoreReward} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2em", height: "1.2em", mixBlendMode: "multiply" }} /></span>
+                        <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "4px" }}> Récompense : +{isZombie ? Math.floor(currentAction.scoreReward / 2) : currentAction.scoreReward} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5em", height: "1.5em", verticalAlign: "middle" }} /></span>
                         <span style={{ color: "var(--color-red)" }}> Dégâts : -{isZombie ? 0 : currentAction.damagePenalty} ❤️</span>
                       </div>
                     )}
@@ -1276,7 +1278,23 @@ export default function PlayerDashboard() {
             </div>
           ) : (
             <div style={{ padding: "30px 15px", textAlign: "center", color: "#9ca3af" }}>
-              <p>Aucune cible active. En attente du début de la chasse par le GM... 🏕️</p>
+              {player.isFrozen ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", padding: "10px" }}>
+                  <span style={{ fontSize: "2.5rem" }}>❄️</span>
+                  <h3 style={{ color: "var(--color-cyan)", fontFamily: "var(--font-title)", fontSize: "1.2rem", margin: "0 0 4px 0", textShadow: "2px 2px 0 #000", transform: "none" }}>
+                    EXFILTRATION DU CAMPEMENT
+                  </h3>
+                  <p style={{ fontSize: "0.85rem", lineHeight: "1.5", margin: 0, color: "#d1d5db", maxWidth: "300px", textAlign: "center" }}>
+                    Tu es actuellement gelé et en sécurité au camp, hors de portée des tueurs et des morsures. 
+                    <br /><br />
+                    Plus d'action ni de cible de mission disponible car tu as quitté le festival avant le dernier jour.
+                    <br /><br />
+                    <span style={{ color: "var(--color-purple)", fontWeight: "bold" }}>Tu restes présent et comptabilisé pour le Classement final ! 🏆</span>
+                  </p>
+                </div>
+              ) : (
+                <p>Aucune cible active. En attente du début de la chasse par le GM... 🏕️</p>
+              )}
             </div>
           )}
         </div>
@@ -1627,7 +1645,7 @@ export default function PlayerDashboard() {
               /* Sélecteurs Récompense 🪙 et Dégâts ❤️ alignés */
               <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2rem", height: "1.2rem", mixBlendMode: "multiply", display: "inline-block" }} />
+                  <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem", display: "inline-block", verticalAlign: "middle" }} />
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.max(50, suggestReward - 50))}><Minus size={12}/></button>
                     <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center" }}>{suggestReward}</span>
@@ -1727,7 +1745,7 @@ export default function PlayerDashboard() {
                       <div style={{ display: "flex", gap: "10px", marginTop: "4px", fontSize: "0.65rem" }}>
                         {(a.type === "mission" || !a.type) ? (
                           <>
-                            <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "2px" }}><img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /> +{a.scoreReward}</span>
+                            <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "2px" }}><img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} /> +{a.scoreReward}</span>
                             <span style={{ color: "var(--color-red)" }}>❤️ -{a.damagePenalty}</span>
                           </>
                         ) : (
@@ -1946,7 +1964,7 @@ export default function PlayerDashboard() {
                   <div style={{ marginBottom: "1rem", padding: "8px", backgroundColor: "rgba(0,0,0,0.2)", borderRadius: "10px", border: "2px solid var(--border-color)", textAlign: "left" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", fontWeight: "bold", marginBottom: "4px" }}>
                       <span style={{ color: "var(--color-cyan)" }}>Rang : {rankIcon} {rankLabel}</span>
-                      {score < 3500 && <span style={{ fontSize: "0.7rem", color: "#9ca3af", display: "inline-flex", alignItems: "center", gap: "2px" }}>{score} / {nextScore} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /></span>}
+                      {score < 3500 && <span style={{ fontSize: "0.7rem", color: "#9ca3af", display: "inline-flex", alignItems: "center", gap: "2px" }}>{score} / {nextScore} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} /></span>}
                     </div>
                     {score < 3500 ? (
                       <div style={{ width: "100%", height: "8px", backgroundColor: "#110f1e", border: "1.5px solid #000", borderRadius: "6px", overflow: "hidden", boxShadow: "1px 1px 0 #000" }}>
@@ -1990,7 +2008,7 @@ export default function PlayerDashboard() {
                     .map(h => (
                       <div key={h.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "4px" }}>
                         <span>⚔️ {h.targetName}</span>
-                        <span style={{ color: "#fbbf24", display: "inline-flex", alignItems: "center", gap: "2px" }}>+{h.scoreReward} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /></span>
+                        <span style={{ color: "#fbbf24", display: "inline-flex", alignItems: "center", gap: "2px" }}>+{h.scoreReward} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} /></span>
                       </div>
                     ))
                   }
@@ -2253,8 +2271,8 @@ export default function PlayerDashboard() {
                     showToast("Cible abandonnée. Nouveau contrat pioché ! 🪙");
                   }}
                 >
-                  <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "2rem", height: "2rem", marginBottom: "4px", mixBlendMode: "multiply" }} />
-                  <span style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem", color: "#fff", display: "inline-flex", alignItems: "center", gap: "2px" }}>-50 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /></span>
+                  <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "2.4rem", height: "2.4rem", marginBottom: "4px" }} />
+                  <span style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem", color: "#fff", display: "inline-flex", alignItems: "center", gap: "2px" }}>-50 <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} /></span>
                   <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)" }}>Biscuits</span>
                 </button>
               </div>
@@ -2384,7 +2402,7 @@ export default function PlayerDashboard() {
               <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.2rem", lineHeight: "1.4" }}>
                 Es-tu sûr d'avoir planté tes dents dans <strong>{getPlayerDisplayName(zombieVictim)}</strong> ?
                 <br />
-                <span style={{ color: "var(--color-green)", display: "flex", alignItems: "center", justifyContent: "center", gap: "2px", fontWeight: "bold" }}>Récompense : +50 <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /> | Rédemption : +1.0 ❤️</span>
+                <span style={{ color: "var(--color-green)", display: "flex", alignItems: "center", justifyContent: "center", gap: "2px", fontWeight: "bold" }}>Récompense : +50 <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} /> | Rédemption : +1.0 ❤️</span>
               </p>
 
               <div style={{ display: "flex", gap: "10px" }}>
@@ -2426,7 +2444,7 @@ export default function PlayerDashboard() {
             pointerEvents: "none"
           }}
         >
-          +{floatingScore.amount} 🪙
+          +{floatingScore.amount} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
         </div>
       )}
 

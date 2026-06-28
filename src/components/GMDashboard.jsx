@@ -649,7 +649,7 @@ export default function GMDashboard() {
                             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                               {/* Reward 🪙 */}
                               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply", display: "inline-block" }} />
+                                <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
                                 <button
                                   type="button"
                                   className="btn-cartoon"
@@ -866,7 +866,7 @@ export default function GMDashboard() {
                   <div style={{ display: "flex", gap: "16px", justifyContent: "space-between", alignItems: "center" }}>
                     {/* Points 🪙 */}
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1 }}>
-                      <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2rem", height: "1.2rem", mixBlendMode: "multiply", display: "inline-block" }} />
+                      <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem", verticalAlign: "middle" }} />
                       <button
                         type="button"
                         className="btn-cartoon"
@@ -998,7 +998,7 @@ export default function GMDashboard() {
                   <div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#fbbf24", marginTop: "2px", display: "flex", alignItems: "center", gap: "4px" }}>
                     {a.type === "mission" || !a.type ? (
                       <>
-                        +{a.scoreReward} <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.1em", height: "1.1em", mixBlendMode: "multiply" }} /> | -{a.damagePenalty} ❤️
+                         +{a.scoreReward} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} /> | -{a.damagePenalty} ❤️
                       </>
                     ) : (
                       <>Soin : +{a.damagePenalty} ❤️</>
@@ -1145,169 +1145,223 @@ export default function GMDashboard() {
               <div style={{ border: "2px solid var(--color-purple)", padding: "12px", borderRadius: "12px", backgroundColor: "#1d1933", textAlign: "left" }}>
                 <h3 style={{ fontSize: "1.1rem", marginBottom: "6px", transform: "none", textShadow: "none" }}>Modifier {getPlayerDisplayName(editingPlayer)}</h3>
                 <div style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "8px" }}>
-                  <div>Cible : <strong>{p ? (getPlayerDisplayName(p.target) || "Aucune") : "Aucune"}</strong></div>
+                  <div>Cible : <strong style={{ color: "#fbbf24" }}>{p ? (getPlayerDisplayName(p.target) || "Aucune") : "Aucune"}</strong></div>
                   <div style={{ marginTop: "4px" }}>Mission en cours : <strong>{currentMissionTitle}</strong></div>
                   {currentMissionDesc && (
-                    <div style={{ marginTop: "4px", fontSize: "0.75rem", fontStyle: "italic", color: "#9ca3af" }}>
+                    <div style={{ marginTop: "4px", fontSize: "0.75rem", fontStyle: "italic", color: "#ffffff" }}>
                       Description : {currentMissionDesc}
                     </div>
                   )}
                 </div>
               
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {/* Row 1: Score & Vie */}
-                <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2rem", height: "1.2rem", mixBlendMode: "multiply", display: "inline-block" }} /> :
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                        onClick={() => setEditScore(prev => Math.max(0, prev - 50))}
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        value={editScore}
-                        onChange={(e) => setEditScore(Number(e.target.value))}
-                        style={{ width: "60px", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff", textAlign: "center" }}
-                      />
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                        onClick={() => setEditScore(prev => prev + 50)}
-                      >
-                        +
-                      </button>
-                    </div>
+                {/* 1. SCORE */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
+                    <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem", verticalAlign: "middle" }} /> :
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>❤️ :</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                        onClick={() => setEditLives(prev => Math.max(0.0, prev - 0.5))}
-                      >
-                        -
-                      </button>
-                      <span style={{ fontFamily: "var(--font-title)", minWidth: "28px", textAlign: "center", display: "inline-block" }}>
-                        {editLives}
-                      </span>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                        onClick={() => setEditLives(prev => Math.min(7.0, prev + 0.5))}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 2: Utilisation Fontaine & Relance Fontaine */}
-                <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>⛲ :</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                        onClick={() => setEditFountainUses(prev => Math.max(0, prev - 1))}
-                      >
-                        -
-                      </button>
-                      <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center", display: "inline-block" }}>
-                        {editFountainUses}/2
-                      </span>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                        onClick={() => setEditFountainUses(prev => Math.min(2, prev + 1))}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>⛲🔄 :</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                        onClick={() => setEditFountainRefreshes(prev => Math.max(0, prev - 1))}
-                      >
-                        -
-                      </button>
-                      <span style={{ fontFamily: "var(--font-title)", minWidth: "20px", textAlign: "center", display: "inline-block" }}>
-                        {editFountainRefreshes}
-                      </span>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                        onClick={() => setEditFountainRefreshes(prev => prev + 1)}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 3: Relance Défi */}
-                <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "flex-start", flexWrap: "wrap", paddingBottom: "4px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>🎯🌀 :</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                        onClick={() => setEditSkips(prev => Math.max(0, prev - 1))}
-                      >
-                        -
-                      </button>
-                      <span style={{ fontFamily: "var(--font-title)", minWidth: "20px", textAlign: "center", display: "inline-block" }}>
-                        {editSkips}
-                      </span>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                        onClick={() => setEditSkips(prev => prev + 1)}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
-                <div style={{ display: "flex", gap: "20px", margin: "4px 0", justifyContent: "center" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", cursor: "pointer" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      disabled={editScore <= 0}
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: editScore <= 0 ? "#4b5563" : "var(--color-purple)", color: editScore <= 0 ? "#9ca3af" : "#fff", opacity: editScore <= 0 ? 0.5 : 1, cursor: editScore <= 0 ? "not-allowed" : "pointer" }} 
+                      onClick={() => setEditScore(prev => Math.max(0, prev - 50))}
+                    >
+                      -
+                    </button>
                     <input
-                      type="checkbox"
-                      checked={editZombie}
-                      onChange={(e) => setEditZombie(e.target.checked)}
-                    /> Zombie 🧟
-                  </label>
-
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={editFrozen}
-                      onChange={(e) => setEditFrozen(e.target.checked)}
-                    /> Exfiltré (Gelé) ❄️
-                  </label>
+                      type="number"
+                      value={editScore}
+                      onChange={(e) => setEditScore(Number(e.target.value))}
+                      style={{ width: "60px", padding: "6px", backgroundColor: "#100e1f", border: "2px solid #000", borderRadius: "6px", color: "#fff", textAlign: "center" }}
+                    />
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
+                      onClick={() => setEditScore(prev => prev + 50)}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
+
+                {/* 2. VITALITÉ */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
+                    <span>❤️ :</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      disabled={editLives <= 0}
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: editLives <= 0 ? "#4b5563" : "var(--color-purple)", color: editLives <= 0 ? "#9ca3af" : "#fff", opacity: editLives <= 0 ? 0.5 : 1, cursor: editLives <= 0 ? "not-allowed" : "pointer" }} 
+                      onClick={() => setEditLives(prev => Math.max(0.0, prev - 0.5))}
+                    >
+                      -
+                    </button>
+                    <span style={{ fontFamily: "var(--font-title)", minWidth: "60px", textAlign: "center", display: "inline-block" }}>
+                      {editLives}
+                    </span>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      disabled={editLives >= 7.0}
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: editLives >= 7.0 ? "#4b5563" : "var(--color-purple)", color: editLives >= 7.0 ? "#9ca3af" : "#fff", opacity: editLives >= 7.0 ? 0.5 : 1, cursor: editLives >= 7.0 ? "not-allowed" : "pointer" }} 
+                      onClick={() => setEditLives(prev => Math.min(7.0, prev + 0.5))}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. RELANCES FONTAINE (🔄) */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
+                    <span>🔄 :</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      disabled={editFountainRefreshes <= 0}
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: editFountainRefreshes <= 0 ? "#4b5563" : "var(--color-purple)", color: editFountainRefreshes <= 0 ? "#9ca3af" : "#fff", opacity: editFountainRefreshes <= 0 ? 0.5 : 1, cursor: editFountainRefreshes <= 0 ? "not-allowed" : "pointer" }} 
+                      onClick={() => setEditFountainRefreshes(prev => Math.max(0, prev - 1))}
+                    >
+                      -
+                    </button>
+                    <span style={{ fontFamily: "var(--font-title)", minWidth: "60px", textAlign: "center", display: "inline-block" }}>
+                      {editFountainRefreshes}
+                    </span>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
+                      onClick={() => setEditFountainRefreshes(prev => prev + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. FONTAINE UTILISATIONS (⛲) */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
+                    <span>⛲ :</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      disabled={editFountainUses <= 0}
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: editFountainUses <= 0 ? "#4b5563" : "var(--color-purple)", color: editFountainUses <= 0 ? "#9ca3af" : "#fff", opacity: editFountainUses <= 0 ? 0.5 : 1, cursor: editFountainUses <= 0 ? "not-allowed" : "pointer" }} 
+                      onClick={() => setEditFountainUses(prev => Math.max(0, prev - 1))}
+                    >
+                      -
+                    </button>
+                    <span style={{ fontFamily: "var(--font-title)", minWidth: "60px", textAlign: "center", display: "inline-block" }}>
+                      {editFountainUses}/2
+                    </span>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      disabled={editFountainUses >= 2}
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: editFountainUses >= 2 ? "#4b5563" : "var(--color-purple)", color: editFountainUses >= 2 ? "#9ca3af" : "#fff", opacity: editFountainUses >= 2 ? 0.5 : 1, cursor: editFountainUses >= 2 ? "not-allowed" : "pointer" }} 
+                      onClick={() => setEditFountainUses(prev => Math.min(2, prev + 1))}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 5. RELANCES DÉFI (🌀) */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
+                    <span>🌀 :</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      disabled={editSkips <= 0}
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: editSkips <= 0 ? "#4b5563" : "var(--color-purple)", color: editSkips <= 0 ? "#9ca3af" : "#fff", opacity: editSkips <= 0 ? 0.5 : 1, cursor: editSkips <= 0 ? "not-allowed" : "pointer" }} 
+                      onClick={() => setEditSkips(prev => Math.max(0, prev - 1))}
+                    >
+                      -
+                    </button>
+                    <span style={{ fontFamily: "var(--font-title)", minWidth: "60px", textAlign: "center", display: "inline-block" }}>
+                      {editSkips}
+                    </span>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
+                      onClick={() => setEditSkips(prev => prev + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+              
+              {/* Boutons Poussoirs Zombie / Gelé */}
+              <div style={{ display: "flex", gap: "40px", margin: "12px 0", justifyContent: "center", alignItems: "center" }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditZombie(prev => !prev)}
+                    style={{
+                      width: "56px",
+                      height: "56px",
+                      borderRadius: "50%",
+                      border: editZombie ? "3px solid var(--color-zombie)" : "3px solid #374151",
+                      backgroundColor: editZombie ? "rgba(74, 222, 128, 0.25)" : "#110e20",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1.8rem",
+                      cursor: "pointer",
+                      boxShadow: editZombie ? "0 0 10px rgba(74, 222, 128, 0.4), 2px 2px 0 #000" : "2px 2px 0 #000",
+                      transition: "all 0.2s ease"
+                    }}
+                  >
+                    🧟
+                  </button>
+                  <span style={{ fontSize: "0.75rem", color: editZombie ? "var(--color-zombie)" : "#9ca3af", fontWeight: "bold" }}>
+                    Zombie
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditFrozen(prev => !prev)}
+                    style={{
+                      width: "56px",
+                      height: "56px",
+                      borderRadius: "50%",
+                      border: editFrozen ? "3px solid var(--color-cyan)" : "3px solid #374151",
+                      backgroundColor: editFrozen ? "rgba(34, 211, 238, 0.25)" : "#110e20",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1.8rem",
+                      cursor: "pointer",
+                      boxShadow: editFrozen ? "0 0 10px rgba(34, 211, 238, 0.4), 2px 2px 0 #000" : "2px 2px 0 #000",
+                      transition: "all 0.2s ease"
+                    }}
+                  >
+                    ❄️
+                  </button>
+                  <span style={{ fontSize: "0.75rem", color: editFrozen ? "var(--color-cyan)" : "#9ca3af", fontWeight: "bold" }}>
+                    Gelé
+                  </span>
+                </div>
+              </div>
 
                 <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
 
@@ -1336,7 +1390,6 @@ export default function GMDashboard() {
                 </div>
                 <button type="button" className="btn-cartoon" style={{ padding: "0.4rem", backgroundColor: "#4b5563" }} onClick={() => setEditingPlayer(null)}>Annuler</button>
               </div>
-            </div>
             );
           })() : (
             <div style={{ border: "2px solid #000", borderRadius: "12px", overflow: "hidden", backgroundColor: "#150e1f", boxShadow: "3px 3px 0 #000" }}>
@@ -1345,14 +1398,16 @@ export default function GMDashboard() {
                   {/* En-tête de la table */}
                   <div style={{ display: "flex", padding: "8px 12px", borderBottom: "2px solid #000", backgroundColor: "#1c1326", fontWeight: "bold", fontSize: "0.75rem", color: "#9ca3af", textTransform: "uppercase", alignItems: "center" }}>
                     <div style={{ flex: 2, minWidth: "120px", textAlign: "left" }}>Joueur</div>
-                    <div style={{ width: "50px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Score (Biscuits)"><img src="/cookie_score_icon.png" alt="🪙" style={{ width: "1.2rem", height: "1.2rem", mixBlendMode: "multiply" }} /></div>
+                    <div style={{ width: "50px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Score (Biscuits)"><img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem" }} /></div>
                     <div style={{ width: "50px", textAlign: "center" }} title="Vitalité / Zombie">❤️</div>
+                    <div style={{ width: "55px", textAlign: "center" }} title="Relances Fontaine">🔄</div>
                     <div style={{ width: "50px", textAlign: "center" }} title="Fontaine Utilisations">⛲</div>
-                    <div style={{ width: "55px", textAlign: "center" }} title="Relances Fontaine">⛲🔄</div>
-                    <div style={{ width: "55px", textAlign: "center" }} title="Relances Défi">🎯🌀</div>
+                    <div style={{ width: "55px", textAlign: "center" }} title="Relances Défi">🌀</div>
                   </div>
                   {/* Lignes des joueurs */}
-                  {gameState.players.map((p) => (
+                  {[...gameState.players]
+                    .sort((a, b) => getPlayerDisplayName(a.name).localeCompare(getPlayerDisplayName(b.name)))
+                    .map((p) => (
                     <div
                       key={p.name}
                       onClick={() => {
@@ -1388,11 +1443,11 @@ export default function GMDashboard() {
                       <div style={{ width: "50px", textAlign: "center", fontSize: "0.85rem" }}>
                         {p.isZombie ? "💀" : `${p.lives}`}
                       </div>
-                      <div style={{ width: "50px", textAlign: "center", fontSize: "0.85rem" }}>
-                        {p.fountainUsesToday || 0}/2
-                      </div>
                       <div style={{ width: "55px", textAlign: "center", fontSize: "0.85rem" }}>
                         {p.fountainRefreshesToday || 0}
+                      </div>
+                      <div style={{ width: "50px", textAlign: "center", fontSize: "0.85rem" }}>
+                        {p.fountainUsesToday || 0}/2
                       </div>
                       <div style={{ width: "55px", textAlign: "center", fontSize: "0.85rem" }}>
                         {p.skips || 0}
