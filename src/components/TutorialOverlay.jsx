@@ -26,25 +26,25 @@ export default function TutorialOverlay({ onComplete }) {
       position: "top"
     },
     {
-      selector: '[data-tuto="nav-contrat"] span',
+      selector: '[data-tuto="nav-contrat"]',
       title: "🎯 L'Écran Mission",
       text: "Ton écran principal pour gérer ton contrat actif, tes abandons, et lancer des accusations.",
       position: "top"
     },
     {
-      selector: '[data-tuto="nav-source"] span',
+      selector: '[data-tuto="nav-source"]',
       title: "⛲ La Fontaine de Vie",
       text: "Rends-toi ici pour réaliser des actions ou vérités amusantes et regagner des cœurs ❤️ en cas de coup dur.",
       position: "top"
     },
     {
-      selector: '[data-tuto="nav-suggestion"] span',
+      selector: '[data-tuto="nav-suggestion"]',
       title: "💡 L'Usine à Sévices",
       text: "Propose de nouvelles idées de pièges absurdes ou vote pour les défis proposés par les autres joueurs.",
       position: "top"
     },
     {
-      selector: '[data-tuto="nav-classement"] span',
+      selector: '[data-tuto="nav-classement"]',
       title: "🏆 Le Classement",
       text: "Suis le classement général des survivants et des zombies en temps réel, ainsi que le flux des actualités du jeu.",
       position: "top"
@@ -66,17 +66,32 @@ export default function TutorialOverlay({ onComplete }) {
       }
 
       const rect = element.getBoundingClientRect();
-      const padding = 8;
       
-      const newSpotlightStyle = {
-        top: `${rect.top - padding + window.scrollY}px`,
-        left: `${rect.left - padding + window.scrollX}px`,
-        width: `${rect.width + padding * 2}px`,
-        height: `${rect.height + padding * 2}px`,
-        display: "block"
-      };
+      let spotlightWidth, spotlightHeight, spotlightTop, spotlightLeft;
+      const isNav = currentStep.selector.includes("nav-");
 
-      setSpotlightStyle(newSpotlightStyle);
+      if (isNav) {
+        // Taille fixe de 64x64 centrée pour les icônes de navigation
+        spotlightWidth = 64;
+        spotlightHeight = 64;
+        spotlightTop = rect.top + rect.height / 2 - 32 + window.scrollY;
+        spotlightLeft = rect.left + rect.width / 2 - 32 + window.scrollX;
+      } else {
+        const padding = 8;
+        spotlightWidth = rect.width + padding * 2;
+        spotlightHeight = rect.height + padding * 2;
+        spotlightTop = rect.top - padding + window.scrollY;
+        spotlightLeft = rect.left - padding + window.scrollX;
+      }
+
+      setSpotlightStyle({
+        top: `${spotlightTop}px`,
+        left: `${spotlightLeft}px`,
+        width: `${spotlightWidth}px`,
+        height: `${spotlightHeight}px`,
+        display: "block",
+        borderRadius: isNav ? "16px" : "12px"
+      });
 
       // Calculer la position de l'info-bulle (tooltip)
       const tooltipHeight = 160;
@@ -87,7 +102,10 @@ export default function TutorialOverlay({ onComplete }) {
       // Limites de l'écran pour éviter que la bulle sorte
       tooltipLeft = Math.max(10, Math.min(window.innerWidth - tooltipWidth - 10, tooltipLeft));
 
-      if (currentStep.position === "bottom") {
+      if (isNav) {
+        // Pour les menus de navigation, remonter l'info-bulle plus haut
+        tooltipTop = rect.top - tooltipHeight - 35 + window.scrollY;
+      } else if (currentStep.position === "bottom") {
         tooltipTop = rect.bottom + 15 + window.scrollY;
       } else {
         tooltipTop = rect.top - tooltipHeight - 15 + window.scrollY;
@@ -96,7 +114,8 @@ export default function TutorialOverlay({ onComplete }) {
       // Garder la bulle visible dans la hauteur du viewport du téléphone
       const viewportHeight = window.innerHeight;
       const minTop = window.scrollY + 10;
-      const maxTop = window.scrollY + viewportHeight - tooltipHeight - 10;
+      const footerOffset = isNav ? 75 : 0;
+      const maxTop = window.scrollY + viewportHeight - tooltipHeight - 10 - footerOffset;
       tooltipTop = Math.max(minTop, Math.min(maxTop, tooltipTop));
 
       setTooltipStyle({

@@ -253,6 +253,7 @@ export default function PlayerDashboard() {
   const [showZombieBiteConfirmModal, setShowZombieBiteConfirmModal] = useState(false);
   const [revealPin, setRevealPin] = useState(false);
   const [isGlitchingMission, setIsGlitchingMission] = useState(false);
+  const [isRedScreen, setIsRedScreen] = useState(false);
   const triggerMissionGlitch = () => {
     setIsGlitchingMission(true);
     setTimeout(() => setIsGlitchingMission(false), 1000);
@@ -1339,6 +1340,23 @@ export default function PlayerDashboard() {
                   style={{ minHeight: "190px", position: "relative", cursor: "pointer" }}
                   onClick={() => setIsMasked(true)}
                 >
+                  {isRedScreen && (
+                    <div style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: "rgba(239, 68, 68, 0.95)",
+                      zIndex: 95,
+                      borderRadius: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}>
+                      <span style={{ fontSize: "3rem", filter: "drop-shadow(0 0 10px #000)" }}>💔</span>
+                    </div>
+                  )}
                   {isGlitchingMission && (
                     <div style={{
                       position: "absolute",
@@ -1349,21 +1367,9 @@ export default function PlayerDashboard() {
                       backgroundColor: "rgba(17, 14, 32, 0.95)",
                       backgroundImage: "repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px)",
                       zIndex: 90,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
                       borderRadius: "12px",
                       animation: "vhs-glitch 0.1s steps(2) infinite"
-                    }}>
-                      <div style={{
-                        color: "var(--color-cyan)",
-                        fontFamily: "var(--font-title)",
-                        fontSize: "1.2rem",
-                        textShadow: "2px 2px 0 #000"
-                      }}>
-                        RECHERCHE... 🌀
-                      </div>
-                    </div>
+                    }} />
                   )}
                   {isTargetFrozen && (
                     <div style={{
@@ -1548,7 +1554,7 @@ export default function PlayerDashboard() {
                       </p>
 
                       {currentAction && (
-                        <div style={{ display: "flex", gap: "10px", marginTop: "12px", fontSize: "0.8rem", fontWeight: "bold" }}>
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "12px", fontSize: "0.8rem", fontWeight: "bold" }}>
                           <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: "4px" }}> Récompense : +{isZombie ? Math.floor(currentAction.scoreReward / 2) : currentAction.scoreReward} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5em", height: "1.5em", verticalAlign: "middle" }} /></span>
                           <span style={{ color: "var(--color-red)" }}> Dégâts : -{isZombie ? 0 : currentAction.damagePenalty} ❤️</span>
                         </div>
@@ -2021,7 +2027,7 @@ export default function PlayerDashboard() {
                         className="btn-cartoon" 
                         style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
                         onClick={() => setSuggestDamage(Math.max(0.5, suggestDamage - 0.5))}
-                        disabled={suggestDamage <= 0.5}
+                        disabled={suggestDamage <= 0.5 || suggestZombieOnly}
                       >
                         <Minus size={12}/>
                       </button>
@@ -2031,7 +2037,7 @@ export default function PlayerDashboard() {
                         className="btn-cartoon" 
                         style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
                         onClick={() => setSuggestDamage(Math.min(4.0, suggestDamage + 0.5))}
-                        disabled={suggestDamage >= 4.0}
+                        disabled={suggestDamage >= 4.0 || suggestZombieOnly}
                       >
                         <Plus size={12}/>
                       </button>
@@ -2043,7 +2049,13 @@ export default function PlayerDashboard() {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px", position: "relative" }}>
                   <button
                     type="button"
-                    onClick={() => setSuggestZombieOnly(prev => !prev)}
+                    onClick={() => {
+                      const next = !suggestZombieOnly;
+                      setSuggestZombieOnly(next);
+                      if (next) {
+                        setSuggestDamage(1.0);
+                      }
+                    }}
                     style={{
                       width: "38px",
                       height: "38px",
@@ -2059,12 +2071,12 @@ export default function PlayerDashboard() {
                       transition: "all 0.15s ease",
                       padding: 0
                     }}
-                    title="Défi Zombie uniquement"
+                    title="Zombie challenge"
                   >
                     🧟
                   </button>
                   <span style={{ fontSize: "0.75rem", color: suggestZombieOnly ? "var(--color-zombie)" : "#9ca3af", fontWeight: "bold" }}>
-                    Défi Zombie Uniquement
+                    Zombie challenge
                   </span>
 
                   {isHelpActive && (
@@ -2169,7 +2181,16 @@ export default function PlayerDashboard() {
                   return (
                     <div key={a.id} style={{ padding: "8px 10px", backgroundColor: "rgba(0,0,0,0.2)", borderRadius: "8px", border: "1px solid rgba(168, 85, 247, 0.2)", fontSize: "0.75rem", textAlign: "left" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                        <div style={{ fontWeight: "bold", color: "#fff" }}>{displayTitle}</div>
+                        <div style={{ fontWeight: "bold", color: "#fff", display: "flex", alignItems: "center" }}>
+                          {displayTitle}
+                          {(a.type === "fountain_action" || a.type === "fountain_truth") && (
+                            <span style={{ display: "inline-flex", gap: "2px", marginLeft: "8px" }}>
+                              <span style={{ color: "#fbbf24", textShadow: "1px 1px 0 #000" }}>★</span>
+                              <span style={{ color: a.damagePenalty >= 1.5 ? "#fbbf24" : "#4b5563", textShadow: "1px 1px 0 #000" }}>★</span>
+                              <span style={{ color: a.damagePenalty >= 3.0 ? "#fbbf24" : "#4b5563", textShadow: "1px 1px 0 #000" }}>★</span>
+                            </span>
+                          )}
+                        </div>
                         <div style={{ display: "flex", gap: "4px" }}>
                           {a.isZombieOnly && (
                             <span style={{ fontSize: "0.6rem", padding: "1px 4px", borderRadius: "4px", backgroundColor: "rgba(22, 101, 52, 0.2)", border: "1px solid var(--color-zombie)", color: "var(--color-zombie)", fontWeight: "bold" }}>
@@ -2643,7 +2664,13 @@ export default function PlayerDashboard() {
                     abandonTarget("life");
                     setShowAbandonModal(false);
                     showToast("Cible abandonnée. Nouveau contrat pioché ! 💔");
-                    triggerMissionGlitch();
+                    
+                    // Instant red screen
+                    setIsRedScreen(true);
+                    setTimeout(() => {
+                      setIsRedScreen(false);
+                      triggerMissionGlitch();
+                    }, 600);
                   }}
                 >
                   <span style={{ fontSize: "2rem", marginBottom: "4px" }}>❤️</span>
@@ -2657,8 +2684,8 @@ export default function PlayerDashboard() {
                   left: "50%",
                   top: "50%",
                   transform: "translate(-50%, -50%) rotate(-12deg)",
-                  backgroundColor: "var(--color-red)",
-                  color: "#fff",
+                  backgroundColor: "#fbbf24",
+                  color: "#000",
                   fontFamily: "var(--font-title)",
                   fontSize: "1.6rem",
                   padding: "4px 10px",

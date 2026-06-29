@@ -54,6 +54,7 @@ export default function GMDashboard() {
   const [defiType, setDefiType] = useState("mission"); // 'mission', 'fountain_action', 'fountain_truth'
   const [showFinishGameModal, setShowFinishGameModal] = useState(false);
   const [finishGameInput, setFinishGameInput] = useState("");
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Filtrer les événements de l'historique en attente (pending)
   const pendingHits = gameState.history.filter(h => h.status === "pending" && h.type === "hit_declared");
@@ -392,11 +393,7 @@ export default function GMDashboard() {
           <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Salon : <strong>{gameCode}</strong></span>
           <button
             type="button"
-            onClick={() => {
-              if (confirm("Voulez-vous vraiment quitter le salon GM ?")) {
-                logOut();
-              }
-            }}
+            onClick={() => setShowLogoutModal(true)}
             style={{
               background: "none",
               border: "none",
@@ -431,11 +428,11 @@ export default function GMDashboard() {
           <>
             <button
               type="button"
-              className="btn-cartoon btn-cyan"
+              className="btn-cartoon btn-purple"
               style={{ flex: 1, padding: "0.6rem", fontSize: "0.8rem" }}
               onClick={handleRoosterCrow}
             >
-              <RefreshCw size={16} /> Chant du Coq
+              <span style={{ marginRight: "4px" }}>🐓</span> Chant du Coq
             </button>
             <button
               type="button"
@@ -912,9 +909,9 @@ export default function GMDashboard() {
                       <button
                         type="button"
                         className="btn-cartoon"
-                        style={{ padding: "2px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        style={{ padding: "2px 8px", fontSize: "0.8rem", backgroundColor: defiDamage <= 0.5 || defiZombieOnly ? "#4b5563" : "var(--color-purple)", color: defiDamage <= 0.5 || defiZombieOnly ? "#9ca3af" : "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000", opacity: defiDamage <= 0.5 || defiZombieOnly ? 0.5 : 1, cursor: defiDamage <= 0.5 || defiZombieOnly ? "not-allowed" : "pointer" }}
                         onClick={() => setDefiDamage(Math.max(0.5, defiDamage - 0.5))}
-                        disabled={defiDamage <= 0.5}
+                        disabled={defiDamage <= 0.5 || defiZombieOnly}
                       >
                         -
                       </button>
@@ -922,9 +919,9 @@ export default function GMDashboard() {
                       <button
                         type="button"
                         className="btn-cartoon"
-                        style={{ padding: "2px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        style={{ padding: "2px 8px", fontSize: "0.8rem", backgroundColor: defiDamage >= 7.0 || defiZombieOnly ? "#4b5563" : "var(--color-purple)", color: defiDamage >= 7.0 || defiZombieOnly ? "#9ca3af" : "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000", opacity: defiDamage >= 7.0 || defiZombieOnly ? 0.5 : 1, cursor: defiDamage >= 7.0 || defiZombieOnly ? "not-allowed" : "pointer" }}
                         onClick={() => setDefiDamage(Math.min(7.0, defiDamage + 0.5))}
-                        disabled={defiDamage >= 7.0}
+                        disabled={defiDamage >= 7.0 || defiZombieOnly}
                       >
                         +
                       </button>
@@ -979,7 +976,13 @@ export default function GMDashboard() {
                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px", marginBottom: "4px" }}>
                      <button
                        type="button"
-                       onClick={() => setDefiZombieOnly(prev => !prev)}
+                       onClick={() => {
+                         const next = !defiZombieOnly;
+                         setDefiZombieOnly(next);
+                         if (next) {
+                           setDefiDamage(1.0);
+                         }
+                       }}
                        style={{
                          width: "38px",
                          height: "38px",
@@ -995,12 +998,12 @@ export default function GMDashboard() {
                          transition: "all 0.15s ease",
                          padding: 0
                        }}
-                       title="Défi Zombie uniquement"
+                       title="Zombie challenge"
                      >
                        🧟
                      </button>
                      <span style={{ fontSize: "0.75rem", color: defiZombieOnly ? "var(--color-zombie)" : "#9ca3af", fontWeight: "bold" }}>
-                       Défi Zombie Uniquement
+                       Zombie challenge
                      </span>
                    </div>
                  )}
@@ -1034,8 +1037,15 @@ export default function GMDashboard() {
                   title="Cliquer pour modifier ce défi"
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>
+                    <div style={{ fontWeight: "bold", fontSize: "0.9rem", display: "flex", alignItems: "center" }}>
                       {a.type === "fountain_action" ? "Action" : (a.type === "fountain_truth" ? "Vérité" : a.title)}
+                      {(a.type === "fountain_action" || a.type === "fountain_truth") && (
+                        <span style={{ display: "inline-flex", gap: "2px", marginLeft: "8px" }}>
+                          <span style={{ color: "#fbbf24", textShadow: "1px 1px 0 #000" }}>★</span>
+                          <span style={{ color: a.damagePenalty >= 1.5 ? "#fbbf24" : "#4b5563", textShadow: "1px 1px 0 #000" }}>★</span>
+                          <span style={{ color: a.damagePenalty >= 3.0 ? "#fbbf24" : "#4b5563", textShadow: "1px 1px 0 #000" }}>★</span>
+                        </span>
+                      )}
                     </div>
                     {a.isZombieOnly && (
                       <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: "6px", backgroundColor: "rgba(22, 101, 52, 0.2)", border: "1.5px solid var(--color-zombie)", color: "var(--color-zombie)", fontWeight: "bold" }}>
@@ -1215,8 +1225,8 @@ export default function GMDashboard() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {/* 1. SCORE */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
-                    <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "2.0rem", height: "2.0rem", verticalAlign: "middle" }} />
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", flexShrink: 0 }}>
+                    <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button 
@@ -1247,8 +1257,8 @@ export default function GMDashboard() {
 
                 {/* 2. VITALITÉ */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
-                    <span style={{ fontSize: "1.8rem", display: "inline-block", lineHeight: 1 }}>❤️</span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", flexShrink: 0 }}>
+                    <span style={{ fontSize: "1.6rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>❤️</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button 
@@ -1277,8 +1287,8 @@ export default function GMDashboard() {
 
                 {/* 3. RELANCES FONTAINE (🔄) */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
-                    <span style={{ fontSize: "1.8rem", display: "inline-block", lineHeight: 1 }}>🔄</span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", flexShrink: 0 }}>
+                    <span style={{ fontSize: "1.6rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>🔄</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button 
@@ -1306,8 +1316,8 @@ export default function GMDashboard() {
 
                 {/* 4. FONTAINE UTILISATIONS (⛲) */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
-                    <span style={{ fontSize: "1.8rem", display: "inline-block", lineHeight: 1 }}>⛲</span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", flexShrink: 0 }}>
+                    <span style={{ fontSize: "1.6rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>⛲</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button 
@@ -1336,8 +1346,8 @@ export default function GMDashboard() {
 
                 {/* 5. RELANCES DÉFI (🌀) */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", width: "130px", gap: "8px", fontWeight: "bold", fontSize: "1.1rem" }}>
-                    <span style={{ fontSize: "1.8rem", display: "inline-block", lineHeight: 1 }}>🌀</span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", flexShrink: 0 }}>
+                    <span style={{ fontSize: "1.6rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>🌀</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button 
@@ -1461,11 +1471,31 @@ export default function GMDashboard() {
                   {/* En-tête de la table */}
                   <div style={{ display: "flex", padding: "8px 12px", borderBottom: "2px solid #000", backgroundColor: "#1c1326", fontWeight: "bold", fontSize: "0.75rem", color: "#9ca3af", textTransform: "uppercase", alignItems: "center" }}>
                     <div style={{ flex: 2, minWidth: "120px", textAlign: "left" }}>Joueur</div>
-                    <div style={{ width: "50px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Score (Biscuits)"><img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem" }} /></div>
-                    <div style={{ width: "50px", textAlign: "center" }} title="Vitalité / Zombie">❤️</div>
-                    <div style={{ width: "55px", textAlign: "center" }} title="Relances Fontaine">🔄</div>
-                    <div style={{ width: "50px", textAlign: "center" }} title="Fontaine Utilisations">⛲</div>
-                    <div style={{ width: "55px", textAlign: "center" }} title="Relances Défi">🌀</div>
+                    <div style={{ width: "50px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Score (Biscuits)">
+                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "32px", height: "32px" }}>
+                        <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
+                      </div>
+                    </div>
+                    <div style={{ width: "50px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Vitalité / Zombie">
+                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "32px", height: "32px" }}>
+                        <span style={{ fontSize: "1.2rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>❤️</span>
+                      </div>
+                    </div>
+                    <div style={{ width: "55px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Relances Fontaine">
+                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "32px", height: "32px" }}>
+                        <span style={{ fontSize: "1.2rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>🔄</span>
+                      </div>
+                    </div>
+                    <div style={{ width: "50px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Fontaine Utilisations">
+                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "32px", height: "32px" }}>
+                        <span style={{ fontSize: "1.2rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>⛲</span>
+                      </div>
+                    </div>
+                    <div style={{ width: "55px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Relances Défi">
+                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "32px", height: "32px" }}>
+                        <span style={{ fontSize: "1.2rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>🌀</span>
+                      </div>
+                    </div>
                   </div>
                   {/* Lignes des joueurs */}
                   {[...gameState.players]
@@ -1619,6 +1649,54 @@ export default function GMDashboard() {
                   onClick={() => setShowFinishGameModal(false)}
                 >
                   Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODALE : CONFIRMATION DE LOGOUT GM */}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.85)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}>
+            <div className="card-cartoon glow-purple" style={{ width: "100%", maxWidth: "340px", textAlign: "center", border: "3px solid var(--color-purple)" }}>
+              <h3 style={{ color: "var(--color-purple)", marginBottom: "1rem", fontFamily: "var(--font-title)" }}>Quitter le salon ? 🚪</h3>
+              <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.2rem", lineHeight: "1.4" }}>
+                Es-tu sûr de vouloir quitter le salon GM ?
+              </p>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="btn-cartoon btn-purple"
+                  style={{ flex: 1, height: "44px" }}
+                  onClick={() => {
+                    logOut();
+                    setShowLogoutModal(false);
+                  }}
+                >
+                  Déconnexion
+                </button>
+                <button
+                  type="button"
+                  className="btn-cartoon"
+                  style={{ flex: 1, height: "44px", backgroundColor: "#4b5563" }}
+                  onClick={() => setShowLogoutModal(false)}
+                >
+                  Rester
                 </button>
               </div>
             </div>
