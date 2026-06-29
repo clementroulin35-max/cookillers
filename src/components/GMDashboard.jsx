@@ -457,8 +457,8 @@ export default function GMDashboard() {
 
       {/* --- 1. ONGLET ARBITRAGE 🛡️ --- */}
       {gmTab === "arbitrage" && (
-        <div className="card-cartoon glow-red" style={{ margin: "10px" }}>
-          <h2 style={{ color: "var(--color-red)", textAlign: "center", width: "100%", marginBottom: "1rem" }}>
+        <div className="card-cartoon glow-purple" style={{ margin: "10px" }}>
+          <h2 style={{ color: "var(--color-purple)", textAlign: "center", width: "100%", marginBottom: "1rem" }}>
             Arbitrage des Requêtes 🛡️
           </h2>
 
@@ -474,7 +474,7 @@ export default function GMDashboard() {
                   return (
                     <div key={item.id} style={{ border: "2px solid #000", borderRadius: "12px", padding: "10px", backgroundColor: "#1e172e", boxShadow: "2px 2px 0 #000", position: "relative" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "6px" }}>
-                        <span className="rarity-badge" style={{ backgroundColor: "var(--color-purple)", color: "#fff", fontSize: "0.65rem", padding: "2px 6px" }}>
+                        <span className="rarity-badge" style={{ backgroundColor: "rgba(168, 85, 247, 0.15)", border: "1px solid var(--color-purple)", color: "var(--color-purple)", fontSize: "0.65rem", padding: "2px 6px" }}>
                           Demande de Validation
                         </span>
                         <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: "bold" }}>
@@ -523,7 +523,7 @@ export default function GMDashboard() {
                   return (
                     <div key={item.id} style={{ border: "2px solid #000", borderRadius: "12px", padding: "10px", backgroundColor: "#1e172e", boxShadow: "2px 2px 0 #000", position: "relative" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "6px" }}>
-                        <span className="rarity-badge" style={{ backgroundColor: "var(--color-red)", color: "#fff", fontSize: "0.65rem", padding: "2px 6px" }}>
+                        <span className="rarity-badge" style={{ backgroundColor: "rgba(236, 72, 153, 0.15)", border: "1px solid #ec4899", color: "#ec4899", fontSize: "0.65rem", padding: "2px 6px" }}>
                           Dénonciation / Accusation
                         </span>
                         <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: "bold" }}>
@@ -603,7 +603,8 @@ export default function GMDashboard() {
                       title: s.actionTitle,
                       desc: cleanDesc,
                       reward: extractedType === "mission" ? s.scoreReward : 0,
-                      damage: s.damagePenalty
+                      damage: s.damagePenalty,
+                      isZombieOnly: s.isZombieOnly || false
                     };
                   }
 
@@ -625,9 +626,16 @@ export default function GMDashboard() {
                         <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
                           Proposé par : <strong>{getPlayerDisplayName(s.playerName)}</strong>
                         </span>
-                        <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${typeColor}`, color: typeColor, fontWeight: "bold" }}>
-                          {typeLabel}
-                        </span>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {s.isZombieOnly && (
+                            <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: "4px", backgroundColor: "rgba(22, 101, 52, 0.2)", border: "1px solid var(--color-zombie)", color: "var(--color-zombie)", fontWeight: "bold" }}>
+                              🧟 Zombie
+                            </span>
+                          )}
+                          <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${typeColor}`, color: typeColor, fontWeight: "bold" }}>
+                            {typeLabel}
+                          </span>
+                        </div>
                       </div>
 
                       <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "8px" }}>
@@ -648,11 +656,11 @@ export default function GMDashboard() {
                         />
                       </div>
 
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
-                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <div style={{ display: "flex", flexDirection: "column", marginTop: "6px" }}>
+                        <div style={{ width: "100%" }}>
                           {extractedType === "mission" ? (
-                            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                              {/* Reward 🪙 */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                              {/* Reward 🪙 (Aligné Gauche) */}
                               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                                 <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
                                 <button
@@ -660,6 +668,7 @@ export default function GMDashboard() {
                                   className="btn-cartoon"
                                   style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
                                   onClick={() => updateMod("reward", Math.max(50, mod.reward - 50))}
+                                  disabled={mod.reward <= 50}
                                 >
                                   -
                                 </button>
@@ -669,12 +678,13 @@ export default function GMDashboard() {
                                   className="btn-cartoon"
                                   style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
                                   onClick={() => updateMod("reward", Math.min(600, mod.reward + 50))}
+                                  disabled={mod.reward >= 600}
                                 >
                                   +
                                 </button>
                               </div>
 
-                              {/* Damage ❤️ */}
+                              {/* Damage ❤️ (Aligné Droite) */}
                               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                                 <span>❤️</span>
                                 <button
@@ -682,6 +692,7 @@ export default function GMDashboard() {
                                   className="btn-cartoon"
                                   style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
                                   onClick={() => updateMod("damage", Math.max(0.5, mod.damage - 0.5))}
+                                  disabled={mod.damage <= 0.5}
                                 >
                                   -
                                 </button>
@@ -691,6 +702,7 @@ export default function GMDashboard() {
                                   className="btn-cartoon"
                                   style={{ padding: "2px 6px", fontSize: "0.7rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "1.5px solid #000", boxShadow: "1px 1px 0 #000" }}
                                   onClick={() => updateMod("damage", Math.min(7.0, mod.damage + 0.5))}
+                                  disabled={mod.damage >= 7.0}
                                 >
                                   +
                                 </button>
@@ -736,11 +748,12 @@ export default function GMDashboard() {
                           )}
                         </div>
 
-                        <div style={{ display: "flex", gap: "6px" }}>
+                        {/* Boutons d'action dessous alignés à droite */}
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: "6px", width: "100%", marginTop: "10px", borderTop: "1px dashed rgba(255,255,255,0.05)", paddingTop: "6px" }}>
                           <button
                             type="button"
                             className="btn-cartoon btn-green"
-                            style={{ padding: "2px 8px", fontSize: "0.7rem" }}
+                            style={{ padding: "4px 12px", fontSize: "0.75rem" }}
                             onClick={async () => {
                               if (!mod.desc || !mod.desc.trim()) {
                                 showToast("La description ne peut pas être vide !");
@@ -759,7 +772,7 @@ export default function GMDashboard() {
                                   description: mod.desc.trim(),
                                   score_reward: extractedType === "mission" ? mod.reward : 0,
                                   damage_penalty: mod.damage,
-                                  is_zombie_only: false,
+                                  is_zombie_only: s.isZombieOnly || false,
                                   type: extractedType,
                                   created_by_player: s.playerName
                                 }
@@ -779,7 +792,7 @@ export default function GMDashboard() {
                           <button
                             type="button"
                             className="btn-cartoon btn-red"
-                            style={{ padding: "2px 8px", fontSize: "0.7rem" }}
+                            style={{ padding: "4px 12px", fontSize: "0.75rem" }}
                             onClick={async () => {
                               // Rejeter : marquer comme rejected dans history
                               await supabase.from("history").update({ status: "rejected" }).eq("id", s.id);
@@ -868,24 +881,24 @@ export default function GMDashboard() {
                 />
                 
                 {defiType === "mission" ? (
-                  <div style={{ display: "flex", gap: "16px", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: "8px", justifyContent: "space-between", alignItems: "center" }}>
                     {/* Points 🍪 */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1 }}>
-                      <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem", verticalAlign: "middle" }} />
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1 }}>
+                      <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.2rem", height: "1.2rem", verticalAlign: "middle" }} />
                       <button
                         type="button"
                         className="btn-cartoon"
-                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        style={{ padding: "2px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiReward(Math.max(50, defiReward - 50))}
                         disabled={defiReward <= 50}
                       >
                         -
                       </button>
-                      <span style={{ fontFamily: "var(--font-title)", minWidth: "45px", textAlign: "center", color: "#fff", fontSize: "0.95rem" }}>{defiReward}</span>
+                      <span style={{ fontFamily: "var(--font-title)", minWidth: "40px", textAlign: "center", color: "#fff", fontSize: "0.9rem" }}>{defiReward}</span>
                       <button
                         type="button"
                         className="btn-cartoon"
-                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        style={{ padding: "2px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiReward(Math.min(600, defiReward + 50))}
                         disabled={defiReward >= 600}
                       >
@@ -894,22 +907,22 @@ export default function GMDashboard() {
                     </div>
 
                     {/* Dégâts ❤️ */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1 }}>
-                      <span style={{ fontSize: "1.1rem" }}>❤️</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1 }}>
+                      <span style={{ fontSize: "0.95rem" }}>❤️</span>
                       <button
                         type="button"
                         className="btn-cartoon"
-                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        style={{ padding: "2px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiDamage(Math.max(0.5, defiDamage - 0.5))}
                         disabled={defiDamage <= 0.5}
                       >
                         -
                       </button>
-                      <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center", color: "#fff", fontSize: "0.95rem" }}>{defiDamage}</span>
+                      <span style={{ fontFamily: "var(--font-title)", minWidth: "30px", textAlign: "center", color: "#fff", fontSize: "0.9rem" }}>{defiDamage}</span>
                       <button
                         type="button"
                         className="btn-cartoon"
-                        style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
+                        style={{ padding: "2px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiDamage(Math.min(7.0, defiDamage + 0.5))}
                         disabled={defiDamage >= 7.0}
                       >
@@ -962,15 +975,35 @@ export default function GMDashboard() {
                    </div>
                  )}
 
-                {defiType === "mission" && (
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={defiZombieOnly}
-                      onChange={(e) => setDefiZombieOnly(e.target.checked)}
-                    /> Defi Zombie uniquement 🧟
-                  </label>
-                )}
+                 {defiType === "mission" && (
+                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px", marginBottom: "4px" }}>
+                     <button
+                       type="button"
+                       onClick={() => setDefiZombieOnly(prev => !prev)}
+                       style={{
+                         width: "38px",
+                         height: "38px",
+                         borderRadius: "50%",
+                         border: defiZombieOnly ? "3px solid var(--color-zombie)" : "3px solid #374151",
+                         backgroundColor: defiZombieOnly ? "rgba(74, 222, 128, 0.25)" : "#110e20",
+                         display: "flex",
+                         alignItems: "center",
+                         justifyContent: "center",
+                         fontSize: "1.2rem",
+                         cursor: "pointer",
+                         boxShadow: defiZombieOnly ? "0 0 8px rgba(74, 222, 128, 0.4), 2px 2px 0 #000" : "2px 2px 0 #000",
+                         transition: "all 0.15s ease",
+                         padding: 0
+                       }}
+                       title="Défi Zombie uniquement"
+                     >
+                       🧟
+                     </button>
+                     <span style={{ fontSize: "0.75rem", color: defiZombieOnly ? "var(--color-zombie)" : "#9ca3af", fontWeight: "bold" }}>
+                       Défi Zombie Uniquement
+                     </span>
+                   </div>
+                 )}
                 <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
                   <button type="submit" className="btn-cartoon btn-green" style={{ flex: 1, padding: "0.5rem" }}>
                     {editingDefi ? "Sauvegarder" : "Injecter"}
@@ -1000,8 +1033,15 @@ export default function GMDashboard() {
                   onClick={() => handleStartEditDefi(a)}
                   title="Cliquer pour modifier ce défi"
                 >
-                  <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>
-                    {a.type === "fountain_action" ? "Action" : (a.type === "fountain_truth" ? "Vérité" : a.title)} {a.isZombieOnly && "🧟"}
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div style={{ fontWeight: "bold", fontSize: "0.9rem" }}>
+                      {a.type === "fountain_action" ? "Action" : (a.type === "fountain_truth" ? "Vérité" : a.title)}
+                    </div>
+                    {a.isZombieOnly && (
+                      <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: "6px", backgroundColor: "rgba(22, 101, 52, 0.2)", border: "1.5px solid var(--color-zombie)", color: "var(--color-zombie)", fontWeight: "bold" }}>
+                        🧟 Zombie
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>{a.description}</div>
                   <div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#fbbf24", marginTop: "2px", display: "flex", alignItems: "center", gap: "4px" }}>

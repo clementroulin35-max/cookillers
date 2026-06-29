@@ -247,9 +247,16 @@ export default function PlayerDashboard() {
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const [showFountainModal, setShowFountainModal] = useState(false);
   const [showSkipConfirmModal, setShowSkipConfirmModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showHitConfirmModal, setShowHitConfirmModal] = useState(false);
   const [showZombieFountainModal, setShowZombieFountainModal] = useState(false);
   const [showZombieBiteConfirmModal, setShowZombieBiteConfirmModal] = useState(false);
   const [revealPin, setRevealPin] = useState(false);
+  const [isGlitchingMission, setIsGlitchingMission] = useState(false);
+  const triggerMissionGlitch = () => {
+    setIsGlitchingMission(true);
+    setTimeout(() => setIsGlitchingMission(false), 1000);
+  };
   const [resetKey, setResetKey] = useState(0);
   const campfireContainerRef = useRef(null);
   const fireRef = useRef(null);
@@ -274,6 +281,7 @@ export default function PlayerDashboard() {
   const [suggestReward, setSuggestReward] = useState(100);
   const [suggestDamage, setSuggestDamage] = useState(1.5);
   const [suggestType, setSuggestType] = useState("mission"); // 'mission', 'fountain_action', 'fountain_truth'
+  const [suggestZombieOnly, setSuggestZombieOnly] = useState(false);
   
   // Fontaine
   const [fountainType, setFountainType] = useState("verite"); // 'action' ou 'verite'
@@ -572,12 +580,14 @@ export default function PlayerDashboard() {
       }
       setShowZombieBiteConfirmModal(true);
     } else {
-      const targetDisplayName = getPlayerDisplayName(player.target);
-      if (window.confirm(`Es-tu sûr d'avoir exécuté le contrat sur ${targetDisplayName} ? Cette action enverra la preuve au Juge.`)) {
-        declareHit(player.target, currentAction.title, currentAction.scoreReward, currentAction.damagePenalty);
-        showToast("Neutralisation envoyée au Grand Juge !");
-      }
+      setShowHitConfirmModal(true);
     }
+  };
+
+  const executeHitSubmit = () => {
+    declareHit(player.target, currentAction.title, currentAction.scoreReward, currentAction.damagePenalty);
+    showToast("Neutralisation envoyée au Grand Juge !");
+    setShowHitConfirmModal(false);
   };
 
   // Soumission Contre-Attaque
@@ -617,11 +627,17 @@ export default function PlayerDashboard() {
         // Reset positions back to orbit
         setResetKey(prev => prev + 1);
 
-        if (p.isZombie) {
+        if (isZombie) {
           showToast("Tu es déjà mort, personne ne veut plus ta peau. 🧟");
           vibrateFailure();
-        } else if (p.isFrozen) {
+        } else if (player.isFrozen) {
           showToast("Tu es exfiltré, personne ne peut te prendre pour cible. ❄️");
+          vibrateFailure();
+        } else if (p.isZombie) {
+          showToast("Ce joueur est déjà à l'état de cadavre, il ne peut pas te cibler");
+          vibrateFailure();
+        } else if (p.isFrozen) {
+          showToast("Ce joueur n'est plus sur le champ de bataille");
           vibrateFailure();
         } else {
           setCounterSuspect(p.name);
@@ -765,12 +781,13 @@ export default function PlayerDashboard() {
     const finalTitle = suggestType === "mission" ? suggestTitle : (suggestDesc.slice(0, 35) + "...");
     const encodedDesc = suggestType + "|" + suggestDesc;
     const finalReward = suggestType === "mission" ? suggestReward : 0;
-    suggestAction(finalTitle, encodedDesc, finalReward, suggestDamage);
+    suggestAction(finalTitle, encodedDesc, finalReward, suggestDamage, suggestZombieOnly);
     setSuggestTitle("");
     setSuggestDesc("");
     setSuggestType("mission");
     setSuggestReward(100);
     setSuggestDamage(1.5);
+    setSuggestZombieOnly(false);
     showToast("Suggestion soumise en arbitrage au Grand Juge. Merci ! 💡");
   };
 
@@ -887,11 +904,7 @@ export default function PlayerDashboard() {
           {/* Bouton de déconnexion */}
           <button
             type="button"
-            onClick={() => {
-              if (confirm("Voulez-vous vraiment quitter le salon ?")) {
-                logOut();
-              }
-            }}
+            onClick={() => setShowLogoutModal(true)}
             style={{
               background: "none",
               border: "none",
@@ -1326,6 +1339,32 @@ export default function PlayerDashboard() {
                   style={{ minHeight: "190px", position: "relative", cursor: "pointer" }}
                   onClick={() => setIsMasked(true)}
                 >
+                  {isGlitchingMission && (
+                    <div style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: "rgba(17, 14, 32, 0.95)",
+                      backgroundImage: "repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px)",
+                      zIndex: 90,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: "12px",
+                      animation: "vhs-glitch 0.1s steps(2) infinite"
+                    }}>
+                      <div style={{
+                        color: "var(--color-cyan)",
+                        fontFamily: "var(--font-title)",
+                        fontSize: "1.2rem",
+                        textShadow: "2px 2px 0 #000"
+                      }}>
+                        RECHERCHE... 🌀
+                      </div>
+                    </div>
+                  )}
                   {isTargetFrozen && (
                     <div style={{
                       position: "absolute",
@@ -1946,24 +1985,114 @@ export default function PlayerDashboard() {
             </div>
 
             {suggestType === "mission" ? (
-              /* Sélecteurs Récompense 🪙 et Dégâts ❤️ alignés */
-              <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem", display: "inline-block", verticalAlign: "middle" }} />
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.max(50, suggestReward - 50))}><Minus size={12}/></button>
-                    <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center" }}>{suggestReward}</span>
-                    <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestReward(Math.min(600, suggestReward + 50))}><Plus size={12}/></button>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {/* Sélecteurs Récompense 🍪 et Dégâts ❤️ alignés */}
+                <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem", display: "inline-block", verticalAlign: "middle" }} />
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        onClick={() => setSuggestReward(Math.max(50, suggestReward - 50))}
+                        disabled={suggestReward <= 50}
+                      >
+                        <Minus size={12}/>
+                      </button>
+                      <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center" }}>{suggestReward}</span>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        onClick={() => setSuggestReward(Math.min(600, suggestReward + 50))}
+                        disabled={suggestReward >= 600}
+                      >
+                        <Plus size={12}/>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "1.1rem" }}>❤️</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        onClick={() => setSuggestDamage(Math.max(0.5, suggestDamage - 0.5))}
+                        disabled={suggestDamage <= 0.5}
+                      >
+                        <Minus size={12}/>
+                      </button>
+                      <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center" }}>{suggestDamage}</span>
+                      <button 
+                        type="button" 
+                        className="btn-cartoon" 
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                        onClick={() => setSuggestDamage(Math.min(4.0, suggestDamage + 0.5))}
+                        disabled={suggestDamage >= 4.0}
+                      >
+                        <Plus size={12}/>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontSize: "1.1rem" }}>❤️</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestDamage(Math.max(0.5, suggestDamage - 0.5))}><Minus size={12}/></button>
-                    <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center" }}>{suggestDamage}</span>
-                    <button type="button" className="btn-cartoon" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={() => setSuggestDamage(Math.min(4.0, suggestDamage + 0.5))}><Plus size={12}/></button>
-                  </div>
+                {/* Bouton Poussoir Zombie */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px", position: "relative" }}>
+                  <button
+                    type="button"
+                    onClick={() => setSuggestZombieOnly(prev => !prev)}
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "50%",
+                      border: suggestZombieOnly ? "3px solid var(--color-zombie)" : "3px solid #374151",
+                      backgroundColor: suggestZombieOnly ? "rgba(74, 222, 128, 0.25)" : "#110e20",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1.2rem",
+                      cursor: "pointer",
+                      boxShadow: suggestZombieOnly ? "0 0 8px rgba(74, 222, 128, 0.4), 2px 2px 0 #000" : "2px 2px 0 #000",
+                      transition: "all 0.15s ease",
+                      padding: 0
+                    }}
+                    title="Défi Zombie uniquement"
+                  >
+                    🧟
+                  </button>
+                  <span style={{ fontSize: "0.75rem", color: suggestZombieOnly ? "var(--color-zombie)" : "#9ca3af", fontWeight: "bold" }}>
+                    Défi Zombie Uniquement
+                  </span>
+
+                  {isHelpActive && (
+                    <span 
+                      onClick={() => triggerTooltip("suggest_zombie")}
+                      style={{ 
+                        backgroundColor: "var(--color-cyan)", 
+                        color: "#000", 
+                        borderRadius: "50%", 
+                        width: "14px", 
+                        height: "14px", 
+                        display: "inline-flex", 
+                        alignItems: "center", 
+                        justifyContent: "center", 
+                        fontSize: "9px", 
+                        fontWeight: "bold",
+                        cursor: "pointer"
+                      }}
+                    >
+                      ?
+                    </span>
+                  )}
+
+                  {activeTooltip === "suggest_zombie" && (
+                    <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 10000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
+                      Proposer ce défi uniquement pour les joueurs zombies 🧟. Les survivants ne recevront jamais cette mission.
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -2041,9 +2170,16 @@ export default function PlayerDashboard() {
                     <div key={a.id} style={{ padding: "8px 10px", backgroundColor: "rgba(0,0,0,0.2)", borderRadius: "8px", border: "1px solid rgba(168, 85, 247, 0.2)", fontSize: "0.75rem", textAlign: "left" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
                         <div style={{ fontWeight: "bold", color: "#fff" }}>{displayTitle}</div>
-                        <span style={{ fontSize: "0.6rem", padding: "1px 4px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${typeColor}`, color: typeColor, fontWeight: "bold" }}>
-                          {typeLabel}
-                        </span>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {a.isZombieOnly && (
+                            <span style={{ fontSize: "0.6rem", padding: "1px 4px", borderRadius: "4px", backgroundColor: "rgba(22, 101, 52, 0.2)", border: "1px solid var(--color-zombie)", color: "var(--color-zombie)", fontWeight: "bold" }}>
+                              🧟 Zombie
+                            </span>
+                          )}
+                          <span style={{ fontSize: "0.6rem", padding: "1px 4px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${typeColor}`, color: typeColor, fontWeight: "bold" }}>
+                            {typeLabel}
+                          </span>
+                        </div>
                       </div>
                       <div style={{ fontSize: "0.7rem", color: "#9ca3af", marginTop: "2px" }}>{a.description}</div>
                       <div style={{ display: "flex", gap: "10px", marginTop: "4px", fontSize: "0.65rem" }}>
@@ -2507,6 +2643,7 @@ export default function PlayerDashboard() {
                     abandonTarget("life");
                     setShowAbandonModal(false);
                     showToast("Cible abandonnée. Nouveau contrat pioché ! 💔");
+                    triggerMissionGlitch();
                   }}
                 >
                   <span style={{ fontSize: "2rem", marginBottom: "4px" }}>❤️</span>
@@ -2558,6 +2695,7 @@ export default function PlayerDashboard() {
                     abandonTarget("score");
                     setShowAbandonModal(false);
                     showToast("Cible abandonnée. Nouveau contrat pioché ! 🪙");
+                    triggerMissionGlitch();
                   }}
                 >
                   <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "2.4rem", height: "2.4rem", marginBottom: "4px" }} />
@@ -2602,7 +2740,7 @@ export default function PlayerDashboard() {
             padding: "20px"
           }}>
             <div className="card-cartoon glow-purple" style={{ width: "100%", maxWidth: "340px", textAlign: "center" }}>
-              <h3 style={{ color: "var(--color-purple)", marginBottom: "1rem" }}>Brûler la Recette ?</h3>
+              <h3 style={{ color: "var(--color-purple)", marginBottom: "1rem", fontFamily: "var(--font-title)" }}>Brûler la Mission ? 🌀</h3>
               <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.2rem", lineHeight: "1.4" }}>
                 Voulez-vous vraiment changer de défi ? Cette action consommera <strong>1 jeton de relance 🌀</strong>.
                 <br />
@@ -2617,6 +2755,7 @@ export default function PlayerDashboard() {
                   onClick={() => {
                     skipMission();
                     setShowSkipConfirmModal(false);
+                    triggerMissionGlitch();
                   }}
                 >
                   Confirmer
@@ -2626,6 +2765,99 @@ export default function PlayerDashboard() {
                   className="btn-cartoon"
                   style={{ flex: 1, height: "44px", backgroundColor: "#4b5563" }}
                   onClick={() => setShowSkipConfirmModal(false)}
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODALE : CONFIRMATION DE LOGOUT */}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.85)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}>
+            <div className="card-cartoon glow-purple" style={{ width: "100%", maxWidth: "340px", textAlign: "center", border: "3px solid var(--color-purple)" }}>
+              <h3 style={{ color: "var(--color-purple)", marginBottom: "1rem", fontFamily: "var(--font-title)" }}>Quitter le salon ? 🚪</h3>
+              <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.2rem", lineHeight: "1.4" }}>
+                Es-tu sûr de vouloir te déconnecter et retourner à l'accueil du campement ?
+              </p>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="btn-cartoon btn-purple"
+                  style={{ flex: 1, height: "44px" }}
+                  onClick={() => {
+                    logOut();
+                    setShowLogoutModal(false);
+                  }}
+                >
+                  Déconnexion
+                </button>
+                <button
+                  type="button"
+                  className="btn-cartoon"
+                  style={{ flex: 1, height: "44px", backgroundColor: "#4b5563" }}
+                  onClick={() => setShowLogoutModal(false)}
+                >
+                  Rester
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODALE : CONFIRMATION DE CONTRAT EXÉCUTÉ */}
+      <AnimatePresence>
+        {showHitConfirmModal && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.85)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}>
+            <div className="card-cartoon glow-green" style={{ width: "100%", maxWidth: "340px", textAlign: "center", border: "3px solid var(--color-green)" }}>
+              <h3 style={{ color: "var(--color-green)", marginBottom: "1rem", fontFamily: "var(--font-title)" }}>CONTRAT REMPLI ? ⚔️</h3>
+              <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.2rem", lineHeight: "1.4" }}>
+                Es-tu sûr d'avoir exécuté la mission sur <strong>{getPlayerDisplayName(player.target)}</strong> ? Cette action enverra la preuve pour examen.
+              </p>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="btn-cartoon btn-green"
+                  style={{ flex: 1, height: "44px" }}
+                  onClick={executeHitSubmit}
+                >
+                  Confirmer
+                </button>
+                <button
+                  type="button"
+                  className="btn-cartoon"
+                  style={{ flex: 1, height: "44px", backgroundColor: "#4b5563" }}
+                  onClick={() => setShowHitConfirmModal(false)}
                 >
                   Annuler
                 </button>

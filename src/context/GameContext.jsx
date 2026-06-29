@@ -277,7 +277,8 @@ export const GameProvider = ({ children }) => {
             action_title: item.title,
             photo_proof: item.description,
             score_reward: item.scoreReward,
-            damage_penalty: item.damagePenalty
+            damage_penalty: item.damagePenalty,
+            is_zombie_only: item.isZombieOnly || false
           }
         ]);
         if (error) throw error;

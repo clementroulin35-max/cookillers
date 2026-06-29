@@ -82,7 +82,8 @@ CREATE TABLE public.history (
     score_reward integer DEFAULT 0 NOT NULL,
     damage_penalty numeric(3,1) DEFAULT 0.0 NOT NULL,
     status varchar(20) DEFAULT 'completed' NOT NULL, -- 'pending', 'completed', 'rejected'
-    photo_proof text
+    photo_proof text,
+    is_zombie_only boolean DEFAULT false NOT NULL
 );
 
 -- 3. Activation de Row Level Security (RLS)
@@ -185,7 +186,8 @@ BEGIN
         'damagePenalty', damage_penalty,
         'status', status,
         'photoProof', photo_proof,
-        'hasPhotoProof', (photo_proof IS NOT NULL AND photo_proof != '')
+        'hasPhotoProof', (photo_proof IS NOT NULL AND photo_proof != ''),
+        'isZombieOnly', is_zombie_only
     ) ORDER BY created_at DESC) INTO v_history
     FROM public.history
     WHERE game_code = p_game_code
