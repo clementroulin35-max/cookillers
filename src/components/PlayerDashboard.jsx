@@ -2064,7 +2064,7 @@ export default function PlayerDashboard() {
 
             {suggestType === "mission" && (
               <div>
-                <label style={{ fontSize: "0.8rem", color: "var(--color-purple)" }}>
+                <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)" }}>
                   Intitulé du défi :
                 </label>
                 <input
