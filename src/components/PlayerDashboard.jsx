@@ -2064,14 +2064,14 @@ export default function PlayerDashboard() {
 
             {suggestType === "mission" && (
               <div>
-                <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)" }}>
+                <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
                   Intitulé du défi :
                 </label>
                 <input
                   type="text"
                   value={suggestTitle}
                   onChange={(e) => setSuggestTitle(e.target.value)}
-                  placeholder="Ex: Le Choc Shifumi ⚡"
+                  placeholder="Ex: Le Choc Shifumi"
                   style={{
                     width: "100%",
                     padding: "8px",
@@ -2079,7 +2079,7 @@ export default function PlayerDashboard() {
                     border: "2px solid #000",
                     borderRadius: "8px",
                     color: "#fff",
-                    marginTop: "2px"
+                    marginTop: "4px"
                   }}
                 />
               </div>
@@ -2101,7 +2101,7 @@ export default function PlayerDashboard() {
                   borderRadius: "8px",
                   padding: "8px",
                   color: "#fff",
-                  marginTop: "2px"
+                  marginTop: "4px"
                 }}
               />
             </div>
