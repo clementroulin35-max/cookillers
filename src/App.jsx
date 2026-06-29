@@ -8,6 +8,7 @@ import GMDashboard from "./components/GMDashboard";
 import TutorialOverlay from "./components/TutorialOverlay";
 import { Loader2, AlertTriangle, LogIn } from "lucide-react";
 import mascotteLogo from "../DA/mascotte_logo_app.png";
+import campBg from "../DA/camp_bg.png";
 
 function MainAppContent() {
   const {
@@ -188,7 +189,10 @@ function MainAppContent() {
         alignItems: "center",
         justifyContent: "center",
         padding: "20px",
-        background: "radial-gradient(circle at 50% 10%, #1c0e2b 0%, #08080a 80%)"
+        backgroundImage: `linear-gradient(to bottom, rgba(8,8,10,0.55) 0%, rgba(28,14,43,0.75) 50%, rgba(8,8,10,0.9) 100%), url(${campBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat"
       }}>
         <div className="card-cartoon glow-purple" style={{ width: "100%", maxWidth: "340px", textAlign: "center" }}>
 
