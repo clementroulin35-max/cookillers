@@ -225,7 +225,27 @@ const AnimatedScore = ({ value }) => {
 };
 
 const CampfireAvatar = ({ p, idx, total, isMe, campPhoto, radarClass, handleAvatarDragEnd, getPlayerDisplayName, campfireContainerRef }) => {
-  const angle = (idx * 2 * Math.PI) / Math.max(1, total);
+  // Répartir à gauche et à droite pour former deux arcs de cercle et vider le dessus/dessous du feu de camp
+  const isRightSide = idx % 2 === 0;
+  const totalRight = Math.ceil(total / 2);
+  const totalLeft = total - totalRight;
+  const localIdx = Math.floor(idx / 2);
+
+  let angle;
+  if (isRightSide) {
+    // Arc de droite : de -45° à +45° (débattement de 90° centré sur 0)
+    const span = Math.PI / 2;
+    const step = totalRight > 1 ? span / (totalRight - 1) : 0;
+    const startAngle = totalRight > 1 ? -span / 2 : 0;
+    angle = startAngle + localIdx * step;
+  } else {
+    // Arc de gauche : de 135° à 225° (débattement de 90° centré sur Math.PI)
+    const span = Math.PI / 2;
+    const step = totalLeft > 1 ? span / (totalLeft - 1) : 0;
+    const startAngle = totalLeft > 1 ? Math.PI - span / 2 : Math.PI;
+    angle = startAngle + localIdx * step;
+  }
+
   const radiusX = 38; 
   const radiusY = 25; 
   const left = 50 + radiusX * Math.cos(angle);
