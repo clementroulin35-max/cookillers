@@ -260,7 +260,8 @@ export const GameProvider = ({ children }) => {
           p_name: item.playerName,
           p_fountain_type: item.fountainType,
           p_proof: item.proof,
-          p_gain_lives: item.gainLives
+          p_gain_lives: item.gainLives,
+          p_active_title: item.activeTitle
         });
         if (error) throw error;
         break;
@@ -646,11 +647,12 @@ export const GameProvider = ({ children }) => {
     });
   };
 
-  const submitFountainProof = async (fountainType, proof, gainLives) => {
+  const submitFountainProof = async (fountainType, proof, gainLives, activeTitle) => {
     return await queueAction("FOUNTAIN", {
       fountainType,
       proof,
-      gainLives
+      gainLives,
+      activeTitle
     });
   };
 

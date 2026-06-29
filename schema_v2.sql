@@ -1106,7 +1106,8 @@ CREATE OR REPLACE FUNCTION public.use_fountain_transaction(
     p_name text,
     p_fountain_type text,
     p_proof text,
-    p_gain_lives numeric
+    p_gain_lives numeric,
+    p_active_title text DEFAULT NULL
 )
 RETURNS boolean
 SECURITY DEFINER
@@ -1138,6 +1139,10 @@ BEGIN
     END IF;
 
     v_lives := LEAST(7.0, v_lives + p_gain_lives);
+
+    IF v_active_title IS NULL OR v_active_title = '' THEN
+        v_active_title := p_active_title;
+    END IF;
 
     UPDATE public.players
     SET lives = v_lives,

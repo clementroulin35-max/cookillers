@@ -901,7 +901,7 @@ export default function PlayerDashboard() {
     const proof = fountainType === "verite" ? fountainTextProof : fountainPhotoProof;
     const gain = fountainChoice.gain;
 
-    submitFountainProof(fountainType, proof, gain);
+    submitFountainProof(fountainType, proof, gain, fountainChoice ? fountainChoice.title : "");
     // Nettoyer le couple du cache local après validation réussie
     if (player) {
       localStorage.removeItem(`fountain_pair_${player.name}_${gameCode}`);

@@ -1177,10 +1177,10 @@ export default function GMDashboard() {
                       <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune mission active</span>
                     ) : (
                       <>
+                        {renderSubGroup("🛡️ Standards", missionsStandard, "#3b82f6")}
+                        {renderSubGroup("⚡ Élites", missionsElite, "#f59e0b")}
+                        {renderSubGroup("🔥 Légendaires", missionsLegendary, "#ef4444")}
                         {renderSubGroup("🧟 Zombie Challenges", missionsZombie, "var(--color-zombie)")}
-                        {renderSubGroup("🔥 Légendaires (>= 4.0 ❤️)", missionsLegendary, "#ef4444")}
-                        {renderSubGroup("⚡ Élites (2.0 - 3.5 ❤️)", missionsElite, "#f59e0b")}
-                        {renderSubGroup("🛡️ Standards (< 2.0 ❤️)", missionsStandard, "#3b82f6")}
                       </>
                     )}
                   </div>
@@ -1192,9 +1192,9 @@ export default function GMDashboard() {
                       <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune action Fontaine</span>
                     ) : (
                       <>
-                        {renderSubGroup("★★★ Difficile (>= 3.0 ❤️)", actions3Stars, "#10b981")}
-                        {renderSubGroup("★★ Moyen (1.5 - 2.5 ❤️)", actions2Stars, "#3b82f6")}
-                        {renderSubGroup("★ Facile (< 1.5 ❤️)", actions1Star, "#6b7280")}
+                        {renderSubGroup("★ Facile", actions1Star, "#6b7280")}
+                        {renderSubGroup("★★ Moyen", actions2Stars, "#3b82f6")}
+                        {renderSubGroup("★★★ Difficile", actions3Stars, "#10b981")}
                       </>
                     )}
                   </div>
@@ -1206,9 +1206,9 @@ export default function GMDashboard() {
                       <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune vérité Fontaine</span>
                     ) : (
                       <>
-                        {renderSubGroup("★★★ Difficile (>= 3.0 ❤️)", truths3Stars, "#10b981")}
-                        {renderSubGroup("★★ Moyen (1.5 - 2.5 ❤️)", truths2Stars, "#3b82f6")}
-                        {renderSubGroup("★ Facile (< 1.5 ❤️)", truths1Star, "#6b7280")}
+                        {renderSubGroup("★ Facile", truths1Star, "#6b7280")}
+                        {renderSubGroup("★★ Moyen", truths2Stars, "#3b82f6")}
+                        {renderSubGroup("★★★ Difficile", truths3Stars, "#10b981")}
                       </>
                     )}
                   </div>

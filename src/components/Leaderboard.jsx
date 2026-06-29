@@ -291,9 +291,9 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
             <span style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: "bold" }}>
               {tierLabel} (+{Math.abs(evt.damagePenalty)} ❤️)
             </span>
-            {evt.targetName && (
-              <div style={{ fontStyle: "italic", color: "#d1d5db", marginTop: "6px", fontSize: "0.85rem", paddingLeft: "8px", borderLeft: "2px solid var(--color-green)" }}>
-                « {evt.targetName} »
+            {(evt.actionTitle || evt.targetName) && (
+              <div style={{ fontStyle: "italic", color: "#d1d5db", marginTop: "6px", fontSize: "0.85rem", paddingLeft: "8px", borderLeft: "2.5px solid var(--color-green)" }}>
+                {evt.actionTitle || evt.targetName}
               </div>
             )}
             
