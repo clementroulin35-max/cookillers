@@ -238,7 +238,7 @@ function MainAppContent() {
                   required
                 />
 
-                <button type="submit" className="btn-cartoon btn-cyan" style={{ width: "100%", marginTop: "6px" }} disabled={loading}>
+                <button type="submit" className="btn-cartoon btn-purple" style={{ width: "100%", marginTop: "6px" }} disabled={loading}>
                   {loading ? <Loader2 size={16} className="animate-spin" /> : "Rejoindre le Salon"}
                 </button>
               </form>
@@ -268,19 +268,23 @@ function MainAppContent() {
                   Salon : {isGM && gameCode === "PENDING" ? "Nouveau" : gameCode}
                 </span>
 
-                {/* Bouton de bascule GM / Joueur pour la connexion à un salon existant */}
                 {gameCode !== "PENDING" && (
                   <button
                     type="button"
                     style={{
-                      background: isGM ? "rgba(34, 211, 238, 0.15)" : "rgba(168, 85, 247, 0.15)",
-                      border: isGM ? "2px solid var(--color-cyan)" : "2px solid var(--color-purple)",
+                      background: !isGM
+                        ? "linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)"
+                        : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                      border: "3px solid #000",
                       borderRadius: "8px",
-                      color: "#fff",
-                      padding: "4px 8px",
-                      fontSize: "0.7rem",
+                      boxShadow: "2px 2px 0 #000, inset 0 2px 4px rgba(255, 255, 255, 0.4)",
+                      color: !isGM ? "#000" : "#fff",
+                      padding: "6px 12px",
+                      fontSize: "0.85rem",
                       cursor: "pointer",
-                      fontWeight: "bold"
+                      fontWeight: "bold",
+                      position: "relative",
+                      overflow: "hidden"
                     }}
                     onClick={() => {
                       setIsGM(!isGM);
@@ -289,7 +293,19 @@ function MainAppContent() {
                       setError("");
                     }}
                   >
-                    {isGM ? "👤 Joueur" : "⚖️ GM"}
+                    {/* Glass reflection streak */}
+                    <div style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, transparent 40%)",
+                      pointerEvents: "none"
+                    }} />
+                    <span style={{ position: "relative", zIndex: 2 }}>
+                      {isGM ? "👤 Joueur" : "⚖️ GM"}
+                    </span>
                   </button>
                 )}
 
@@ -317,8 +333,8 @@ function MainAppContent() {
                       padding: "6px",
                       border: "none",
                       borderRadius: "6px",
-                      backgroundColor: !isRegistering ? "var(--color-cyan)" : "transparent",
-                      color: !isRegistering ? "#000" : "#fff",
+                      backgroundColor: !isRegistering ? "var(--color-purple)" : "transparent",
+                      color: "#fff",
                       fontWeight: "bold",
                       cursor: "pointer"
                     }}
@@ -333,8 +349,8 @@ function MainAppContent() {
                       padding: "6px",
                       border: "none",
                       borderRadius: "6px",
-                      backgroundColor: isRegistering ? "var(--color-cyan)" : "transparent",
-                      color: isRegistering ? "#000" : "#fff",
+                      backgroundColor: isRegistering ? "var(--color-purple)" : "transparent",
+                      color: "#fff",
                       fontWeight: "bold",
                       cursor: "pointer"
                     }}

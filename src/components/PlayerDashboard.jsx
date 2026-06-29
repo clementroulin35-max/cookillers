@@ -9,6 +9,115 @@ import mascotteLogo from "../../DA/mascotte_logo_app.png";
 import headerTitle from "../../DA/header_title.png";
 import { vibrateLight, vibrateMedium, vibrateSuccess, vibrateFailure, vibrateDeath } from "../utils/haptic";
 
+function TVStaticNoise({ style }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let animationFrameId;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth || 300;
+      canvas.height = canvas.offsetHeight || 150;
+    };
+    resize();
+
+    const render = () => {
+      const width = canvas.width;
+      const height = canvas.height;
+      if (width === 0 || height === 0) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+      const imgData = ctx.createImageData(width, height);
+      const data = imgData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const val = Math.random() < 0.5 ? 0 : 255;
+        data[i] = val;
+        data[i+1] = val;
+        data[i+2] = val;
+        data[i+3] = 255;
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} style={{ width: "100%", height: "100%", display: "block", ...style }} />;
+}
+
+function RedStamp({ text }) {
+  return (
+    <div style={{
+      border: "5px double #ef4444",
+      borderRadius: "6px",
+      color: "#ef4444",
+      fontFamily: "var(--font-title)",
+      fontSize: "1.4rem",
+      fontWeight: "bold",
+      textTransform: "uppercase",
+      padding: "8px 18px",
+      transform: "rotate(-10deg)",
+      display: "inline-block",
+      backgroundColor: "rgba(0,0,0,0.85)",
+      boxShadow: "0 0 12px rgba(239, 68, 68, 0.5)",
+      letterSpacing: "0.05em",
+      textAlign: "center"
+    }}>
+      {text}
+    </div>
+  );
+}
+
+function PendingHitOverlay({ text = "EXAMEN EN COURS" }) {
+  const [isStaticActive, setIsStaticActive] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsStaticActive(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      borderRadius: "12px",
+      zIndex: 90,
+      overflow: "hidden",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    }}>
+      {isStaticActive ? (
+        <TVStaticNoise style={{ position: "absolute", top: 0, left: 0, zIndex: 91 }} />
+      ) : (
+        <>
+          {/* Semi-transparent dark cover underneath the stamp */}
+          <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(17, 14, 32, 0.8)", zIndex: 91 }} />
+          <div style={{ zIndex: 92 }}>
+            <RedStamp text={text} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 const FOUNTAIN_POOL = [
   // Actions Faciles (Tier 1) — gain 0.5
   { type: "action", tier: 1, title: "Faire un compliment sincère à un inconnu.", gain: 0.5 },
@@ -287,7 +396,6 @@ export default function PlayerDashboard() {
   const [showZombieBiteConfirmModal, setShowZombieBiteConfirmModal] = useState(false);
   const [revealPin, setRevealPin] = useState(false);
   const [isGlitchingMission, setIsGlitchingMission] = useState(false);
-  const [isRedScreen, setIsRedScreen] = useState(false);
   const triggerMissionGlitch = () => {
     setIsGlitchingMission(true);
     setTimeout(() => setIsGlitchingMission(false), 1000);
@@ -502,9 +610,10 @@ export default function PlayerDashboard() {
   // Charger les photos des victimes du tableau de chasse
   useEffect(() => {
     if (!gameState || !gameState.history || !player) return;
-    const completedHits = gameState.history.filter(h => h.playerName === player.name && h.type === "hit_declared" && h.status === "completed");
+    const completedHits = gameState.history.filter(h => h.playerName === player.name && h.type === "player_zombified");
     completedHits.forEach(h => {
       const vName = h.targetName;
+      if (!vName) return;
       const victimObj = gameState.players.find(p => p.name === vName);
       if (victimObj && victimObj.hasPhoto && !victimPhotos[vName]) {
         getPlayerPhoto(vName).then(photo => {
@@ -901,39 +1010,42 @@ export default function PlayerDashboard() {
         top: 0,
         zIndex: 500
       }}>
-        {/* Avatar cliquable pour modale matricule */}
-        <div 
-          onClick={() => setShowProfileModal(true)}
-          data-tuto="profile-avatar"
-          style={{
-            width: "42px",
-            height: "42px",
-            borderRadius: "50%",
-            border: "2px solid #000",
-            boxShadow: "2px 2px 0 #000",
-            backgroundColor: "#221f3b",
-            overflow: "hidden",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}
-        >
-          {profilePhoto ? (
-            <img src={profilePhoto} alt="Profil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          ) : (
-            <span style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem" }}>
-              {(player.displayName || player.name).slice(0, 2).toUpperCase()}
-            </span>
-          )}
+        {/* Avatar cliquable pour modale matricule wrapped for centering */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", width: "100px", flexShrink: 0 }}>
+          <div 
+            onClick={() => setShowProfileModal(true)}
+            data-tuto="profile-avatar"
+            style={{
+              width: "42px",
+              height: "42px",
+              borderRadius: "50%",
+              border: "2px solid #000",
+              boxShadow: "2px 2px 0 #000",
+              backgroundColor: "#221f3b",
+              overflow: "hidden",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            {profilePhoto ? (
+              <img src={profilePhoto} alt="Profil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <span style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem" }}>
+                {(player.displayName || player.name).slice(0, 2).toUpperCase()}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Logo mini */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1 }}>
           <img src={headerTitle} alt="Cookillers" style={{ height: "45px", maxWidth: "160px", objectFit: "contain", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }} />
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        {/* Options container wrapped for centering */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "flex-end", width: "100px", flexShrink: 0 }}>
           {/* Bouton d'aide contextuelle */}
           <button
             type="button"
@@ -1271,39 +1383,7 @@ export default function PlayerDashboard() {
               {/* Cadre Contrat de Morsure */}
               <div className="card-cartoon" style={{ border: "3px solid var(--color-zombie)", backgroundColor: "#0c1510", width: "100%", padding: "12px", textAlign: "left", marginBottom: "15px", boxShadow: "4px 4px 0 #000", position: "relative" }}>
                 {pendingHit && (
-                  <div style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "rgba(12, 21, 16, 0.9)",
-                    borderRadius: "12px",
-                    zIndex: 30,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "10px",
-                    border: "2px solid var(--color-zombie)"
-                  }}>
-                    <div style={{
-                      backgroundColor: "var(--color-zombie)",
-                      color: "#fff",
-                      fontFamily: "var(--font-title)",
-                      padding: "8px 16px",
-                      border: "3px solid #000",
-                      boxShadow: "3px 3px 0 #000",
-                      textTransform: "uppercase",
-                      fontSize: "0.8rem",
-                      textAlign: "center",
-                      transform: "rotate(-6deg)",
-                      position: "relative",
-                      zIndex: 100
-                    }}>
-                      MORSURE EN EXAMEN ⚖️
-                    </div>
-                  </div>
+                  <PendingHitOverlay text="EXAMEN EN COURS" />
                 )}
                 
                 <h3 style={{ fontSize: "0.8rem", color: "var(--color-zombie)", fontFamily: "var(--font-title)", textTransform: "uppercase", margin: "0 0 6px 0" }}>
@@ -1391,23 +1471,6 @@ export default function PlayerDashboard() {
                   style={{ minHeight: "190px", position: "relative", cursor: "pointer" }}
                   onClick={() => setIsMasked(true)}
                 >
-                  {isRedScreen && (
-                    <div style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      backgroundColor: "rgba(239, 68, 68, 0.95)",
-                      zIndex: 95,
-                      borderRadius: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center"
-                    }}>
-                      <span style={{ fontSize: "3rem", filter: "drop-shadow(0 0 10px #000)" }}>💔</span>
-                    </div>
-                  )}
                   {isGlitchingMission && (
                     <div style={{
                       position: "absolute",
@@ -1503,34 +1566,7 @@ export default function PlayerDashboard() {
 
                   {/* Bandeau Examen si arbitrage en cours */}
                   {pendingHit && (
-                    <div style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      backgroundColor: "rgba(17, 14, 32, 0.95)",
-                      borderRadius: "12px",
-                      zIndex: 30,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center"
-                    }}>
-                      <div style={{
-                        backgroundColor: "var(--color-red)",
-                        color: "#fff",
-                        fontFamily: "var(--font-title)",
-                        padding: "8px 16px",
-                        border: "3px solid #000",
-                        boxShadow: "3px 3px 0 #000",
-                        textTransform: "uppercase",
-                        fontSize: "0.8rem",
-                        textAlign: "center",
-                        transform: "rotate(-6deg)"
-                      }}>
-                        EN COURS D'EXAMEN PAR LE JUGE ⚖️
-                      </div>
-                    </div>
+                    <PendingHitOverlay text="EXAMEN EN COURS" />
                   )}
 
                   {/* Contenu de la fiche contrat */}
@@ -2528,7 +2564,7 @@ export default function PlayerDashboard() {
                 </h4>
                 <div style={{ maxHeight: "150px", overflowY: "auto", marginTop: "8px", fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: "8px" }}>
                   {gameState.history
-                    .filter(h => h.playerName === player.name && h.type === "hit_declared" && h.status === "completed")
+                    .filter(h => h.playerName === player.name && h.type === "player_zombified")
                     .map(h => {
                       const vPhoto = victimPhotos[h.targetName];
                       return (
@@ -2540,7 +2576,7 @@ export default function PlayerDashboard() {
                                 <img src={vPhoto} alt="Victime" style={{ width: "100%", height: "100%", objectFit: "cover", filter: "grayscale(100%)" }} />
                               ) : (
                                 <span style={{ fontFamily: "var(--font-title)", fontSize: "0.8rem", color: "#9ca3af" }}>
-                                  {h.targetName.slice(0, 2).toUpperCase()}
+                                  {h.targetName ? h.targetName.slice(0, 2).toUpperCase() : "??"}
                                 </span>
                               )}
                               <span style={{ position: "absolute", bottom: "-2px", right: "-2px", fontSize: "0.8rem" }}>🩸</span>
@@ -2548,7 +2584,7 @@ export default function PlayerDashboard() {
                             <span style={{ fontWeight: "bold", color: "#f3f4f6" }}>{getPlayerDisplayName(h.targetName)}</span>
                           </div>
                           <span style={{ color: "#fbbf24", display: "inline-flex", alignItems: "center", gap: "2px", fontWeight: "bold" }}>
-                            +{h.scoreReward} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
+                            +{h.scoreReward || 200} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
                           </span>
                         </div>
                       );
@@ -2754,12 +2790,11 @@ export default function PlayerDashboard() {
                     setShowAbandonModal(false);
                     showToast("Cible abandonnée. Nouveau contrat pioché ! 💔");
                     
-                    // Instant red screen
-                    setIsRedScreen(true);
+                    // Global red screen damage flash
+                    triggerDamageEffect();
                     setTimeout(() => {
-                      setIsRedScreen(false);
                       triggerMissionGlitch();
-                    }, 600);
+                    }, 400);
                   }}
                 >
                   <span style={{ fontSize: "2rem", marginBottom: "4px" }}>❤️</span>

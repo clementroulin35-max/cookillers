@@ -63,6 +63,36 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
     return namesArray.map(name => getPlayerDisplayName(name)).join(", ");
   };
 
+  const renderTrophyWinners = (namesArray) => {
+    if (!namesArray || namesArray.length === 0) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: "8px" }}>
+          <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>Aucun gagnant pour le moment</span>
+        </div>
+      );
+    }
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", marginTop: "8px" }}>
+        {namesArray.map(name => {
+          const found = players.find(p => p.name.toUpperCase() === name.toUpperCase());
+          const hasPhoto = found ? found.hasPhoto : false;
+          return (
+            <div key={name} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+              <PlayerAvatar 
+                name={name} 
+                hasPhoto={hasPhoto} 
+                style={{ width: "42px", height: "42px", border: "2.5px solid #000", boxShadow: "2px 2px 0 #000" }} 
+              />
+              <span style={{ fontSize: "0.85rem", fontWeight: "bold", color: "#fff" }}>
+                {getPlayerDisplayName(name)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const [subTab, setSubTab] = useState("scores"); // scores, trophies, flux
   const [expandedPhoto, setExpandedPhoto] = useState(null);
   const [loadedProofs, setLoadedProofs] = useState({}); // { id: proofString }
@@ -251,9 +281,9 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
         const hasProof = evt.hasPhotoProof;
         const proof = loadedProofs[evt.id];
         const isPhoto = proof && proof.startsWith("data:image");
-        let tierLabel = "Tier I : Jus de Chaussette";
-        if (Math.abs(evt.damagePenalty) >= 3.0) tierLabel = "Tier III : Larmes de VIP";
-        else if (Math.abs(evt.damagePenalty) >= 1.5) tierLabel = "Tier II : Élixir du Barman";
+        let tierLabel = "Jus de Chaussette";
+        if (Math.abs(evt.damagePenalty) >= 3.0) tierLabel = "Larmes de VIP";
+        else if (Math.abs(evt.damagePenalty) >= 1.5) tierLabel = "Élixir du Barman";
         return (
           <span>
             ⛲ <strong>SOIN SOURCE</strong><br/>
@@ -261,10 +291,11 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
             <span style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: "bold" }}>
               {tierLabel} (+{Math.abs(evt.damagePenalty)} ❤️)
             </span>
-            <br/>
-            <span style={{ color: "#9ca3af", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-              <EyeOff size={12} /> Le titre de la vérité ou de l'action et sa description sont masqués pour protéger l'intimité du joueur.
-            </span>
+            {evt.targetName && (
+              <div style={{ fontStyle: "italic", color: "#d1d5db", marginTop: "6px", fontSize: "0.85rem", paddingLeft: "8px", borderLeft: "2px solid var(--color-green)" }}>
+                « {evt.targetName} »
+              </div>
+            )}
             
             {hasProof && !proof && (
               <div style={{ marginTop: "6px" }}>
@@ -308,13 +339,14 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
           </span>
         );
       case "player_zombified":
-        const killerName = evt.targetName || "Un assassin";
-        const victimName = evt.targetName ? evt.playerName : (evt.playerName || "Un joueur");
+        const killerName = evt.playerName || "Un assassin";
+        const victimName = evt.targetName || "Un joueur";
         const bonusCookies = evt.scoreReward || 200;
         return (
           <span>
-            🧟 <strong>ZOMBIFICATION</strong><br/>
-            <strong>{getPlayerDisplayName(killerName)}</strong> a neutralisé <strong>{getPlayerDisplayName(victimName)}</strong> et a empoché <strong>+{bonusCookies} 🪙</strong>. <strong>{getPlayerDisplayName(victimName)}</strong> rejoint la horde des zombies ! 🧟
+            💀🔪 <strong>MEURTRE / ASSASSINAT</strong><br/>
+            L'assassin <strong>{getPlayerDisplayName(killerName)}</strong> a éliminé <strong>{getPlayerDisplayName(victimName)}</strong> et a empoché <strong>+{bonusCookies} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", display: "inline-block", verticalAlign: "middle" }} /></strong>.<br/>
+            La victime rejoint la horde des zombies ! 🧟
           </span>
         );
       case "player_frozen":
@@ -571,12 +603,12 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                       boxShadow: "3px 3px 0 #000"
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1, minWidth: 0 }}>
-                      <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", width: "18px", color: "var(--color-purple)", flexShrink: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1, minWidth: 0 }}>
+                      <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", width: "15px", color: "var(--color-purple)", flexShrink: 0 }}>
                         {idx + 1}
                       </span>
                       <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
-                        <span style={{ fontWeight: "bold", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <span style={{ fontWeight: "bold", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {getPlayerDisplayName(player.name)}
                           </span>
@@ -589,8 +621,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                       </div>
                     </div>
                     
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", width: "85px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", width: "75px" }}>
                         <span style={{ fontWeight: "black", fontSize: "1rem", color: "#fbbf24", textAlign: "right", display: "inline-flex", alignItems: "center", gap: "2px" }}>
                           {player.effectiveScore} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
                         </span>
@@ -600,7 +632,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                           </span>
                         )}
                       </div>
-                      <div style={{ width: "65px", textAlign: "right", fontSize: "1rem", fontWeight: "bold", flexShrink: 0 }}>
+                      <div style={{ width: "50px", textAlign: "right", fontSize: "1rem", fontWeight: "bold", flexShrink: 0 }}>
                         {player.isZombie ? "💀" : `${player.lives} ❤️`}
                       </div>
                     </div>
@@ -624,9 +656,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le roi du pogo ayant accumulé le plus grand nombre de Cookies.</p>
                 </div>
               </div>
-              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
-                {formatTrophyNames(trophies.alphas)}
-              </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+              {renderTrophyWinners(trophies.alphas)}
             </div>
 
             {/* Trophée 2: Le Survivant Ultime */}
@@ -638,9 +669,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le miraculé ayant conservé le plus grand nombre de ❤️ (vivant).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
-                {formatTrophyNames(trophies.survivors)}
-              </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+              {renderTrophyWinners(trophies.survivors)}
             </div>
 
             {/* Trophée 3: Le Patient Zéro */}
@@ -652,9 +682,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>La première victime à être passée dans le Mode Moisi (décédée à 0 ❤️).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
-                {formatTrophyNames(trophies.patientZero)}
-              </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+              {renderTrophyWinners(trophies.patientZero)}
             </div>
 
             {/* Trophée 4: Le Faucheur du Camping */}
@@ -666,9 +695,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le bourreau ayant infligé le coup de grâce le plus de fois ({trophies.maxKills} kills).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
-                {formatTrophyNames(trophies.reapers)}
-              </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+              {renderTrophyWinners(trophies.reapers)}
             </div>
 
             {/* Trophée 5: Le Complotiste */}
@@ -680,9 +708,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>L'assassin ayant lancé le plus de fausses accusations ({trophies.maxFailedAcc} alertes).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
-                {formatTrophyNames(trophies.complotistes)}
-              </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+              {renderTrophyWinners(trophies.complotistes)}
             </div>
 
             {/* Trophée 6: Le Joueur Fou */}
@@ -694,9 +721,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le festivalier hyperactif ayant abusé de la relance ({trophies.maxCrazy} relances/abandons).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
-                {formatTrophyNames(trophies.crazyPlayers)}
-              </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+              {renderTrophyWinners(trophies.crazyPlayers)}
             </div>
 
             {/* Trophée 7: La Source de Jouvence */}
@@ -708,9 +734,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le joueur s'étant abreuvé le plus grand nombre de fois à la Source ({trophies.maxFountain} fois).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
-                {formatTrophyNames(trophies.fountainLovers)}
-              </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+              {renderTrophyWinners(trophies.fountainLovers)}
             </div>
 
             {/* Trophée 8: L'Insaisissable */}
@@ -722,9 +747,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                   <p style={{ fontSize: "0.8rem", color: "#d1d5db" }}>Le joueur ayant esquivé le plus d'attaques en dénonçant correctement son tueur ({trophies.maxSuccessfulAcc} esquives).</p>
                 </div>
               </div>
-              <div style={{ textAlign: "center", marginTop: "6px", fontSize: "0.9rem", fontWeight: "bold" }}>
-                {formatTrophyNames(trophies.elusives)}
-              </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "8px 0" }} />
+              {renderTrophyWinners(trophies.elusives)}
             </div>
 
           </div>

@@ -134,6 +134,11 @@ h1, h2, h3, .cartoon-title {
   color: #08080a;
 }
 
+.btn-cartoon.btn-purple {
+  background-color: var(--color-purple);
+  color: #ffffff;
+}
+
 .btn-cartoon:disabled,
 .btn-cartoon.btn-disabled {
   background-color: #374151 !important;

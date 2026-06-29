@@ -384,41 +384,42 @@ export default function GMDashboard() {
         top: 0,
         zIndex: 500
       }}>
-        {/* Left: Premium shiny gold GM badge */}
-        <div style={{
-          width: "42px",
-          height: "42px",
-          background: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)",
-          border: "3px solid #000",
-          borderRadius: "8px",
-          boxShadow: "2px 2px 0 #000, inset 0 2px 4px rgba(255, 255, 255, 0.4)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          {/* Glass reflection streak */}
+        {/* Left: Premium shiny gold GM badge wrapped for centering */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", width: "100px", flexShrink: 0 }}>
           <div style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, transparent 40%)",
-            pointerEvents: "none"
-          }} />
-          <span style={{
-            fontFamily: "var(--font-title)",
-            fontSize: "1.1rem",
-            fontWeight: "bold",
-            color: "#000",
-            letterSpacing: "0.05em",
-            zIndex: 2
+            width: "42px",
+            height: "42px",
+            background: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)",
+            border: "3px solid #000",
+            borderRadius: "8px",
+            boxShadow: "2px 2px 0 #000, inset 0 2px 4px rgba(255, 255, 255, 0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+            overflow: "hidden"
           }}>
-            GM
-          </span>
+            {/* Glass reflection streak */}
+            <div style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, transparent 40%)",
+              pointerEvents: "none"
+            }} />
+            <span style={{
+              fontFamily: "var(--font-title)",
+              fontSize: "1.1rem",
+              fontWeight: "bold",
+              color: "#000",
+              letterSpacing: "0.05em",
+              zIndex: 2
+            }}>
+              GM
+            </span>
+          </div>
         </div>
 
         {/* Center: Title Logo */}
@@ -426,8 +427,8 @@ export default function GMDashboard() {
           <img src={headerTitle} alt="Cookillers" style={{ height: "45px", maxWidth: "160px", objectFit: "contain", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }} />
         </div>
 
-        {/* Right: Salon & Logout */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "flex-end", flexShrink: 0 }}>
+        {/* Right: Salon & Logout wrapped for centering */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "flex-end", width: "100px", flexShrink: 0 }}>
           <span style={{ fontSize: "0.8rem", color: "#9ca3af", fontWeight: "bold", backgroundColor: "rgba(0,0,0,0.3)", padding: "4px 8px", borderRadius: "6px", border: "1.5px solid #000" }}>{gameCode}</span>
           <button
             type="button"
@@ -1562,6 +1563,11 @@ export default function GMDashboard() {
                         <span style={{ fontSize: "1.2rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>❤️</span>
                       </div>
                     </div>
+                    <div style={{ width: "55px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Relances Défi">
+                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "32px", height: "32px" }}>
+                        <span style={{ fontSize: "1.2rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>🌀</span>
+                      </div>
+                    </div>
                     <div style={{ width: "55px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Relances Fontaine">
                       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "32px", height: "32px" }}>
                         <span style={{ fontSize: "1.2rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>🔄</span>
@@ -1570,11 +1576,6 @@ export default function GMDashboard() {
                     <div style={{ width: "50px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Fontaine Utilisations">
                       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "32px", height: "32px" }}>
                         <span style={{ fontSize: "1.2rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>⛲</span>
-                      </div>
-                    </div>
-                    <div style={{ width: "55px", display: "flex", justifyContent: "center", alignItems: "center" }} title="Relances Défi">
-                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "32px", height: "32px" }}>
-                        <span style={{ fontSize: "1.2rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>🌀</span>
                       </div>
                     </div>
                   </div>
@@ -1618,13 +1619,13 @@ export default function GMDashboard() {
                         {p.isZombie ? "💀" : `${p.lives}`}
                       </div>
                       <div style={{ width: "55px", textAlign: "center", fontSize: "0.85rem" }}>
+                        {p.skips || 0}
+                      </div>
+                      <div style={{ width: "55px", textAlign: "center", fontSize: "0.85rem" }}>
                         {p.fountainRefreshesToday || 0}
                       </div>
                       <div style={{ width: "50px", textAlign: "center", fontSize: "0.85rem" }}>
                         {p.fountainUsesToday || 0}/2
-                      </div>
-                      <div style={{ width: "55px", textAlign: "center", fontSize: "0.85rem" }}>
-                        {p.skips || 0}
                       </div>
                     </div>
                   ))}
