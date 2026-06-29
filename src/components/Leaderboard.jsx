@@ -307,6 +307,16 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
             </span>
           </span>
         );
+      case "player_zombified":
+        const killerName = evt.targetName || "Un assassin";
+        const victimName = evt.targetName ? evt.playerName : (evt.playerName || "Un joueur");
+        const bonusCookies = evt.scoreReward || 200;
+        return (
+          <span>
+            🧟 <strong>ZOMBIFICATION</strong><br/>
+            <strong>{getPlayerDisplayName(killerName)}</strong> a neutralisé <strong>{getPlayerDisplayName(victimName)}</strong> et a empoché <strong>+{bonusCookies} 🪙</strong>. <strong>{getPlayerDisplayName(victimName)}</strong> rejoint la horde des zombies ! 🧟
+          </span>
+        );
       case "player_frozen":
         return (
           <span>

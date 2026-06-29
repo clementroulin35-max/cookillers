@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useGame } from "../context/GameContext";
 import { supabase } from "../services/supabaseClient";
+import headerTitle from "../../DA/header_title.png";
 import Leaderboard, { getRank } from "./Leaderboard";
 import { Check, X, Users, Award, Shield, FileText, Smartphone, Plus, Minus, Trash, RefreshCw, Play, XOctagon, LogOut } from "lucide-react";
 
@@ -377,20 +378,57 @@ export default function GMDashboard() {
         justifyContent: "space-between",
         alignItems: "center",
         padding: "10px 16px",
-        backgroundColor: "rgba(30, 16, 18, 0.8)",
+        backgroundColor: "rgba(18, 16, 30, 0.8)",
         borderBottom: "3px solid #000",
         position: "sticky",
         top: 0,
-        zindex: 500
+        zIndex: 500
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <span style={{ fontSize: "1.4rem" }}>⚖️</span>
-          <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", textShadow: "1.5px 1.5px 0 #000" }}>
-            Console Grand Juge
+        {/* Left: Premium shiny gold GM badge */}
+        <div style={{
+          width: "42px",
+          height: "42px",
+          background: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)",
+          border: "3px solid #000",
+          borderRadius: "8px",
+          boxShadow: "2px 2px 0 #000, inset 0 2px 4px rgba(255, 255, 255, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          {/* Glass reflection streak */}
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, transparent 40%)",
+            pointerEvents: "none"
+          }} />
+          <span style={{
+            fontFamily: "var(--font-title)",
+            fontSize: "1.1rem",
+            fontWeight: "bold",
+            color: "#000",
+            letterSpacing: "0.05em",
+            zIndex: 2
+          }}>
+            GM
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Salon : <strong>{gameCode}</strong></span>
+
+        {/* Center: Title Logo */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1 }}>
+          <img src={headerTitle} alt="Cookillers" style={{ height: "45px", maxWidth: "160px", objectFit: "contain", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }} />
+        </div>
+
+        {/* Right: Salon & Logout */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "flex-end", flexShrink: 0 }}>
+          <span style={{ fontSize: "0.8rem", color: "#9ca3af", fontWeight: "bold", backgroundColor: "rgba(0,0,0,0.3)", padding: "4px 8px", borderRadius: "6px", border: "1.5px solid #000" }}>{gameCode}</span>
           <button
             type="button"
             onClick={() => setShowLogoutModal(true)}
@@ -405,7 +443,7 @@ export default function GMDashboard() {
             }}
             title="Se déconnecter"
           >
-            <LogOut size={18} />
+            <LogOut size={22} />
           </button>
         </div>
       </header>
@@ -1094,41 +1132,84 @@ export default function GMDashboard() {
             const gmFountainActions = gameState.actionPool.filter(a => a.type === "fountain_action");
             const gmFountainTruths = gameState.actionPool.filter(a => a.type === "fountain_truth");
 
+            // Subsections for Missions
+            const missionsZombie = gmActiveMissions.filter(m => m.isZombieOnly);
+            const missionsLegendary = gmActiveMissions.filter(m => !m.isZombieOnly && m.damagePenalty >= 4.0);
+            const missionsElite = gmActiveMissions.filter(m => !m.isZombieOnly && m.damagePenalty >= 2.0 && m.damagePenalty < 4.0);
+            const missionsStandard = gmActiveMissions.filter(m => !m.isZombieOnly && m.damagePenalty < 2.0);
+
+            // Subsections for Actions
+            const actions3Stars = gmFountainActions.filter(a => a.damagePenalty >= 3.0);
+            const actions2Stars = gmFountainActions.filter(a => a.damagePenalty >= 1.5 && a.damagePenalty < 3.0);
+            const actions1Star = gmFountainActions.filter(a => a.damagePenalty < 1.5);
+
+            // Subsections for Truths
+            const truths3Stars = gmFountainTruths.filter(a => a.damagePenalty >= 3.0);
+            const truths2Stars = gmFountainTruths.filter(a => a.damagePenalty >= 1.5 && a.damagePenalty < 3.0);
+            const truths1Star = gmFountainTruths.filter(a => a.damagePenalty < 1.5);
+
+            const renderSubGroup = (title, items, color = "var(--color-purple)") => {
+              if (items.length === 0) return null;
+              return (
+                <div style={{ margin: "4px 0 8px 12px", borderLeft: `2.5px solid ${color}`, paddingLeft: "8px" }}>
+                  <div style={{ fontSize: "0.7rem", color: color, fontWeight: "bold", textTransform: "uppercase", marginBottom: "4px", textAlign: "left" }}>
+                    {title} ({items.length})
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {items.map(renderDefiRow)}
+                  </div>
+                </div>
+              );
+            };
+
             return (
               <>
                 <h3 style={{ fontSize: "0.85rem", color: "#d1d5db", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "4px", marginBottom: "12px", textAlign: "left" }}>
                   Pool Globale de Défis ({gameState.actionPool.length})
                 </h3>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "1.5rem" }}>
-                  <div>
-                    <h4 style={{ fontSize: "0.75rem", color: "var(--color-purple)", marginBottom: "6px", textAlign: "left", textTransform: "uppercase" }}>Missions Actives 🎯 ({gmActiveMissions.length})</h4>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                      {gmActiveMissions.map(renderDefiRow)}
-                      {gmActiveMissions.length === 0 && (
-                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune mission active</span>
-                      )}
-                    </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "1.5rem" }}>
+                  {/* CATEGORY 1: MISSIONS */}
+                  <div style={{ backgroundColor: "rgba(0,0,0,0.15)", padding: "10px", borderRadius: "10px", border: "1.5px solid rgba(255,255,255,0.05)" }}>
+                    <h4 style={{ fontSize: "0.75rem", color: "var(--color-purple)", marginBottom: "8px", textAlign: "left", textTransform: "uppercase", fontWeight: "bold" }}>Missions Actives 🎯 ({gmActiveMissions.length})</h4>
+                    {gmActiveMissions.length === 0 ? (
+                      <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune mission active</span>
+                    ) : (
+                      <>
+                        {renderSubGroup("🧟 Zombie Challenges", missionsZombie, "var(--color-zombie)")}
+                        {renderSubGroup("🔥 Légendaires (>= 4.0 ❤️)", missionsLegendary, "#ef4444")}
+                        {renderSubGroup("⚡ Élites (2.0 - 3.5 ❤️)", missionsElite, "#f59e0b")}
+                        {renderSubGroup("🛡️ Standards (< 2.0 ❤️)", missionsStandard, "#3b82f6")}
+                      </>
+                    )}
                   </div>
 
-                  <div>
-                    <h4 style={{ fontSize: "0.75rem", color: "var(--color-cyan)", marginBottom: "6px", textAlign: "left", textTransform: "uppercase" }}>Actions Fontaine ⚡ ({gmFountainActions.length})</h4>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                      {gmFountainActions.map(renderDefiRow)}
-                      {gmFountainActions.length === 0 && (
-                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune action Fontaine</span>
-                      )}
-                    </div>
+                  {/* CATEGORY 2: ACTIONS FONTAINE */}
+                  <div style={{ backgroundColor: "rgba(0,0,0,0.15)", padding: "10px", borderRadius: "10px", border: "1.5px solid rgba(255,255,255,0.05)" }}>
+                    <h4 style={{ fontSize: "0.75rem", color: "var(--color-cyan)", marginBottom: "8px", textAlign: "left", textTransform: "uppercase", fontWeight: "bold" }}>Actions Fontaine ⚡ ({gmFountainActions.length})</h4>
+                    {gmFountainActions.length === 0 ? (
+                      <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune action Fontaine</span>
+                    ) : (
+                      <>
+                        {renderSubGroup("★★★ Difficile (>= 3.0 ❤️)", actions3Stars, "#10b981")}
+                        {renderSubGroup("★★ Moyen (1.5 - 2.5 ❤️)", actions2Stars, "#3b82f6")}
+                        {renderSubGroup("★ Facile (< 1.5 ❤️)", actions1Star, "#6b7280")}
+                      </>
+                    )}
                   </div>
 
-                  <div>
-                    <h4 style={{ fontSize: "0.75rem", color: "#10b981", marginBottom: "6px", textAlign: "left", textTransform: "uppercase" }}>Vérités Fontaine 💬 ({gmFountainTruths.length})</h4>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                      {gmFountainTruths.map(renderDefiRow)}
-                      {gmFountainTruths.length === 0 && (
-                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune vérité Fontaine</span>
-                      )}
-                    </div>
+                  {/* CATEGORY 3: VÉRITÉS FONTAINE */}
+                  <div style={{ backgroundColor: "rgba(0,0,0,0.15)", padding: "10px", borderRadius: "10px", border: "1.5px solid rgba(255,255,255,0.05)" }}>
+                    <h4 style={{ fontSize: "0.75rem", color: "#10b981", marginBottom: "8px", textAlign: "left", textTransform: "uppercase", fontWeight: "bold" }}>Vérités Fontaine 💬 ({gmFountainTruths.length})</h4>
+                    {gmFountainTruths.length === 0 ? (
+                      <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontStyle: "italic", textAlign: "left", display: "block" }}>Aucune vérité Fontaine</span>
+                    ) : (
+                      <>
+                        {renderSubGroup("★★★ Difficile (>= 3.0 ❤️)", truths3Stars, "#10b981")}
+                        {renderSubGroup("★★ Moyen (1.5 - 2.5 ❤️)", truths2Stars, "#3b82f6")}
+                        {renderSubGroup("★ Facile (< 1.5 ❤️)", truths1Star, "#6b7280")}
+                      </>
+                    )}
                   </div>
                 </div>
               </>

@@ -416,8 +416,8 @@ BEGIN
             stat_zombie_date = now()
         WHERE game_code = r_hist.game_code AND name = r_hist.target_name;
         
-        INSERT INTO public.history (game_code, player_name, type, status)
-        VALUES (r_hist.game_code, r_hist.target_name, 'player_zombified', 'completed');
+        INSERT INTO public.history (game_code, player_name, type, status, target_name, score_reward)
+        VALUES (r_hist.game_code, r_hist.player_name, 'player_zombified', 'completed', r_hist.target_name, v_zombie_bonus);
     ELSE
         UPDATE public.players
         SET lives = v_final_lives
@@ -606,8 +606,8 @@ BEGIN
             stat_zombie_date = now()
         WHERE game_code = r_hist.game_code AND name = r_hist.target_name;
 
-        INSERT INTO public.history (game_code, player_name, type, status)
-        VALUES (r_hist.game_code, r_hist.target_name, 'player_zombified', 'completed');
+        INSERT INTO public.history (game_code, player_name, type, status, target_name, score_reward)
+        VALUES (r_hist.game_code, r_hist.player_name, 'player_zombified', 'completed', r_hist.target_name, 0);
     ELSE
         UPDATE public.players
         SET lives = v_victim_lives,

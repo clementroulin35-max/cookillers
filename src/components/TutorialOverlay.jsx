@@ -48,6 +48,18 @@ export default function TutorialOverlay({ onComplete }) {
       title: "🏆 Le Classement",
       text: "Suis le classement général des survivants et des zombies en temps réel, ainsi que le flux des actualités du jeu.",
       position: "top"
+    },
+    {
+      selector: '[data-tuto="profile-avatar"]',
+      title: "👁️ Mon Matricule",
+      text: "Clique sur ton portrait pour ouvrir ton Matricule. Tu y trouveras ton rang, ton journal de mission et ton tableau de chasse !",
+      position: "bottom"
+    },
+    {
+      selector: null,
+      title: "Ta Photo de Profil 📸",
+      text: "Pour pimenter la partie et permettre aux autres de t'identifier, n'oublie pas de charger une photo de profil dans ton Matricule !",
+      position: "center"
     }
   ];
 
@@ -56,12 +68,28 @@ export default function TutorialOverlay({ onComplete }) {
   // Calcul du rectangle du spotlight
   useEffect(() => {
     const updateSpotlight = () => {
-      if (!currentStep?.selector) return;
+      if (!currentStep?.selector) {
+        setSpotlightStyle({ display: "none" });
+        setTooltipStyle({
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "280px"
+        });
+        return;
+      }
       const element = document.querySelector(currentStep.selector);
       if (!element) {
         // Si l'élément n'est pas rendu, on cache le spotlight
         setSpotlightStyle({ display: "none" });
-        setTooltipStyle({ top: "50%", left: "50%", transform: "translate(-50%, -50%)" });
+        setTooltipStyle({
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "280px"
+        });
         return;
       }
 

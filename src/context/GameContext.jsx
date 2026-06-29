@@ -232,10 +232,8 @@ export const GameProvider = ({ children }) => {
         ]);
         if (error) throw error;
         // Déclencher un incrément version sur le serveur pour alerter le GM
-        await supabase.rpc("get_complete_game_state", { p_game_code: gameCode }); // hack trigger increment or via state_version update
-        // Mais pour incrémenter state_version, on fait une mise à jour sur games
-        await supabase.rpc("skip_player_mission_transaction", { p_game_code: gameCode, p_name: item.playerName }); // non, ce n'est pas le bon RPC.
-        // En fait, on peut simplement faire un update direct de la version sur games
+        await supabase.rpc("get_complete_game_state", { p_game_code: gameCode });
+        // Mettre à jour state_version sur games
         await supabase.from("games").update({ state_version: gameState.stateVersion + 1 }).eq("game_code", gameCode);
         break;
       }

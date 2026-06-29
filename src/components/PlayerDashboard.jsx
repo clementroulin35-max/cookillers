@@ -201,6 +201,38 @@ const CampfireAvatar = ({ p, idx, total, isMe, campPhoto, radarClass, handleAvat
   );
 };
 
+function ZombieMascot({ style }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/zombie_mascot.png";
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+      // Convert white-ish pixels to transparent
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i+1];
+        const b = data[i+2];
+        if (r > 240 && g > 240 && b > 240) {
+          data[i+3] = 0;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} style={{ ...style, objectFit: "contain" }} />;
+}
+
 export default function PlayerDashboard() {
   const {
     currentUser,
@@ -250,6 +282,8 @@ export default function PlayerDashboard() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showHitConfirmModal, setShowHitConfirmModal] = useState(false);
   const [showZombieFountainModal, setShowZombieFountainModal] = useState(false);
+  const [showFrozenFountainModal, setShowFrozenFountainModal] = useState(false);
+  const [victimPhotos, setVictimPhotos] = useState({});
   const [showZombieBiteConfirmModal, setShowZombieBiteConfirmModal] = useState(false);
   const [revealPin, setRevealPin] = useState(false);
   const [isGlitchingMission, setIsGlitchingMission] = useState(false);
@@ -464,6 +498,23 @@ export default function PlayerDashboard() {
       setTargetPhoto(null);
     }
   }, [zombieVictim, player?.isZombie, getPlayerPhoto]);
+
+  // Charger les photos des victimes du tableau de chasse
+  useEffect(() => {
+    if (!gameState || !gameState.history || !player) return;
+    const completedHits = gameState.history.filter(h => h.playerName === player.name && h.type === "hit_declared" && h.status === "completed");
+    completedHits.forEach(h => {
+      const vName = h.targetName;
+      const victimObj = gameState.players.find(p => p.name === vName);
+      if (victimObj && victimObj.hasPhoto && !victimPhotos[vName]) {
+        getPlayerPhoto(vName).then(photo => {
+          setVictimPhotos(prev => ({ ...prev, [vName]: photo }));
+        }).catch(err => {
+          console.error("Error loading victim photo in background:", err);
+        });
+      }
+    });
+  }, [gameState.history, player?.name, getPlayerPhoto, victimPhotos, gameState.players]);
 
   // Mascotte quotes
   const quotes = [
@@ -853,6 +904,7 @@ export default function PlayerDashboard() {
         {/* Avatar cliquable pour modale matricule */}
         <div 
           onClick={() => setShowProfileModal(true)}
+          data-tuto="profile-avatar"
           style={{
             width: "42px",
             height: "42px",
@@ -1204,13 +1256,9 @@ export default function PlayerDashboard() {
                 CADAVRE AMBULANT
               </div>
 
-              {/* Image de la pierre tombale et Coeur Brisé */}
+              {/* Image de la mascotte Zombie et Coeur Brisé */}
               <div style={{ position: "relative", width: "120px", height: "120px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img 
-                  src={tombstoneZombie} 
-                  alt="Tombeau Zombie" 
-                  style={{ width: "100%", height: "100%", objectFit: "contain", filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))", zIndex: 1 }}
-                />
+                <ZombieMascot style={{ width: "100%", height: "100%", zIndex: 1 }} />
                 {!lowPerfMode && (
                   <div className="giant-broken-heart">💔</div>
                 )}
@@ -1229,12 +1277,15 @@ export default function PlayerDashboard() {
                     left: 0,
                     width: "100%",
                     height: "100%",
-                    backgroundColor: "#0c1510",
+                    backgroundColor: "rgba(12, 21, 16, 0.9)",
                     borderRadius: "12px",
                     zIndex: 30,
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
-                    justifyContent: "center"
+                    justifyContent: "center",
+                    padding: "10px",
+                    border: "2px solid var(--color-zombie)"
                   }}>
                     <div style={{
                       backgroundColor: "var(--color-zombie)",
@@ -1304,7 +1355,7 @@ export default function PlayerDashboard() {
                 disabled={pendingHit || !zombieVictim}
                 onClick={handleHitSubmit}
               >
-                MORDRE UN SURVIVANT 🧟
+                MORDRE UN SURVIVANT 🦷
               </button>
             </div>
           ) : player.target ? (
@@ -2449,7 +2500,19 @@ export default function PlayerDashboard() {
                 border: "2px solid var(--border-color)",
                 marginBottom: "1rem"
               }}>
-                <span style={{ fontSize: "0.85rem", fontWeight: "bold" }}>Performances Réduites</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: "bold" }}>Performances Réduites</span>
+                  <button
+                    type="button"
+                    style={{ background: "none", border: "none", color: "#fff", padding: 0, display: "flex", alignItems: "center", cursor: "pointer" }}
+                    onClick={() => {
+                      showToast("Désactive les effets visuels lourds (animations pulsées, VHS glitch, etc.) pour économiser la batterie.");
+                    }}
+                    title="Explication des performances réduites"
+                  >
+                    <HelpCircle size={14} />
+                  </button>
+                </div>
                 <input
                   type="checkbox"
                   checked={lowPerfMode}
@@ -2463,15 +2526,33 @@ export default function PlayerDashboard() {
                 <h4 style={{ fontFamily: "var(--font-title)", fontSize: "0.9rem", color: "var(--color-purple)", borderBottom: "2px solid var(--border-color)", paddingBottom: "4px" }}>
                   Tableau de chasse ({player.statKillsCount} neutralisés)
                 </h4>
-                <div style={{ maxHeight: "120px", overflowY: "auto", marginTop: "8px", fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ maxHeight: "150px", overflowY: "auto", marginTop: "8px", fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: "8px" }}>
                   {gameState.history
-                    .filter(h => h.playerName === player.name && h.type === "hit_approved" && h.status === "completed")
-                    .map(h => (
-                      <div key={h.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "4px" }}>
-                        <span>⚔️ {h.targetName}</span>
-                        <span style={{ color: "#fbbf24", display: "inline-flex", alignItems: "center", gap: "2px" }}>+{h.scoreReward} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} /></span>
-                      </div>
-                    ))
+                    .filter(h => h.playerName === player.name && h.type === "hit_declared" && h.status === "completed")
+                    .map(h => {
+                      const vPhoto = victimPhotos[h.targetName];
+                      return (
+                        <div key={h.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "6px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            {/* Grayscale avatar with blood drips */}
+                            <div style={{ position: "relative", width: "36px", height: "36px", borderRadius: "50%", border: "2px solid var(--color-red)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#1a0f1d", flexShrink: 0 }}>
+                              {vPhoto ? (
+                                <img src={vPhoto} alt="Victime" style={{ width: "100%", height: "100%", objectFit: "cover", filter: "grayscale(100%)" }} />
+                              ) : (
+                                <span style={{ fontFamily: "var(--font-title)", fontSize: "0.8rem", color: "#9ca3af" }}>
+                                  {h.targetName.slice(0, 2).toUpperCase()}
+                                </span>
+                              )}
+                              <span style={{ position: "absolute", bottom: "-2px", right: "-2px", fontSize: "0.8rem" }}>🩸</span>
+                            </div>
+                            <span style={{ fontWeight: "bold", color: "#f3f4f6" }}>{getPlayerDisplayName(h.targetName)}</span>
+                          </div>
+                          <span style={{ color: "#fbbf24", display: "inline-flex", alignItems: "center", gap: "2px", fontWeight: "bold" }}>
+                            +{h.scoreReward} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
+                          </span>
+                        </div>
+                      );
+                    })
                   }
                   {player.statKillsCount === 0 && (
                     <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Aucune victime pour l'instant. Les couteaux sont neufs.</span>
@@ -2493,8 +2574,16 @@ export default function PlayerDashboard() {
                       const timeStr = new Date(h.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                       
                       if (h.type === "hit_declared") {
-                        text = `Infiltration en cours (Hit envoyé sur ${h.targetName}) ⏳`;
-                        icon = "🎯";
+                        if (h.status === "pending") {
+                          text = `Infiltration en cours (Hit envoyé sur ${h.targetName}) ⏳`;
+                          icon = "🎯";
+                        } else if (h.status === "completed") {
+                          text = `Contrat validé (Cible ${h.targetName} neutralisée) ⚔️`;
+                          icon = "⚔️";
+                        } else if (h.status === "rejected") {
+                          text = `Contrat sur ${h.targetName} rejeté par le Juge ❌`;
+                          icon = "❌";
+                        }
                       } else if (h.type === "hit_approved") {
                         text = `Contrat validé (Cible ${h.targetName} neutralisée) ⚔️`;
                         icon = "⚔️";
@@ -2929,6 +3018,41 @@ export default function PlayerDashboard() {
         )}
       </AnimatePresence>
 
+      {/* MODALE : ACCÈS INTERDIT AUX JOUEURS GELÉS */}
+      <AnimatePresence>
+        {showFrozenFountainModal && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.85)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}>
+            <div className="card-cartoon glow-cyan" style={{ width: "100%", maxWidth: "340px", textAlign: "center", border: "3px solid var(--color-cyan)" }}>
+              <span style={{ fontSize: "3rem" }}>❄️🔒</span>
+              <h3 style={{ color: "var(--color-cyan)", margin: "1rem 0", fontFamily: "var(--font-title)" }}>CAMP DE GLACE ❄️</h3>
+              <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.5rem", lineHeight: "1.4" }}>
+                Tu es gelé sous ta tente de camping. La fontaine de vie ne coule pas pour les absents. Reviens quand le Grand Juge t'aura réchauffé.
+              </p>
+              <button
+                type="button"
+                className="btn-cartoon btn-cyan"
+                style={{ width: "100%", height: "44px" }}
+                onClick={() => setShowFrozenFountainModal(false)}
+              >
+                Rester Emmitouflé ⛺
+              </button>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* MODALE : CONFIRMATION DE MORSURE ZOMBIE */}
       <AnimatePresence>
         {showZombieBiteConfirmModal && (
@@ -3038,6 +3162,8 @@ export default function PlayerDashboard() {
           onClick={() => {
             if (isZombie) {
               setShowZombieFountainModal(true);
+            } else if (player.isFrozen) {
+              setShowFrozenFountainModal(true);
             } else {
               setActiveTab("source");
             }
@@ -3045,7 +3171,7 @@ export default function PlayerDashboard() {
           aria-label="Soins à la Source"
           data-tuto="nav-source"
         >
-          <span style={{ fontSize: "1.6rem" }}>{isZombie ? "⛲🔒" : "⛲"}</span>
+          <span style={{ fontSize: "1.6rem" }}>{(isZombie || player.isFrozen) ? "⛲🔒" : "⛲"}</span>
         </div>
         <div
           className={`bottom-nav-item ${activeTab === "contrat" ? "active" : ""}`}
