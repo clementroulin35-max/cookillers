@@ -1899,7 +1899,7 @@ export default function PlayerDashboard() {
                     <button
                       type="button"
                       className="btn-cartoon"
-                      style={{ width: "100%", padding: "0.5rem", marginTop: "12px", backgroundColor: "var(--color-purple)", border: "2px solid #000" }}
+                      style={{ width: "100%", padding: "0.5rem", marginTop: "12px", backgroundColor: "var(--color-cyan)", border: "2px solid #000" }}
                       onClick={handleFountainRefresh}
                     >
                       Rafraîchir 🔄
