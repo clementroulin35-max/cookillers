@@ -356,6 +356,44 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
             🏆 Le festival se termine ! La chasse est close. Consultez l'onglet Trophées pour célébrer les vainqueurs.
           </span>
         );
+      case "skip_mission":
+        return (
+          <span>
+            🌀 <strong>CONTRAT RELANCÉ</strong><br/>
+            Un assassin a brûlé son contrat actif pour en piocher un nouveau.<br/>
+            <span style={{ color: "#9ca3af", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+              <EyeOff size={12} /> L'identité du joueur reste masquée.
+            </span>
+          </span>
+        );
+      case "hit_rejected":
+        return (
+          <span>
+            ⚖️ <strong>DÉCLARATION REJETÉE</strong><br/>
+            Le Grand Juge a rejeté une déclaration de meurtre (preuve insuffisante ou invalide). Le contrat reste actif.
+          </span>
+        );
+      case "suggestion_pending":
+        return (
+          <span>
+            💡 <strong>PROPOSITION DE DÉFI</strong><br/>
+            Un joueur a proposé un nouveau défi à l'usine à sévices. En attente de validation par le GM.
+          </span>
+        );
+      case "suggestion_approved":
+        return (
+          <span>
+            💡 <strong>PROPOSITION ACCEPTÉE</strong><br/>
+            Le GM a validé une nouvelle idée de défi ! Elle rejoint le catalogue public.
+          </span>
+        );
+      case "suggestion_rejected":
+        return (
+          <span>
+            💡 <strong>PROPOSITION REJETÉE</strong><br/>
+            Une idée de défi a été rejetée par le GM.
+          </span>
+        );
       default:
         return <span>Action mystérieuse du jeu de type {evt.type}.</span>;
     }
@@ -523,8 +561,8 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                       boxShadow: "3px 3px 0 #000"
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", width: "24px", color: "var(--color-purple)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+                      <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", width: "24px", color: "var(--color-purple)", flexShrink: 0 }}>
                         {idx + 1}
                       </span>
                       <div style={{ position: "relative", width: "32px", height: "32px", flexShrink: 0 }}>
@@ -545,20 +583,22 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                           </div>
                         )}
                       </div>
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={{ fontWeight: "bold", fontSize: "1rem", display: "flex", alignItems: "center", gap: "6px" }}>
-                          {getPlayerDisplayName(player.name)}
-                          {player.isZombie && <span>🧟</span>}
-                          {player.isFrozen && <span title="Gelé / Exfiltré">❄️</span>}
+                      <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
+                        <span style={{ fontWeight: "bold", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {getPlayerDisplayName(player.name)}
+                          </span>
+                          {player.isZombie && <span style={{ flexShrink: 0 }}>🧟</span>}
+                          {player.isFrozen && <span style={{ flexShrink: 0 }} title="Gelé / Exfiltré">❄️</span>}
                         </span>
-                        <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>
+                        <span style={{ fontSize: "0.75rem", color: "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {rank.icon} {rank.label}
                         </span>
                       </div>
                     </div>
                     
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", width: "80px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", width: "85px" }}>
                         <span style={{ fontWeight: "black", fontSize: "1rem", color: "#fbbf24", textAlign: "right", display: "inline-flex", alignItems: "center", gap: "2px" }}>
                           {player.effectiveScore} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} />
                         </span>
@@ -568,7 +608,7 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                           </span>
                         )}
                       </div>
-                      <div style={{ width: "70px", textAlign: "right", fontSize: "1.1rem" }}>
+                      <div style={{ width: "65px", textAlign: "right", fontSize: "1rem", fontWeight: "bold", flexShrink: 0 }}>
                         {player.isZombie ? "💀" : `${player.lives} ❤️`}
                       </div>
                     </div>

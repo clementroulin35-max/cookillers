@@ -99,22 +99,24 @@ h1, h2, h3, .cartoon-title {
   font-family: var(--font-title);
   text-transform: uppercase;
   padding: 0.8rem 1.5rem;
-  border: 3px solid #000;
+  border: 3px solid #000 !important;
   border-radius: 12px;
   background-color: var(--color-purple);
   color: #fff;
   cursor: pointer;
-  box-shadow: 4px 4px 0px #000;
+  box-shadow: 4px 4px 0px #000 !important;
   transition: all 0.15s ease-in-out;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .btn-cartoon:active {
   transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px #000;
+  box-shadow: 2px 2px 0px #000 !important;
 }
 
 .btn-cartoon.btn-cyan {
@@ -143,9 +145,9 @@ h1, h2, h3, .cartoon-title {
 /* Cartes Cartoons avec Soft Glow néon */
 .card-cartoon {
   background-color: var(--bg-card);
-  border: 3px solid #000;
+  border: 3px solid #000 !important;
   border-radius: 16px;
-  box-shadow: 6px 6px 0px #000;
+  box-shadow: 6px 6px 0px #000 !important;
   padding: 1.25rem;
   margin: 1rem;
   position: relative;
@@ -153,15 +155,15 @@ h1, h2, h3, .cartoon-title {
 }
 
 .card-cartoon.glow-purple {
-  box-shadow: 6px 6px 0px #000, 0 0 15px rgba(168, 85, 247, 0.4);
+  box-shadow: 6px 6px 0px #000, 0 0 15px rgba(168, 85, 247, 0.4) !important;
 }
 
 .card-cartoon.glow-cyan {
-  box-shadow: 6px 6px 0px #000, 0 0 15px rgba(34, 211, 238, 0.4);
+  box-shadow: 6px 6px 0px #000, 0 0 15px rgba(34, 211, 238, 0.4) !important;
 }
 
 .card-cartoon.glow-zombie {
-  box-shadow: 6px 6px 0px #000, 0 0 15px rgba(74, 222, 128, 0.4);
+  box-shadow: 6px 6px 0px #000, 0 0 15px rgba(74, 222, 128, 0.4) !important;
 }
 
 /* Raretés de cartes RPG */

@@ -914,9 +914,9 @@ export default function GMDashboard() {
                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
                        <span>Difficulté / Soin :</span>
                        <span>
-                         {defiDamage === 0.5 ? "Tier I : Jus de Chaussette (+0.5 ❤️)" : 
-                          defiDamage === 1.5 ? "Tier II : Élixir du Barman (+1.5 ❤️)" : 
-                          "Tier III : Larmes de VIP (+3.0 ❤️)"}
+                         {defiDamage === 0.5 ? "Jus de Chaussette (+0.5 ❤️)" : 
+                          defiDamage === 1.5 ? "Élixir du Barman (+1.5 ❤️)" : 
+                          "Larmes de VIP (+3.0 ❤️)"}
                        </span>
                      </div>
                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

@@ -11,40 +11,40 @@ export default function TutorialOverlay({ onComplete }) {
       selector: '[data-tuto="contrat"]',
       title: "🎯 La Cible Secrète",
       text: "Voici ta proie du moment et le piège absurde à lui tendre. Fais ça discrètement ! Si quelqu'un regarde, clique n'importe où sur cet encart pour le masquer instantanément.",
-      position: "bottom"
+      position: "top"
     },
     {
       selector: '[data-tuto="campement"]',
       title: "⛺ Le Campement",
       text: "Retrouve tous les joueurs autour du feu. Tu penses être suivi ? Fais glisser la bulle du suspect directement dans le feu 🔥 pour l'accuser ! Les zombies 🧟 et gelés ❄️ ne peuvent pas être accusés.",
-      position: "bottom"
+      position: "top"
     },
     {
       selector: '[data-tuto="vitalite"]',
       title: "❤️ Vitalité & 🍪 Biscuits",
       text: "Garde un œil sur tes cœurs de vie et ton score en biscuits (cookies). Si tes cœurs tombent à 0, tu décèdes et passes zombie 🧟 !",
-      position: "bottom"
+      position: "top"
     },
     {
-      selector: '[data-tuto="nav-contrat"]',
+      selector: '[data-tuto="nav-contrat"] span',
       title: "🎯 L'Écran Mission",
       text: "Ton écran principal pour gérer ton contrat actif, tes abandons, et lancer des accusations.",
       position: "top"
     },
     {
-      selector: '[data-tuto="nav-source"]',
+      selector: '[data-tuto="nav-source"] span',
       title: "⛲ La Fontaine de Vie",
       text: "Rends-toi ici pour réaliser des actions ou vérités amusantes et regagner des cœurs ❤️ en cas de coup dur.",
       position: "top"
     },
     {
-      selector: '[data-tuto="nav-suggestion"]',
+      selector: '[data-tuto="nav-suggestion"] span',
       title: "💡 L'Usine à Sévices",
       text: "Propose de nouvelles idées de pièges absurdes ou vote pour les défis proposés par les autres joueurs.",
       position: "top"
     },
     {
-      selector: '[data-tuto="nav-classement"]',
+      selector: '[data-tuto="nav-classement"] span',
       title: "🏆 Le Classement",
       text: "Suis le classement général des survivants et des zombies en temps réel, ainsi que le flux des actualités du jeu.",
       position: "top"
@@ -92,6 +92,12 @@ export default function TutorialOverlay({ onComplete }) {
       } else {
         tooltipTop = rect.top - tooltipHeight - 15 + window.scrollY;
       }
+
+      // Garder la bulle visible dans la hauteur du viewport du téléphone
+      const viewportHeight = window.innerHeight;
+      const minTop = window.scrollY + 10;
+      const maxTop = window.scrollY + viewportHeight - tooltipHeight - 10;
+      tooltipTop = Math.max(minTop, Math.min(maxTop, tooltipTop));
 
       setTooltipStyle({
         top: `${tooltipTop}px`,

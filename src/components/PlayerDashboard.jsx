@@ -1564,14 +1564,19 @@ export default function PlayerDashboard() {
             Les Zombies 🧟 n'ont pas accès à la Source.
           </p>
 
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", fontSize: "0.85rem", alignItems: "center", position: "relative" }}>
-            <span onClick={() => triggerTooltip("fountain_uses")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
-              Utilisations aujourd'hui : <strong>{player.fountainUsesToday} / 2</strong>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", marginBottom: "1rem", fontSize: "0.8rem", alignItems: "center" }}>
+            <div 
+              onClick={() => triggerTooltip("fountain_uses")} 
+              style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", backgroundColor: "rgba(0,0,0,0.3)", padding: "4px 8px", borderRadius: "8px", border: "1.5px solid var(--color-cyan)" }}
+            >
+              <span>Utilisations : <strong>{player.fountainUsesToday} / 2</strong></span>
               {isHelpActive && (
-                <span style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "12px", height: "12px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "8px", fontWeight: "bold" }}>?</span>
+                <span style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "14px", height: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: "bold" }}>?</span>
               )}
-            </span>
-            <span>Relances de la Source : <strong>{player.fountainRefreshesToday} 🔄</strong></span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "rgba(0,0,0,0.3)", padding: "4px 8px", borderRadius: "8px", border: "1.5px solid rgba(255,255,255,0.15)" }}>
+              <span>Relances : <strong>{player.fountainRefreshesToday} 🔄</strong></span>
+            </div>
 
             {activeTooltip === "fountain_uses" && (
               <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
@@ -1800,7 +1805,7 @@ export default function PlayerDashboard() {
                     marginTop: "16px",
                     fontFamily: "var(--font-title)",
                     fontSize: "1.5rem",
-                    color: "var(--color-green)",
+                    color: "var(--color-cyan)",
                     textShadow: "2px 2px 0 #000"
                   }}>
                     +{player.fountainTotalUses >= 5 ? "3.0" : player.fountainTotalUses >= 3 ? "1.5" : "0.5"} ❤️
@@ -1920,9 +1925,9 @@ export default function PlayerDashboard() {
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
                   <span>Difficulté / Soin :</span>
                   <span>
-                    {suggestDamage === 0.5 ? "Tier I : Jus de Chaussette (+0.5 ❤️)" : 
-                     suggestDamage === 1.5 ? "Tier II : Élixir du Barman (+1.5 ❤️)" : 
-                     "Tier III : Larmes de VIP (+3.0 ❤️)"}
+                    {suggestDamage === 0.5 ? "Jus de Chaussette (+0.5 ❤️)" : 
+                     suggestDamage === 1.5 ? "Élixir du Barman (+1.5 ❤️)" : 
+                     "Larmes de VIP (+3.0 ❤️)"}
                   </span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

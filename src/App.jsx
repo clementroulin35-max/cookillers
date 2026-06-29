@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GameProvider, useGame } from "./context/GameContext";
+import { supabase } from "./services/supabaseClient";
 import PinPad from "./components/PinPad";
 import PlayerDashboard from "./components/PlayerDashboard";
 import GMDashboard from "./components/GMDashboard";
