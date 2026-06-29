@@ -561,28 +561,10 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
                       boxShadow: "3px 3px 0 #000"
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
-                      <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", width: "24px", color: "var(--color-purple)", flexShrink: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1, minWidth: 0 }}>
+                      <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", width: "18px", color: "var(--color-purple)", flexShrink: 0 }}>
                         {idx + 1}
                       </span>
-                      <div style={{ position: "relative", width: "32px", height: "32px", flexShrink: 0 }}>
-                        <PlayerAvatar
-                          name={player.name}
-                          hasPhoto={player.hasPhoto}
-                          initialsFontSize="0.75rem"
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            border: `2px solid ${player.isZombie ? "var(--color-red)" : "#000"}`
-                          }}
-                        />
-                        {player.isZombie && (
-                          <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, pointerEvents: "none" }}>
-                            <div style={{ position: "absolute", width: "100%", height: "3px", backgroundColor: "var(--color-red)", transform: "rotate(45deg)", border: "0.5px solid #000" }} />
-                            <div style={{ position: "absolute", width: "100%", height: "3px", backgroundColor: "var(--color-red)", transform: "rotate(-45deg)", border: "0.5px solid #000" }} />
-                          </div>
-                        )}
-                      </div>
                       <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
                         <span style={{ fontWeight: "bold", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

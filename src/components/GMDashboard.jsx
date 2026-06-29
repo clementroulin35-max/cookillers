@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { useGame } from "../context/GameContext";
 import { supabase } from "../services/supabaseClient";
 import Leaderboard, { getRank } from "./Leaderboard";
@@ -51,6 +52,8 @@ export default function GMDashboard() {
   const [defiDamage, setDefiDamage] = useState(1.5);
   const [defiZombieOnly, setDefiZombieOnly] = useState(false);
   const [defiType, setDefiType] = useState("mission"); // 'mission', 'fountain_action', 'fountain_truth'
+  const [showFinishGameModal, setShowFinishGameModal] = useState(false);
+  const [finishGameInput, setFinishGameInput] = useState("");
 
   // Filtrer les événements de l'historique en attente (pending)
   const pendingHits = gameState.history.filter(h => h.status === "pending" && h.type === "hit_declared");
@@ -91,29 +94,31 @@ export default function GMDashboard() {
     }
   };
 
-  // Action : Terminer la chasse
-  const handleFinishGame = async () => {
-    const userInput = window.prompt("⚠️ ATTENTION : Voulez-vous vraiment clore la chasse aux cookies ? Le classement sera figé et les trophées décernés.\n\nPour confirmer, veuillez saisir :\ncookillers2026");
-    if (userInput === null) return;
-    if (userInput !== "cookillers2026") {
-      showToast("Code incorrect. Action annulée. ❌");
+  // Action : Ouvrir la modale de fin de chasse
+  const handleFinishGame = () => {
+    setFinishGameInput("");
+    setShowFinishGameModal(true);
+  };
+
+  const executeFinishGame = async () => {
+    if (finishGameInput !== "cookillers2026") {
+      showToast("Code de confirmation incorrect. ❌");
       return;
     }
-    if (true) {
-      // Mettre à jour games status à 'finished'
-      const { error } = await supabase
-        .from("games")
-        .update({ status: "finished", end_time: new Date() })
-        .eq("game_code", gameCode);
-      if (error) {
-        showToast(`Erreur : ${error.message}`);
-      } else {
-        // Loguer la fin
-        await supabase.from("history").insert([
-          { game_code: gameCode, player_name: "GM", type: "game_finished", status: "completed" }
-        ]);
-        showToast("Chasse figée avec succès ! Trophées décernés. 🏆");
-      }
+    // Mettre à jour games status à 'finished'
+    const { error } = await supabase
+      .from("games")
+      .update({ status: "finished", end_time: new Date() })
+      .eq("game_code", gameCode);
+    if (error) {
+      showToast(`Erreur : ${error.message}`);
+    } else {
+      // Loguer la fin
+      await supabase.from("history").insert([
+        { game_code: gameCode, player_name: "GM", type: "game_finished", status: "completed" }
+      ]);
+      showToast("Chasse figée avec succès ! Trophées décernés. 🏆");
+      setShowFinishGameModal(false);
     }
   };
   const PlayerAvatar = ({ name, hasPhoto }) => {
@@ -864,7 +869,7 @@ export default function GMDashboard() {
                 
                 {defiType === "mission" ? (
                   <div style={{ display: "flex", gap: "16px", justifyContent: "space-between", alignItems: "center" }}>
-                    {/* Points 🪙 */}
+                    {/* Points 🍪 */}
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1 }}>
                       <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem", verticalAlign: "middle" }} />
                       <button
@@ -872,6 +877,7 @@ export default function GMDashboard() {
                         className="btn-cartoon"
                         style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiReward(Math.max(50, defiReward - 50))}
+                        disabled={defiReward <= 50}
                       >
                         -
                       </button>
@@ -881,6 +887,7 @@ export default function GMDashboard() {
                         className="btn-cartoon"
                         style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiReward(Math.min(600, defiReward + 50))}
+                        disabled={defiReward >= 600}
                       >
                         +
                       </button>
@@ -894,6 +901,7 @@ export default function GMDashboard() {
                         className="btn-cartoon"
                         style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiDamage(Math.max(0.5, defiDamage - 0.5))}
+                        disabled={defiDamage <= 0.5}
                       >
                         -
                       </button>
@@ -903,6 +911,7 @@ export default function GMDashboard() {
                         className="btn-cartoon"
                         style={{ padding: "4px 10px", fontSize: "0.85rem", backgroundColor: "var(--color-purple)", color: "#fff", border: "2px solid #000", boxShadow: "2px 2px 0 #000" }}
                         onClick={() => setDefiDamage(Math.min(7.0, defiDamage + 0.5))}
+                        disabled={defiDamage >= 7.0}
                       >
                         +
                       </button>
@@ -1512,6 +1521,70 @@ export default function GMDashboard() {
         >
           <span style={{ fontSize: "1.6rem" }}>🏆</span>
         </div>
+      {/* MODALE : FIGER LA CHASSE (FIN DE PARTIE GM) */}
+      <AnimatePresence>
+        {showFinishGameModal && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.85)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}>
+            <div className="card-cartoon glow-red" style={{ width: "100%", maxWidth: "340px", textAlign: "center", border: "3px solid var(--color-red)" }}>
+              <h3 style={{ color: "var(--color-red)", marginBottom: "1rem", fontFamily: "var(--font-title)" }}>FIGER LA CHASSE ? 🏆</h3>
+              <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.2rem", lineHeight: "1.4" }}>
+                ⚠️ <strong>ATTENTION :</strong> Voulez-vous vraiment clore la chasse aux cookies ? Le classement sera figé et les trophées décernés.
+                <br /><br />
+                Pour confirmer, veuillez saisir : <strong>cookillers2026</strong>
+              </p>
+
+              <input
+                type="text"
+                placeholder="Saisir cookillers2026"
+                value={finishGameInput}
+                onChange={(e) => setFinishGameInput(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  backgroundColor: "#100e1f",
+                  border: "2px solid #000",
+                  borderRadius: "8px",
+                  color: "#fff",
+                  textAlign: "center",
+                  marginBottom: "1.2rem"
+                }}
+              />
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="btn-cartoon btn-red"
+                  style={{ flex: 1, height: "44px", backgroundColor: "#b91c1c", border: "2px solid #000" }}
+                  onClick={executeFinishGame}
+                  disabled={finishGameInput !== "cookillers2026"}
+                >
+                  Figer !
+                </button>
+                <button
+                  type="button"
+                  className="btn-cartoon"
+                  style={{ flex: 1, height: "44px", backgroundColor: "#4b5563" }}
+                  onClick={() => setShowFinishGameModal(false)}
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
       </nav>
 
     </div>

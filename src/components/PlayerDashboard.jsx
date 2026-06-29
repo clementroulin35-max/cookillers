@@ -117,8 +117,8 @@ const AnimatedScore = ({ value }) => {
 
 const CampfireAvatar = ({ p, idx, total, isMe, campPhoto, radarClass, handleAvatarDragEnd, getPlayerDisplayName, campfireContainerRef }) => {
   const angle = (idx * 2 * Math.PI) / Math.max(1, total);
-  const radiusX = 35; 
-  const radiusY = 22; 
+  const radiusX = 38; 
+  const radiusY = 25; 
   const left = 50 + radiusX * Math.cos(angle);
   const top = 50 + radiusY * Math.sin(angle);
 
@@ -137,12 +137,13 @@ const CampfireAvatar = ({ p, idx, total, isMe, campPhoto, radarClass, handleAvat
     >
       <motion.div
         key={p.name}
-        className={radarClass}
+        className={`campfire-avatar-bubble ${radarClass}`}
+        data-player={p.name}
         drag={!isMe}
         dragConstraints={campfireContainerRef}
         dragElastic={0.1}
         dragMomentum={false}
-        dragSnapToOrigin={true}
+        dragSnapToOrigin={false}
         onDragEnd={(event, info) => {
           handleAvatarDragEnd(p, info);
         }}
@@ -592,26 +593,16 @@ export default function PlayerDashboard() {
   };
 
   const handleAvatarDragEnd = (p, info) => {
-    if (p.isZombie || p.isFrozen) {
-      const fireRect = fireRef.current?.getBoundingClientRect();
-      if (fireRect) {
-        const dragX = info.point.x;
-        const dragY = info.point.y;
-        const inFire = (
-          dragX >= fireRect.left &&
-          dragX <= fireRect.right &&
-          dragY >= fireRect.top &&
-          dragY <= fireRect.bottom
-        );
-        if (inFire) {
-          showToast(`Impossible d'accuser un Zombie 🧟 ou un joueur Gelé ❄️ !`);
-          vibrateFailure();
-        }
-      }
-      return;
-    }
-
     const fireRect = fireRef.current?.getBoundingClientRect();
+    const avatarEls = document.querySelectorAll(".campfire-avatar-bubble");
+    
+    let droppedEl = null;
+    avatarEls.forEach(el => {
+      if (el.getAttribute("data-player") === p.name) {
+        droppedEl = el;
+      }
+    });
+
     if (fireRect) {
       const dragX = info.point.x;
       const dragY = info.point.y;
@@ -623,10 +614,52 @@ export default function PlayerDashboard() {
       );
 
       if (inFire) {
-        setCounterSuspect(p.name);
-        setShowCounterModal(true);
-        vibrateMedium();
+        // Reset positions back to orbit
+        setResetKey(prev => prev + 1);
+
+        if (p.isZombie) {
+          showToast("Tu es déjà mort, personne ne veut plus ta peau. 🧟");
+          vibrateFailure();
+        } else if (p.isFrozen) {
+          showToast("Tu es exfiltré, personne ne peut te prendre pour cible. ❄️");
+          vibrateFailure();
+        } else {
+          setCounterSuspect(p.name);
+          setShowCounterModal(true);
+          vibrateMedium();
+        }
+        return;
       }
+    }
+
+    // Spacing check to avoid overlaps when dropped outside
+    if (droppedEl) {
+      const droppedRect = droppedEl.getBoundingClientRect();
+      const droppedCX = droppedRect.left + droppedRect.width / 2;
+      const droppedCY = droppedRect.top + droppedRect.height / 2;
+
+      avatarEls.forEach(otherEl => {
+        if (otherEl === droppedEl) return;
+        const otherRect = otherEl.getBoundingClientRect();
+        const otherCX = otherRect.left + otherRect.width / 2;
+        const otherCY = otherRect.top + otherRect.height / 2;
+
+        const dx = otherCX - droppedCX;
+        const dy = otherCY - droppedCY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const minDist = 52; // 48px avatar width + margin
+
+        if (dist < minDist) {
+          const angle = dist > 0 ? Math.atan2(dy, dx) : Math.random() * 2 * Math.PI;
+          const pushDist = minDist - dist;
+          const pushX = pushDist * Math.cos(angle);
+          const pushY = pushDist * Math.sin(angle);
+
+          const style = window.getComputedStyle(otherEl);
+          const matrix = new DOMMatrix(style.transform);
+          otherEl.style.transform = `translate(${matrix.m41 + pushX}px, ${matrix.m42 + pushY}px)`;
+        }
+      });
     }
   };
 
@@ -1107,7 +1140,9 @@ export default function PlayerDashboard() {
             {/* Cercle d'avatars des joueurs autour du feu */}
             <div style={{ position: "absolute", width: "100%", height: "100%", zIndex: 15 }}>
               {(() => {
-                const sortedCampPlayers = [...gameState.players].sort((a, b) => a.name.localeCompare(b.name));
+                const sortedCampPlayers = [...gameState.players]
+                  .filter(p => p.name.toUpperCase() !== player.name.toUpperCase())
+                  .sort((a, b) => a.name.localeCompare(b.name));
                 return sortedCampPlayers.map((p, idx) => {
                   const userPhoto = campPhotos[p.name];
                   const isSuspecting = gameState.history.some(
@@ -1574,13 +1609,25 @@ export default function PlayerDashboard() {
                 <span style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "14px", height: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: "bold" }}>?</span>
               )}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "rgba(0,0,0,0.3)", padding: "4px 8px", borderRadius: "8px", border: "1.5px solid rgba(255,255,255,0.15)" }}>
+            <div 
+              onClick={() => triggerTooltip("fountain_refreshes")} 
+              style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", backgroundColor: "rgba(0,0,0,0.3)", padding: "4px 8px", borderRadius: "8px", border: "1.5px solid var(--color-cyan)" }}
+            >
               <span>Relances : <strong>{player.fountainRefreshesToday} 🔄</strong></span>
+              {isHelpActive && (
+                <span style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "14px", height: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: "bold" }}>?</span>
+              )}
             </div>
 
             {activeTooltip === "fountain_uses" && (
               <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
                 Vos réserves d'eau quotidiennes. Votre compteur est réinitialisé chaque matin par le Chant du Coq.
+              </div>
+            )}
+
+            {activeTooltip === "fountain_refreshes" && (
+              <div onClick={() => setActiveTooltip(null)} style={{ position: "fixed", bottom: "90px", left: "16px", right: "16px", backgroundColor: "#1e1b30", border: "2px solid var(--color-cyan)", padding: "12px", borderRadius: "12px", zIndex: 1000, fontSize: "0.85rem", boxShadow: "0 4px 20px rgba(0,0,0,0.7)", textAlign: "left" }}>
+                Le nombre de relances de la Source restantes aujourd'hui. Chaque relance remplace le couple d'Action et de Vérité proposé.
               </div>
             )}
           </div>
