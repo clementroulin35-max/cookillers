@@ -2086,7 +2086,7 @@ export default function PlayerDashboard() {
             )}
 
             <div>
-              <label style={{ fontSize: "0.8rem", color: "var(--color-purple)" }}>
+              <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
                 {suggestType === "fountain_truth" ? "Votre question à poser :" : "Description du défi / action à réaliser :"}
               </label>
               <textarea
@@ -2544,7 +2544,7 @@ export default function PlayerDashboard() {
                 return (
                   <div style={{ marginBottom: "1rem", padding: "8px", backgroundColor: "rgba(0,0,0,0.2)", borderRadius: "10px", border: "2px solid var(--border-color)", textAlign: "left" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", fontWeight: "bold", marginBottom: "4px" }}>
-                      <span style={{ color: "var(--color-cyan)" }}>Rang : {rankIcon} {rankLabel}</span>
+                      <span style={{ color: "#9ca3af" }}>Rang : {rankIcon} {rankLabel}</span>
                       {score < 3500 && <span style={{ fontSize: "0.7rem", color: "#9ca3af", display: "inline-flex", alignItems: "center", gap: "2px" }}>{score} / {nextScore} <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.4em", height: "1.4em", verticalAlign: "middle" }} /></span>}
                     </div>
                     {score < 3500 ? (
