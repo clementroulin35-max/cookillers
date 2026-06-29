@@ -2109,6 +2109,10 @@ export default function PlayerDashboard() {
             {suggestType === "mission" ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {/* Sélecteurs Récompense 🍪 et Dégâts ❤️ alignés */}
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
+                  <span>Gains :</span>
+                  <span>Dégâts :</span>
+                </div>
                 <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem", display: "inline-block", verticalAlign: "middle" }} />
