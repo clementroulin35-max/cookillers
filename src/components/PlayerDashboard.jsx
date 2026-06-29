@@ -37,9 +37,9 @@ function TVStaticNoise({ style }) {
       for (let i = 0; i < data.length; i += 4) {
         const val = Math.random() < 0.5 ? 0 : 255;
         data[i] = val;
-        data[i+1] = val;
-        data[i+2] = val;
-        data[i+3] = 255;
+        data[i + 1] = val;
+        data[i + 2] = val;
+        data[i + 3] = 255;
       }
 
       ctx.putImageData(imgData, 0, 0);
@@ -191,13 +191,13 @@ const AnimatedScore = ({ value }) => {
 
   useEffect(() => {
     if (prevValueRef.current === value) return;
-    
+
     const startVal = displayValue;
     const endVal = value;
     prevValueRef.current = value;
 
     let startTimestamp = null;
-    const duration = 1000; 
+    const duration = 1000;
     let animationFrameId;
 
     const step = (timestamp) => {
@@ -205,7 +205,7 @@ const AnimatedScore = ({ value }) => {
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
       const easeProgress = 1 - Math.pow(1 - progress, 3); // cubic easeOut
       const currentVal = Math.round(startVal + easeProgress * (endVal - startVal));
-      
+
       setDisplayValue(currentVal);
 
       if (progress < 1) {
@@ -246,8 +246,8 @@ const CampfireAvatar = ({ p, idx, total, isMe, campPhoto, radarClass, handleAvat
     angle = startAngle + localIdx * step;
   }
 
-  const radiusX = 38; 
-  const radiusY = 25; 
+  const radiusX = 38;
+  const radiusY = 25;
   const left = 50 + radiusX * Math.cos(angle);
   const top = 50 + radiusY * Math.sin(angle);
 
@@ -349,10 +349,10 @@ function ZombieMascot({ style }) {
       // Convert white-ish pixels to transparent
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
-        const g = data[i+1];
-        const b = data[i+2];
+        const g = data[i + 1];
+        const b = data[i + 2];
         if (r > 240 && g > 240 && b > 240) {
-          data[i+3] = 0;
+          data[i + 3] = 0;
         }
       }
       ctx.putImageData(imgData, 0, 0);
@@ -423,7 +423,7 @@ export default function PlayerDashboard() {
   const [resetKey, setResetKey] = useState(0);
   const campfireContainerRef = useRef(null);
   const fireRef = useRef(null);
-  
+
   // États de l'aide contextuelle
   const [isHelpActive, setIsHelpActive] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState(null);
@@ -445,7 +445,7 @@ export default function PlayerDashboard() {
   const [suggestDamage, setSuggestDamage] = useState(1.5);
   const [suggestType, setSuggestType] = useState("mission"); // 'mission', 'fountain_action', 'fountain_truth'
   const [suggestZombieOnly, setSuggestZombieOnly] = useState(false);
-  
+
   // Fontaine
   const [fountainType, setFountainType] = useState("verite"); // 'action' ou 'verite'
   const [fountainTextProof, setFountainTextProof] = useState("");
@@ -531,7 +531,7 @@ export default function PlayerDashboard() {
 
   useEffect(() => {
     if (!player) return;
-    
+
     // Pour éviter de déclencher l'effet au tout premier rendu ou reconnexion vide
     if (prevStats.current.lives === undefined) {
       prevStats.current = {
@@ -792,7 +792,7 @@ export default function PlayerDashboard() {
   const handleAvatarDragEnd = (p, info) => {
     const fireRect = fireRef.current?.getBoundingClientRect();
     const avatarEls = document.querySelectorAll(".campfire-avatar-bubble");
-    
+
     let droppedEl = null;
     avatarEls.forEach(el => {
       if (el.getAttribute("data-player") === p.name) {
@@ -989,7 +989,7 @@ export default function PlayerDashboard() {
 
   return (
     <div className={`app-container ${isZombie ? "zombie-mode" : ""} ${triggerScreenShake ? "screen-shake" : ""}`} style={{ paddingBottom: "75px" }}>
-      
+
       {/* Flash Rouge sur Dégâts */}
       {showRedFlash && (
         <div style={{
@@ -1041,7 +1041,7 @@ export default function PlayerDashboard() {
       }}>
         {/* Avatar cliquable pour modale matricule wrapped for centering */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", width: "100px", flexShrink: 0 }}>
-          <div 
+          <div
             onClick={() => setShowProfileModal(true)}
             data-tuto="profile-avatar"
             style={{
@@ -1122,9 +1122,9 @@ export default function PlayerDashboard() {
         else if (player.lives < 4.0) ecgColor = "#f97316"; // orange
 
         return (
-          <div 
-            className="ecg-container" 
-            style={{ margin: "4px 10px", height: "30px", borderRadius: "8px", "--ecg-base-color": ecgColor }} 
+          <div
+            className="ecg-container"
+            style={{ margin: "4px 10px", height: "30px", borderRadius: "8px", "--ecg-base-color": ecgColor }}
             onClick={() => triggerTooltip("ecg")}
           >
             <div className={`ecg-line ${ecgClass}`} />
@@ -1143,7 +1143,7 @@ export default function PlayerDashboard() {
       {/* Barre de Vitalité & Biscuits standardisée */}
       <div data-tuto="vitalite" style={{ display: "flex", justifyContent: "space-between", padding: "4px 12px", alignItems: "center" }}>
         {/* Vitalité ❤️ */}
-        <div 
+        <div
           onClick={() => triggerTooltip("health")}
           style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", position: "relative" }}
         >
@@ -1162,7 +1162,7 @@ export default function PlayerDashboard() {
         </div>
 
         {/* Biscuits 🪙 */}
-        <div 
+        <div
           onClick={() => triggerTooltip("biscuits")}
           style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", position: "relative" }}
         >
@@ -1171,13 +1171,13 @@ export default function PlayerDashboard() {
             <AnimatedScore value={player.score} />
           </span>
           {isZombie && (
-            <span 
-              className="rarity-badge" 
-              style={{ 
-                backgroundColor: "var(--color-purple)", 
-                color: "#fff", 
-                fontSize: "0.6rem", 
-                padding: "2px 6px", 
+            <span
+              className="rarity-badge"
+              style={{
+                backgroundColor: "var(--color-purple)",
+                color: "#fff",
+                fontSize: "0.6rem",
+                padding: "2px 6px",
                 marginLeft: "4px",
                 border: "1.5px solid #000",
                 boxShadow: "1px 1px 0 #000",
@@ -1201,7 +1201,7 @@ export default function PlayerDashboard() {
         </div>
 
         {/* Relances 🌀 */}
-        <div 
+        <div
           onClick={() => triggerTooltip("skips")}
           style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", position: "relative" }}
         >
@@ -1223,9 +1223,9 @@ export default function PlayerDashboard() {
       {/* --- ONGLET CONTRAT 🎯 --- */}
       {activeTab === "contrat" && (
         <div style={{ display: "flex", flexDirection: "column" }}>
-          
+
           {/* Hub Le Campement des Assassins 2D */}
-          <div 
+          <div
             ref={campfireContainerRef}
             data-tuto="campement"
             style={{
@@ -1253,7 +1253,7 @@ export default function PlayerDashboard() {
             }} />
 
             {/* Feu de camp animé au centre (interactif) */}
-            <div 
+            <div
               className="fire-camp"
               onClick={() => {
                 setResetKey(prev => prev + 1);
@@ -1275,7 +1275,7 @@ export default function PlayerDashboard() {
             </div>
 
             {/* Zone de détection et de pulsation crépitement autour du feu */}
-            <div 
+            <div
               ref={fireRef}
               className="fire-pulse-ring"
               style={{
@@ -1294,25 +1294,25 @@ export default function PlayerDashboard() {
 
             {/* Aide du Feu de Camp si active */}
             {isHelpActive && (
-              <div 
+              <div
                 onClick={(e) => {
                   e.stopPropagation();
                   triggerTooltip("campfire");
                 }}
-                style={{ 
-                  position: "absolute", 
-                  top: "10px", 
-                  right: "10px", 
-                  backgroundColor: "var(--color-cyan)", 
-                  color: "#000", 
-                  borderRadius: "50%", 
-                  width: "18px", 
-                  height: "18px", 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  fontSize: "11px", 
-                  fontWeight: "bold", 
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                  backgroundColor: "var(--color-cyan)",
+                  color: "#000",
+                  borderRadius: "50%",
+                  width: "18px",
+                  height: "18px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "11px",
+                  fontWeight: "bold",
                   cursor: "pointer",
                   zIndex: 20
                 }}
@@ -1321,23 +1321,23 @@ export default function PlayerDashboard() {
               </div>
             )}
             {activeTooltip === "campfire" && (
-              <div 
+              <div
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveTooltip(null);
-                }} 
-                style={{ 
-                  position: "fixed", 
-                  bottom: "90px", 
-                  left: "16px", 
-                  right: "16px", 
-                  backgroundColor: "#1e1b30", 
-                  border: "2px solid var(--color-cyan)", 
-                  padding: "12px", 
-                  borderRadius: "12px", 
-                  zIndex: 10000, 
-                  fontSize: "0.85rem", 
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.7)" 
+                }}
+                style={{
+                  position: "fixed",
+                  bottom: "90px",
+                  left: "16px",
+                  right: "16px",
+                  backgroundColor: "#1e1b30",
+                  border: "2px solid var(--color-cyan)",
+                  padding: "12px",
+                  borderRadius: "12px",
+                  zIndex: 10000,
+                  fontSize: "0.85rem",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.7)"
                 }}
               >
                 <strong>Le Campement :</strong> Faites glisser la bulle d'un autre joueur suspecté dans le feu de camp central 🔥 pour lancer une accusation de meurtre. Attention, accuser à tort vous coûtera 0.5 ❤️. On ne peut pas accuser un joueur zombie 🧟 ou gelé ❄️.
@@ -1414,7 +1414,7 @@ export default function PlayerDashboard() {
                 {pendingHit && (
                   <PendingHitOverlay text="EXAMEN EN COURS" />
                 )}
-                
+
                 <h3 style={{ fontSize: "0.8rem", color: "var(--color-zombie)", fontFamily: "var(--font-title)", textTransform: "uppercase", margin: "0 0 6px 0" }}>
                   🧟 Contrat de Morsure
                 </h3>
@@ -1472,7 +1472,7 @@ export default function PlayerDashboard() {
             <div style={{ position: "relative" }}>
               {/* Masque de dissimulation */}
               {isMasked ? (
-                <div 
+                <div
                   className="card-cartoon glow-purple"
                   onClick={() => setIsMasked(false)}
                   style={{
@@ -1494,7 +1494,7 @@ export default function PlayerDashboard() {
                   </span>
                 </div>
               ) : (
-                <div 
+                <div
                   className={`card-cartoon ${rarityClass} glow-cyan`}
                   data-tuto="contrat"
                   style={{ minHeight: "190px", position: "relative", cursor: "pointer" }}
@@ -1570,23 +1570,23 @@ export default function PlayerDashboard() {
                     </div>
                   )}
                   {activeTooltip === "target_card" && (
-                    <div 
+                    <div
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveTooltip(null);
-                      }} 
-                      style={{ 
-                        position: "fixed", 
-                        bottom: "90px", 
-                        left: "16px", 
-                        right: "16px", 
-                        backgroundColor: "#1e1b30", 
-                        border: "2px solid var(--color-cyan)", 
-                        padding: "12px", 
-                        borderRadius: "12px", 
-                        zIndex: 10000, 
-                        fontSize: "0.85rem", 
-                        boxShadow: "0 4px 20px rgba(0,0,0,0.7)" 
+                      }}
+                      style={{
+                        position: "fixed",
+                        bottom: "90px",
+                        left: "16px",
+                        right: "16px",
+                        backgroundColor: "#1e1b30",
+                        border: "2px solid var(--color-cyan)",
+                        padding: "12px",
+                        borderRadius: "12px",
+                        zIndex: 10000,
+                        fontSize: "0.85rem",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.7)"
                       }}
                     >
                       <strong>Votre Contrat Secret :</strong> Affiche le profil de votre cible active ainsi que le piège absurde à réaliser. Cliquez n'importe où sur cet encart pour le masquer instantanément en cas de danger !
@@ -1627,7 +1627,7 @@ export default function PlayerDashboard() {
                           <span style={{ fontSize: "1.8rem" }}>👤</span>
                         )}
                         {!lowPerfMode && (
-                          <div 
+                          <div
                             className="target-crosshair"
                             style={{
                               position: "absolute",
@@ -1733,7 +1733,7 @@ export default function PlayerDashboard() {
                     EXFILTRATION DU CAMPEMENT
                   </h3>
                   <p style={{ fontSize: "0.85rem", lineHeight: "1.5", margin: 0, color: "#d1d5db", maxWidth: "300px", textAlign: "center" }}>
-                    Tu es actuellement gelé et en sécurité au camp, hors de portée des tueurs et des morsures. 
+                    Tu es actuellement gelé et en sécurité au camp, hors de portée des tueurs et des morsures.
                     <br /><br />
                     Plus d'action ni de cible de mission disponible car tu as quitté le festival avant le dernier jour.
                     <br /><br />
@@ -1756,13 +1756,13 @@ export default function PlayerDashboard() {
           </h2>
 
           <p style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "1rem", lineHeight: "1.4" }}>
-            Pour regagner des ❤️, vous devez accomplir un défi de la Source. 
+            Pour regagner des ❤️, vous devez accomplir un défi de la Source.
             Les Zombies 🧟 n'ont pas accès à la Source.
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", marginBottom: "1rem", fontSize: "0.8rem", alignItems: "center" }}>
-            <div 
-              onClick={() => triggerTooltip("fountain_uses")} 
+            <div
+              onClick={() => triggerTooltip("fountain_uses")}
               style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", backgroundColor: "rgba(0,0,0,0.3)", padding: "4px 8px", borderRadius: "8px", border: "1.5px solid var(--color-cyan)" }}
             >
               <span>Utilisations : <strong>{player.fountainUsesToday} / 2</strong></span>
@@ -1770,8 +1770,8 @@ export default function PlayerDashboard() {
                 <span style={{ backgroundColor: "var(--color-cyan)", color: "#000", borderRadius: "50%", width: "14px", height: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: "bold" }}>?</span>
               )}
             </div>
-            <div 
-              onClick={() => triggerTooltip("fountain_refreshes")} 
+            <div
+              onClick={() => triggerTooltip("fountain_refreshes")}
               style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", backgroundColor: "rgba(0,0,0,0.3)", padding: "4px 8px", borderRadius: "8px", border: "1.5px solid var(--color-cyan)" }}
             >
               <span>Relances : <strong>{player.fountainRefreshesToday} 🔄</strong></span>
@@ -1810,61 +1810,61 @@ export default function PlayerDashboard() {
               {fountainChoice ? (
                 <>
                   <div style={{ border: "2px solid var(--color-cyan)", borderRadius: "12px", padding: "12px", backgroundColor: "rgba(34, 211, 238, 0.03)" }}>
-                  <h3 style={{ fontSize: "1.1rem", margin: "4px 0", transform: "none", textShadow: "none", color: "#fff", lineHeight: "1.4" }}>
-                    <span style={{ fontSize: "0.85rem", textTransform: "uppercase", color: "var(--color-cyan)", fontWeight: "bold" }}>
-                      Défi de la Source :{" "}
-                    </span>
-                    {fountainChoice.title ? fountainChoice.title : (fountainType === "action" ? "ACTION" : "VERITE")}
-                  </h3>
-                  <p style={{ fontSize: "0.9rem", fontStyle: "italic", margin: "8px 0 4px 0" }}>
-                    {fountainChoice.desc}
-                  </p>
+                    <h3 style={{ fontSize: "1.1rem", margin: "4px 0", transform: "none", textShadow: "none", color: "#fff", lineHeight: "1.4" }}>
+                      <span style={{ fontSize: "0.85rem", textTransform: "uppercase", color: "var(--color-cyan)", fontWeight: "bold" }}>
+                        Défi de la Source :{" "}
+                      </span>
+                      {fountainChoice.title ? fountainChoice.title : (fountainType === "action" ? "ACTION" : "VERITE")}
+                    </h3>
+                    <p style={{ fontSize: "0.9rem", fontStyle: "italic", margin: "8px 0 4px 0" }}>
+                      {fountainChoice.desc}
+                    </p>
 
-                  {/* Formulaire de Preuve */}
-                  <div style={{ marginTop: "1rem", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
-                    {fountainType === "verite" ? (
-                      <div>
-                        <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)", display: "block", marginBottom: "4px" }}>
-                          Votre Confession (Vérité) :
-                        </label>
-                        <textarea
-                          value={fountainTextProof}
-                          onChange={(e) => setFountainTextProof(e.target.value)}
-                          placeholder="Tapez votre aveu sincère ici..."
-                          style={{
-                            width: "100%",
-                            height: "60px",
-                            backgroundColor: "#1a172e",
-                            border: "2px solid #000",
-                            borderRadius: "8px",
-                            padding: "8px",
-                            color: "#fff"
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div>
-                        <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)", display: "block", marginBottom: "4px" }}>
-                          Preuve Photo (Action) :
-                        </label>
-                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            capture="user"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (!file) return;
-                              const reader = new FileReader();
-                              reader.onloadend = () => setFountainPhotoProof(reader.result);
-                              reader.readAsDataURL(file);
-                            }}
-                            style={{ display: "none" }}
-                            id="fountain-cam"
-                          />
-                          <label htmlFor="fountain-cam" className="btn-cartoon btn-cyan" style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", cursor: "pointer" }}>
-                            <Camera size={16} /> Ouvrir Appareil Photo
+                    {/* Formulaire de Preuve */}
+                    <div style={{ marginTop: "1rem", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+                      {fountainType === "verite" ? (
+                        <div>
+                          <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)", display: "block", marginBottom: "4px" }}>
+                            Votre Confession (Vérité) :
                           </label>
+                          <textarea
+                            value={fountainTextProof}
+                            onChange={(e) => setFountainTextProof(e.target.value)}
+                            placeholder="Tapez votre aveu sincère ici..."
+                            style={{
+                              width: "100%",
+                              height: "60px",
+                              backgroundColor: "#1a172e",
+                              border: "2px solid #000",
+                              borderRadius: "8px",
+                              padding: "8px",
+                              color: "#fff"
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <label style={{ fontSize: "0.8rem", color: "var(--color-cyan)", display: "block", marginBottom: "4px" }}>
+                            Preuve Photo (Action) :
+                          </label>
+                          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              capture="user"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onloadend = () => setFountainPhotoProof(reader.result);
+                                reader.readAsDataURL(file);
+                              }}
+                              style={{ display: "none" }}
+                              id="fountain-cam"
+                            />
+                            <label htmlFor="fountain-cam" className="btn-cartoon btn-cyan" style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", cursor: "pointer" }}>
+                              <Camera size={16} /> Ouvrir Appareil Photo
+                            </label>
                             {fountainPhotoProof && (
                               <div style={{ position: "relative", width: "48px", height: "48px", border: "2px solid #000", borderRadius: "6px", overflow: "hidden", boxShadow: "1px 1px 0 #000" }}>
                                 <img src={fountainPhotoProof} alt="Preuve" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -1909,24 +1909,24 @@ export default function PlayerDashboard() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px", position: "relative" }}>
                   {isHelpActive && (
-                    <div 
-                      onClick={() => triggerTooltip("fountain_draw")} 
-                      style={{ 
-                        position: "absolute", 
-                        top: "4px", 
-                        right: "4px", 
-                        backgroundColor: "var(--color-cyan)", 
-                        color: "#000", 
-                        borderRadius: "50%", 
-                        width: "16px", 
-                        height: "16px", 
-                        display: "flex", 
-                        alignItems: "center", 
-                        justifyContent: "center", 
-                        fontSize: "10px", 
-                        fontWeight: "bold", 
-                        cursor: "pointer", 
-                        zIndex: 10 
+                    <div
+                      onClick={() => triggerTooltip("fountain_draw")}
+                      style={{
+                        position: "absolute",
+                        top: "4px",
+                        right: "4px",
+                        backgroundColor: "var(--color-cyan)",
+                        color: "#000",
+                        borderRadius: "50%",
+                        width: "16px",
+                        height: "16px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "10px",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        zIndex: 10
                       }}
                     >
                       ?
@@ -2110,31 +2110,31 @@ export default function PlayerDashboard() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {/* Sélecteurs Récompense 🍪 et Dégâts ❤️ alignés */}
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
-                  <span>Gains :</span>
-                  <span>Dégâts :</span>
+                  <span>Gain en cookies :</span>
+                  <span>Dégâts infligés :</span>
                 </div>
                 <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.5rem", height: "1.5rem", display: "inline-block", verticalAlign: "middle" }} />
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                      <button
+                        type="button"
+                        className="btn-cartoon"
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }}
                         onClick={() => setSuggestReward(Math.max(50, suggestReward - 50))}
                         disabled={suggestReward <= 50}
                       >
-                        <Minus size={12}/>
+                        <Minus size={12} />
                       </button>
                       <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center" }}>{suggestReward}</span>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                      <button
+                        type="button"
+                        className="btn-cartoon"
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }}
                         onClick={() => setSuggestReward(Math.min(600, suggestReward + 50))}
                         disabled={suggestReward >= 600}
                       >
-                        <Plus size={12}/>
+                        <Plus size={12} />
                       </button>
                     </div>
                   </div>
@@ -2142,24 +2142,24 @@ export default function PlayerDashboard() {
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "1.1rem" }}>❤️</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                      <button
+                        type="button"
+                        className="btn-cartoon"
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }}
                         onClick={() => setSuggestDamage(Math.max(0.5, suggestDamage - 0.5))}
                         disabled={suggestDamage <= 0.5 || suggestZombieOnly}
                       >
-                        <Minus size={12}/>
+                        <Minus size={12} />
                       </button>
                       <span style={{ fontFamily: "var(--font-title)", minWidth: "35px", textAlign: "center" }}>{suggestDamage}</span>
-                      <button 
-                        type="button" 
-                        className="btn-cartoon" 
-                        style={{ padding: "4px 8px", fontSize: "0.8rem" }} 
+                      <button
+                        type="button"
+                        className="btn-cartoon"
+                        style={{ padding: "4px 8px", fontSize: "0.8rem" }}
                         onClick={() => setSuggestDamage(Math.min(4.0, suggestDamage + 0.5))}
                         disabled={suggestDamage >= 4.0 || suggestZombieOnly}
                       >
-                        <Plus size={12}/>
+                        <Plus size={12} />
                       </button>
                     </div>
                   </div>
@@ -2200,18 +2200,18 @@ export default function PlayerDashboard() {
                   </span>
 
                   {isHelpActive && (
-                    <span 
+                    <span
                       onClick={() => triggerTooltip("suggest_zombie")}
-                      style={{ 
-                        backgroundColor: "var(--color-cyan)", 
-                        color: "#000", 
-                        borderRadius: "50%", 
-                        width: "14px", 
-                        height: "14px", 
-                        display: "inline-flex", 
-                        alignItems: "center", 
-                        justifyContent: "center", 
-                        fontSize: "9px", 
+                      style={{
+                        backgroundColor: "var(--color-cyan)",
+                        color: "#000",
+                        borderRadius: "50%",
+                        width: "14px",
+                        height: "14px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "9px",
                         fontWeight: "bold",
                         cursor: "pointer"
                       }}
@@ -2233,9 +2233,9 @@ export default function PlayerDashboard() {
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--color-cyan)", fontWeight: "bold" }}>
                   <span>Difficulté / Soin :</span>
                   <span>
-                    {suggestDamage === 0.5 ? "Jus de Chaussette (+0.5 ❤️)" : 
-                     suggestDamage === 1.5 ? "Élixir du Barman (+1.5 ❤️)" : 
-                     "Larmes de VIP (+3.0 ❤️)"}
+                    {suggestDamage === 0.5 ? "Jus de Chaussette (+0.5 ❤️)" :
+                      suggestDamage === 1.5 ? "Élixir du Barman (+1.5 ❤️)" :
+                        "Larmes de VIP (+3.0 ❤️)"}
                   </span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -2349,9 +2349,9 @@ export default function PlayerDashboard() {
 
       {/* --- ONGLET CLASSEMENT 🏆 --- */}
       {activeTab === "classement" && (
-        <Leaderboard 
-          players={gameState.players} 
-          history={gameState.history} 
+        <Leaderboard
+          players={gameState.players}
+          history={gameState.history}
           isHelpActive={isHelpActive}
           activeTooltip={activeTooltip}
           triggerTooltip={triggerTooltip}
@@ -2426,16 +2426,16 @@ export default function PlayerDashboard() {
             padding: "20px"
           }}>
             <div className="card-cartoon glow-purple" style={{ width: "100%", maxWidth: "340px", textAlign: "center", maxHeight: "90vh", overflowY: "auto" }}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowProfileModal(false)}
                 style={{ position: "absolute", top: "10px", right: "10px", background: "none", border: "none", color: "#fff", cursor: "pointer" }}
               >
-                <X size={20}/>
+                <X size={20} />
               </button>
 
               <h2 style={{ color: "var(--color-purple)", marginBottom: "1rem" }}>Mon Matricule</h2>
-              
+
               <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
                 <div style={{ position: "relative" }}>
                   <div style={{
@@ -2455,7 +2455,7 @@ export default function PlayerDashboard() {
                       <span style={{ fontSize: "2rem" }}>👤</span>
                     ) : (
                       <span style={{ fontFamily: "var(--font-title)", fontSize: "1.5rem" }}>
-                         {(player.displayName || player.name).slice(0, 2).toUpperCase()}
+                        {(player.displayName || player.name).slice(0, 2).toUpperCase()}
                       </span>
                     )}
                   </div>
@@ -2467,8 +2467,8 @@ export default function PlayerDashboard() {
                     style={{ display: "none" }}
                     id="profile-cam"
                   />
-                  <label 
-                    htmlFor="profile-cam" 
+                  <label
+                    htmlFor="profile-cam"
                     style={{
                       position: "absolute",
                       bottom: "-4px",
@@ -2641,7 +2641,7 @@ export default function PlayerDashboard() {
                       let text = "";
                       let icon = "ℹ️";
                       const timeStr = new Date(h.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                      
+
                       if (h.type === "hit_declared") {
                         if (h.status === "pending") {
                           text = `Infiltration en cours (Hit envoyé sur ${h.targetName}) ⏳`;
@@ -2697,8 +2697,8 @@ export default function PlayerDashboard() {
                   )}
                 </div>
               </div>
+            </div>
           </div>
-        </div>
         )}
       </AnimatePresence>
 
@@ -2719,17 +2719,17 @@ export default function PlayerDashboard() {
             padding: "20px"
           }}>
             <div className="card-cartoon glow-red" style={{ width: "100%", maxWidth: "340px" }}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowCounterModal(false)}
                 style={{ position: "absolute", top: "10px", right: "10px", background: "none", border: "none", color: "#fff", cursor: "pointer" }}
               >
-                <X size={20}/>
+                <X size={20} />
               </button>
 
               <h2 style={{ color: "var(--color-red)", marginBottom: "1rem" }}>Bureau des Rumeurs</h2>
               <p style={{ fontSize: "0.8rem", color: "#9ca3af", marginBottom: "1rem", lineHeight: "1.4" }}>
-                Vous pensez être suivi ? Accusez directement un suspect et le défi qu'il essaie de vous faire commettre. 
+                Vous pensez être suivi ? Accusez directement un suspect et le défi qu'il essaie de vous faire commettre.
                 Fausse accusation : <strong>-0.5 ❤️</strong> !
               </p>
 
@@ -2793,7 +2793,7 @@ export default function PlayerDashboard() {
             <div className="card-cartoon glow-red" style={{ width: "100%", maxWidth: "340px", textAlign: "center" }}>
               <h3 style={{ color: "var(--color-red)", marginBottom: "1rem" }}>Abandonner le contrat</h3>
               <p style={{ fontSize: "0.85rem", color: "#d1d5db", marginBottom: "1.2rem", lineHeight: "1.4" }}>
-                Votre cible a fui le festival ? Abandonner le contrat entraîne une pénalité immédiate. 
+                Votre cible a fui le festival ? Abandonner le contrat entraîne une pénalité immédiate.
                 Choisissez votre sacrifice :
               </p>
 
@@ -2823,7 +2823,7 @@ export default function PlayerDashboard() {
                     abandonTarget("life");
                     setShowAbandonModal(false);
                     showToast("Cible abandonnée. Nouveau contrat pioché ! 💔");
-                    
+
                     // Global red screen damage flash
                     triggerDamageEffect();
                     setTimeout(() => {
@@ -3170,7 +3170,7 @@ export default function PlayerDashboard() {
       </AnimatePresence>
 
       {floatingScore && !lowPerfMode && (
-        <div 
+        <div
           className="floating-score-animation"
           style={{
             position: "fixed",
