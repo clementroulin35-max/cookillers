@@ -107,8 +107,8 @@ function PendingHitOverlay({ text = "EXAMEN EN COURS" }) {
         <TVStaticNoise style={{ position: "absolute", top: 0, left: 0, zIndex: 91 }} />
       ) : (
         <>
-          {/* Semi-transparent dark cover underneath the stamp */}
-          <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(17, 14, 32, 0.8)", zIndex: 91 }} />
+          {/* Opaque dark cover underneath the stamp */}
+          <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "#110e20", zIndex: 91 }} />
           <div style={{ zIndex: 92 }}>
             <RedStamp text={text} />
           </div>
@@ -499,6 +499,8 @@ export default function PlayerDashboard() {
     }, 2000);
   };
 
+  const isSacrificingRef = useRef(false);
+
   const prevStats = useRef({
     lives: player?.lives,
     isZombie: player?.isZombie,
@@ -546,8 +548,12 @@ export default function PlayerDashboard() {
       triggerDamageEffect();
     } else if (player.lives < prev.lives) {
       // Perte de vie générale (ex: morsure zombie subie)
-      triggerVibration(200);
-      triggerDamageEffect();
+      if (isSacrificingRef.current) {
+        isSacrificingRef.current = false;
+      } else {
+        triggerVibration(200);
+        triggerDamageEffect();
+      }
     }
 
     // Mettre à jour la ref
@@ -1478,12 +1484,12 @@ export default function PlayerDashboard() {
                       left: 0,
                       width: "100%",
                       height: "100%",
-                      backgroundColor: "rgba(17, 14, 32, 0.95)",
-                      backgroundImage: "repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px)",
-                      zIndex: 90,
                       borderRadius: "12px",
-                      animation: "vhs-glitch 0.1s steps(2) infinite"
-                    }} />
+                      zIndex: 90,
+                      overflow: "hidden"
+                    }}>
+                      <TVStaticNoise style={{ position: "absolute", top: 0, left: 0, zIndex: 91 }} />
+                    </div>
                   )}
                   {isTargetFrozen && (
                     <div style={{
@@ -2786,6 +2792,7 @@ export default function PlayerDashboard() {
                   }}
                   disabled={player.lives <= 0.5}
                   onClick={() => {
+                    isSacrificingRef.current = true;
                     abandonTarget("life");
                     setShowAbandonModal(false);
                     showToast("Cible abandonnée. Nouveau contrat pioché ! 💔");

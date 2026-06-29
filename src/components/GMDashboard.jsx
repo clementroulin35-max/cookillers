@@ -1367,7 +1367,36 @@ export default function GMDashboard() {
                   </div>
                 </div>
 
-                {/* 3. RELANCES FONTAINE (🔄) */}
+                {/* 3. RELANCES DÉFI (🌀) */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", flexShrink: 0 }}>
+                    <span style={{ fontSize: "1.6rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>🌀</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      disabled={editSkips <= 0}
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: editSkips <= 0 ? "#4b5563" : "var(--color-purple)", color: editSkips <= 0 ? "#9ca3af" : "#fff", opacity: editSkips <= 0 ? 0.5 : 1, cursor: editSkips <= 0 ? "not-allowed" : "pointer" }} 
+                      onClick={() => setEditSkips(prev => Math.max(0, prev - 1))}
+                    >
+                      -
+                    </button>
+                    <span style={{ fontFamily: "var(--font-title)", minWidth: "60px", textAlign: "center", display: "inline-block" }}>
+                      {editSkips}
+                    </span>
+                    <button 
+                      type="button" 
+                      className="btn-cartoon" 
+                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
+                      onClick={() => setEditSkips(prev => prev + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. RELANCES FONTAINE (🔄) */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", flexShrink: 0 }}>
                     <span style={{ fontSize: "1.6rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>🔄</span>
@@ -1396,7 +1425,7 @@ export default function GMDashboard() {
                   </div>
                 </div>
 
-                {/* 4. FONTAINE UTILISATIONS (⛲) */}
+                {/* 5. FONTAINE UTILISATIONS (⛲) */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", flexShrink: 0 }}>
                     <span style={{ fontSize: "1.6rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>⛲</span>
@@ -1420,35 +1449,6 @@ export default function GMDashboard() {
                       disabled={editFountainUses >= 2}
                       style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: editFountainUses >= 2 ? "#4b5563" : "var(--color-purple)", color: editFountainUses >= 2 ? "#9ca3af" : "#fff", opacity: editFountainUses >= 2 ? 0.5 : 1, cursor: editFountainUses >= 2 ? "not-allowed" : "pointer" }} 
                       onClick={() => setEditFountainUses(prev => Math.min(2, prev + 1))}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                {/* 5. RELANCES DÉFI (🌀) */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed rgba(255,255,255,0.05)", paddingBottom: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", flexShrink: 0 }}>
-                    <span style={{ fontSize: "1.6rem", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>🌀</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <button 
-                      type="button" 
-                      className="btn-cartoon" 
-                      disabled={editSkips <= 0}
-                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: editSkips <= 0 ? "#4b5563" : "var(--color-purple)", color: editSkips <= 0 ? "#9ca3af" : "#fff", opacity: editSkips <= 0 ? 0.5 : 1, cursor: editSkips <= 0 ? "not-allowed" : "pointer" }} 
-                      onClick={() => setEditSkips(prev => Math.max(0, prev - 1))}
-                    >
-                      -
-                    </button>
-                    <span style={{ fontFamily: "var(--font-title)", minWidth: "60px", textAlign: "center", display: "inline-block" }}>
-                      {editSkips}
-                    </span>
-                    <button 
-                      type="button" 
-                      className="btn-cartoon" 
-                      style={{ padding: "4px 8px", fontSize: "0.8rem", backgroundColor: "var(--color-purple)", color: "#fff" }} 
-                      onClick={() => setEditSkips(prev => prev + 1)}
                     >
                       +
                     </button>

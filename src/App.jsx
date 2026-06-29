@@ -304,7 +304,7 @@ function MainAppContent() {
                       pointerEvents: "none"
                     }} />
                     <span style={{ position: "relative", zIndex: 2 }}>
-                      {isGM ? "👤 Joueur" : "⚖️ GM"}
+                      {isGM ? "Joueur" : "GM"}
                     </span>
                   </button>
                 )}

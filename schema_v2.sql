@@ -1027,10 +1027,25 @@ BEGIN
           AND name != p_name
           AND target IS NOT NULL 
           AND target != p_name
+          AND target != v_current_target
           AND is_frozen = false 
           AND is_zombie = false
         ORDER BY random()
         LIMIT 1;
+
+        -- Dernier recours si aucun autre choix possible
+        IF NOT FOUND THEN
+            SELECT name, target INTO v_random_player
+            FROM public.players
+            WHERE game_code = p_game_code 
+              AND name != p_name
+              AND target IS NOT NULL 
+              AND target != p_name
+              AND is_frozen = false 
+              AND is_zombie = false
+            ORDER BY random()
+            LIMIT 1;
+        END IF;
     END IF;
 
     -- Court-circuiter p_name en connectant son tueur à sa cible actuelle

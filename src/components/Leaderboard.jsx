@@ -66,13 +66,13 @@ export default function Leaderboard({ players, history, isHelpActive, activeTool
   const renderTrophyWinners = (namesArray) => {
     if (!namesArray || namesArray.length === 0) {
       return (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: "8px" }}>
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: "8px" }}>
           <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>Aucun gagnant pour le moment</span>
         </div>
       );
     }
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center", marginTop: "8px" }}>
+      <div style={{ display: "flex", flexDirection: "row", gap: "16px", justifyContent: "center", alignItems: "center", flexWrap: "wrap", marginTop: "8px", width: "100%" }}>
         {namesArray.map(name => {
           const found = players.find(p => p.name.toUpperCase() === name.toUpperCase());
           const hasPhoto = found ? found.hasPhoto : false;
