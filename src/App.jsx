@@ -40,9 +40,9 @@ function MainAppContent() {
       const cleanUser = currentUser.toUpperCase();
       const playerObj = gameState.players.find(p => p.name.toUpperCase() === cleanUser);
       const tutoDoneLocal = localStorage.getItem(`cookillers_tuto_done_${cleanUser}`) === "true";
-      
+
       const needsTuto = playerObj ? playerObj.init : !tutoDoneLocal;
-      
+
       if (needsTuto && !tutoDoneLocal) {
         setShowTuto(true);
       }
@@ -74,7 +74,7 @@ function MainAppContent() {
     const code = params.get("join");
     if (code) {
       setInputCode(code.toUpperCase());
-      joinRoom(code).catch(() => {});
+      joinRoom(code).catch(() => { });
     }
   }, [joinRoom]);
 
@@ -160,8 +160,8 @@ function MainAppContent() {
 
           await loginPlayer(nickname, pin);
 
-          const formattedName = dbPlayer && dbPlayer.display_name 
-            ? dbPlayer.display_name 
+          const formattedName = dbPlayer && dbPlayer.display_name
+            ? dbPlayer.display_name
             : (nickname.trim().charAt(0).toUpperCase() + nickname.trim().slice(1).toLowerCase());
 
           const isFirstConn = dbPlayer ? dbPlayer.init : true;
@@ -191,22 +191,22 @@ function MainAppContent() {
         background: "radial-gradient(circle at 50% 10%, #1c0e2b 0%, #08080a 80%)"
       }}>
         <div className="card-cartoon glow-purple" style={{ width: "100%", maxWidth: "340px", textAlign: "center" }}>
-          
+
           {/* Logo & Mascotte */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "1.2rem" }}>
-            <img 
-              src={mascotteLogo} 
-              alt="Logo" 
-              style={{ 
-                width: "160px", 
-                height: "160px", 
-                objectFit: "contain", 
-                marginBottom: "6px", 
-                filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.5))" 
-              }} 
+            <img
+              src={mascotteLogo}
+              alt="Logo"
+              style={{
+                width: "160px",
+                height: "160px",
+                objectFit: "contain",
+                marginBottom: "6px",
+                filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.5))"
+              }}
             />
             <p style={{ fontSize: "0.85rem", color: "#9ca3af", fontStyle: "italic", marginTop: "4px" }}>
-              "La Chasse au Cookie Festival 2026"
+              "La Chasse aux Cookies Festival 2026"
             </p>
           </div>
 
@@ -237,7 +237,7 @@ function MainAppContent() {
                   }}
                   required
                 />
-                
+
                 <button type="submit" className="btn-cartoon btn-cyan" style={{ width: "100%", marginTop: "6px" }} disabled={loading}>
                   {loading ? <Loader2 size={16} className="animate-spin" /> : "Rejoindre le Salon"}
                 </button>
@@ -448,13 +448,13 @@ function MainAppContent() {
         <div className="card-cartoon glow-purple" style={{ width: "100%", maxWidth: "340px", textAlign: "center" }}>
           <span style={{ fontSize: "4.5rem", display: "block", animation: "fire-camp 0.8s ease-in-out infinite alternate" }}>⛺</span>
           <h2 style={{ color: "var(--color-purple)", margin: "1rem 0 0.5rem 0" }}>Lobby du Campement</h2>
-          
+
           <span className="rarity-badge" style={{ backgroundColor: "var(--color-cyan)", margin: "0.5rem 0" }}>
             Salon : {gameCode}
           </span>
 
           <p style={{ fontSize: "0.9rem", color: "#d1d5db", margin: "1rem 0", lineHeight: "1.4" }}>
-            Le GM prépare les couteaux...<br/>
+            Le GM prépare les couteaux...<br />
             En attente du lancement de la chasse.
           </p>
 
