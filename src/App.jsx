@@ -147,12 +147,29 @@ function MainAppContent() {
       try {
         if (isRegistering) {
           await registerPlayer(nickname, pin);
-          const greetName = nickname.charAt(0).toUpperCase() + nickname.slice(1).toLowerCase();
-          showToast(`Bienvenue au campement, ${greetName} ! 🏕️`);
+          const greetName = nickname.trim().charAt(0).toUpperCase() + nickname.trim().slice(1).toLowerCase();
+          showToast(`Bienvenue au camp ${greetName} ! 🏕️`);
         } else {
+          const { data: dbPlayer } = await supabase
+            .from("players")
+            .select("init, display_name")
+            .eq("game_code", gameCode)
+            .ilike("name", nickname.trim())
+            .maybeSingle();
+
           await loginPlayer(nickname, pin);
-          const greetName = nickname.charAt(0).toUpperCase() + nickname.slice(1).toLowerCase();
-          showToast(`Heureux de te revoir, ${greetName} ! 🔪`);
+
+          const formattedName = dbPlayer && dbPlayer.display_name 
+            ? dbPlayer.display_name 
+            : (nickname.trim().charAt(0).toUpperCase() + nickname.trim().slice(1).toLowerCase());
+
+          const isFirstConn = dbPlayer ? dbPlayer.init : true;
+
+          if (isFirstConn) {
+            showToast(`Bienvenue au camp ${formattedName} ! 🏕️`);
+          } else {
+            showToast(`Heureux de te revoir, ${formattedName} ! 🔪`);
+          }
         }
       } catch (err) {
         setError(err.message);

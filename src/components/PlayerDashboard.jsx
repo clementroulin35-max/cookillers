@@ -76,34 +76,54 @@ const getRandomFountainChallenge = (requestedType, tier, actionPool) => {
   return available[Math.floor(Math.random() * available.length)];
 };
 
-const CampfireAvatar = ({ p, idx, total, isMe, campPhoto, radarClass, handleAvatarDragEnd, getPlayerDisplayName, campfireContainerRef, resetKey }) => {
-  const controls = useAnimation();
-  
+const AnimatedScore = ({ value }) => {
+  const [displayValue, setDisplayValue] = useState(value);
+  const prevValueRef = useRef(value);
+
+  useEffect(() => {
+    if (prevValueRef.current === value) return;
+    
+    const startVal = displayValue;
+    const endVal = value;
+    prevValueRef.current = value;
+
+    let startTimestamp = null;
+    const duration = 1000; 
+    let animationFrameId;
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 3); // cubic easeOut
+      const currentVal = Math.round(startVal + easeProgress * (endVal - startVal));
+      
+      setDisplayValue(currentVal);
+
+      if (progress < 1) {
+        animationFrameId = window.requestAnimationFrame(step);
+      }
+    };
+
+    animationFrameId = window.requestAnimationFrame(step);
+    return () => {
+      if (animationFrameId) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [value]);
+
+  return <span>{displayValue}</span>;
+};
+
+const CampfireAvatar = ({ p, idx, total, isMe, campPhoto, radarClass, handleAvatarDragEnd, getPlayerDisplayName, campfireContainerRef }) => {
   const angle = (idx * 2 * Math.PI) / Math.max(1, total);
   const radiusX = 35; 
   const radiusY = 22; 
   const left = 50 + radiusX * Math.cos(angle);
   const top = 50 + radiusY * Math.sin(angle);
 
-  useEffect(() => {
-    if (resetKey > 0) {
-      controls.start({ x: 0, y: 0, transition: { type: "spring", stiffness: 300, damping: 20 } });
-    }
-  }, [resetKey, controls]);
-
   return (
-    <motion.div
-      key={p.name}
-      className={radarClass}
-      drag={!isMe}
-      dragConstraints={campfireContainerRef}
-      dragElastic={0.1}
-      dragMomentum={false}
-      animate={controls}
-      onDragEnd={async (event, info) => {
-        handleAvatarDragEnd(p, info);
-        await controls.start({ x: 0, y: 0, transition: { type: "spring", stiffness: 300, damping: 20 } });
-      }}
+    <div
       style={{
         position: "absolute",
         left: `${left}%`,
@@ -111,53 +131,72 @@ const CampfireAvatar = ({ p, idx, total, isMe, campPhoto, radarClass, handleAvat
         transform: "translate(-50%, -50%)",
         width: "48px",
         height: "48px",
-        borderRadius: "50%",
-        border: `2px solid ${p.isZombie ? "var(--color-zombie)" : (p.isFrozen ? "var(--color-cyan)" : "#000")}`,
-        backgroundColor: p.isZombie ? "rgba(74, 222, 128, 0.2)" : (p.isFrozen ? "rgba(34, 211, 238, 0.2)" : "#3a3463"),
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "0.95rem",
-        fontWeight: "bold",
         zIndex: 10,
-        cursor: isMe ? "default" : "grab",
-        touchAction: "none",
-        userSelect: "none",
-        WebkitUserSelect: "none"
+        pointerEvents: "none"
       }}
-      title={p.displayName || p.name}
     >
-      <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-        {campPhoto ? (
-          <img src={campPhoto} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
-        ) : (
-          <span style={{ pointerEvents: "none" }}>
-            {p.displayName ? p.displayName.slice(0, 2).toUpperCase() : p.name.slice(0, 2).toUpperCase()}
-          </span>
+      <motion.div
+        key={p.name}
+        className={radarClass}
+        drag={!isMe}
+        dragConstraints={campfireContainerRef}
+        dragElastic={0.1}
+        dragMomentum={false}
+        dragSnapToOrigin={true}
+        onDragEnd={(event, info) => {
+          handleAvatarDragEnd(p, info);
+        }}
+        style={{
+          width: "100%",
+          height: "100%",
+          borderRadius: "50%",
+          border: `2px solid ${p.isZombie ? "var(--color-zombie)" : (p.isFrozen ? "var(--color-cyan)" : "#000")}`,
+          backgroundColor: p.isZombie ? "rgba(74, 222, 128, 0.2)" : (p.isFrozen ? "rgba(34, 211, 238, 0.2)" : "#3a3463"),
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "0.95rem",
+          fontWeight: "bold",
+          cursor: isMe ? "default" : "grab",
+          pointerEvents: "auto",
+          touchAction: "none",
+          userSelect: "none",
+          WebkitUserSelect: "none"
+        }}
+        title={p.displayName || p.name}
+      >
+        <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+          {campPhoto ? (
+            <img src={campPhoto} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
+          ) : (
+            <span style={{ pointerEvents: "none" }}>
+              {p.displayName ? p.displayName.slice(0, 2).toUpperCase() : p.name.slice(0, 2).toUpperCase()}
+            </span>
+          )}
+        </div>
+        {p.isFrozen && (
+          <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12, pointerEvents: "none" }}>❄️</span>
         )}
-      </div>
-      {p.isFrozen && (
-        <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12, pointerEvents: "none" }}>❄️</span>
-      )}
-      {p.isZombie && (
-        <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12, pointerEvents: "none" }}>🧟</span>
-      )}
-      <span style={{
-        position: "absolute",
-        top: "52px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        fontSize: "0.7rem",
-        fontStyle: "italic",
-        color: "#ffffff",
-        textShadow: "1px 1px 0 #000",
-        pointerEvents: "none",
-        whiteSpace: "nowrap",
-        zIndex: 15
-      }}>
-        {getPlayerDisplayName(p.name)}
-      </span>
-    </motion.div>
+        {p.isZombie && (
+          <span style={{ position: "absolute", bottom: "-4px", right: "-4px", fontSize: "0.95rem", zIndex: 12, pointerEvents: "none" }}>🧟</span>
+        )}
+        <span style={{
+          position: "absolute",
+          top: "52px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          fontSize: "0.7rem",
+          fontStyle: "italic",
+          color: "#ffffff",
+          textShadow: "1px 1px 0 #000",
+          pointerEvents: "none",
+          whiteSpace: "nowrap",
+          zIndex: 15
+        }}>
+          {getPlayerDisplayName(p.name)}
+        </span>
+      </motion.div>
+    </div>
   );
 };
 
@@ -889,7 +928,7 @@ export default function PlayerDashboard() {
         >
           <img src="/cookie_score_icon.png" alt="🍪" style={{ width: "1.8rem", height: "1.8rem", verticalAlign: "middle", display: "inline-block" }} />
           <span style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", textShadow: "1.5px 1.5px 0 #000", color: "#fbbf24" }}>
-            {player.score}
+            <AnimatedScore value={player.score} />
           </span>
           {isZombie && (
             <span 
@@ -2122,7 +2161,7 @@ export default function PlayerDashboard() {
               </div>
 
               <div style={{ marginBottom: "1rem" }}>
-                <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{player.displayName || player.name}</span>
+                <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{getPlayerDisplayName(player.name)}</span>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: "0.8rem", color: "#9ca3af", marginTop: "4px" }}>
                   <span>PIN Secret : {revealPin ? (localStorage.getItem("cookillers_player_pin") || "****") : "****"}</span>
                   <button
