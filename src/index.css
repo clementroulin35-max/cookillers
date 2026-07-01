@@ -6,14 +6,20 @@
   --bg-global: #08080a;
   --bg-card: #161320;
   --border-color: #1c1929;
-  
-  --color-purple: #a855f7; /* Violet électrique néon */
-  --color-cyan: #22d3ee;   /* Cyan holographique */
-  --color-green: #22c55e;  /* Vert putride / Vitalité OK */
-  --color-orange: #f97316; /* Orange moyen */
-  --color-red: #ef4444;    /* Rouge sang / Danger */
-  --color-zombie: #4ade80; /* Vert zombie */
-  
+
+  --color-purple: #a855f7;
+  /* Violet électrique néon */
+  --color-cyan: #22d3ee;
+  /* Cyan holographique */
+  --color-green: #22c55e;
+  /* Vert putride / Vitalité OK */
+  --color-orange: #f97316;
+  /* Orange moyen */
+  --color-red: #ef4444;
+  /* Rouge sang / Danger */
+  --color-zombie: #4ade80;
+  /* Vert zombie */
+
   /* Raretés RPG */
   --rarity-common: #9ca3af;
   --rarity-standard: #3b82f6;
@@ -50,13 +56,13 @@ body {
 .app-container {
   min-height: 100vh;
   position: relative;
-  background: linear-gradient(to bottom, rgba(8,8,10,0.6) 0%, rgba(23,18,42,0.8) 40%, rgba(8,8,10,0.92) 100%);
+  background: linear-gradient(to bottom, rgba(8, 8, 10, 0.6) 0%, rgba(23, 18, 42, 0.8) 40%, rgba(8, 8, 10, 0.92) 100%);
   display: flex;
   flex-direction: column;
 }
 
 .app-container.zombie-mode {
-  background: linear-gradient(to bottom, rgba(8,8,10,0.6) 0%, rgba(19,36,24,0.8) 40%, rgba(8,8,10,0.92) 100%) !important;
+  background: linear-gradient(to bottom, rgba(8, 8, 10, 0.6) 0%, rgba(19, 36, 24, 0.8) 40%, rgba(8, 8, 10, 0.92) 100%) !important;
 }
 
 /* Masque Glitch VHS pour l'état Zombie */
@@ -66,16 +72,36 @@ body {
 }
 
 @keyframes vhs-glitch {
-  0% { transform: translate(0) }
-  20% { transform: translate(-2px, 2px) }
-  40% { transform: translate(-2px, -2px) }
-  60% { transform: translate(2px, 2px) }
-  80% { transform: translate(2px, -2px) }
-  100% { transform: translate(0) }
+  0% {
+    transform: translate(0)
+  }
+
+  20% {
+    transform: translate(-2px, 2px)
+  }
+
+  40% {
+    transform: translate(-2px, -2px)
+  }
+
+  60% {
+    transform: translate(2px, 2px)
+  }
+
+  80% {
+    transform: translate(2px, -2px)
+  }
+
+  100% {
+    transform: translate(0)
+  }
 }
 
 /* Typographies Cartoon stickers */
-h1, h2, h3, .cartoon-title {
+h1,
+h2,
+h3,
+.cartoon-title {
   font-family: var(--font-title);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -188,10 +214,21 @@ h1, h2, h3, .cartoon-title {
   text-transform: uppercase;
 }
 
-.card-common { border-color: var(--rarity-common); }
-.card-standard { border-color: var(--rarity-standard); }
-.card-elite { border-color: var(--rarity-elite); }
-.card-legendary { border-color: var(--rarity-legendary); }
+.card-common {
+  border-color: var(--rarity-common);
+}
+
+.card-standard {
+  border-color: var(--rarity-standard);
+}
+
+.card-elite {
+  border-color: var(--rarity-elite);
+}
+
+.card-legendary {
+  border-color: var(--rarity-legendary);
+}
 
 /* Animation d'onde ECG réactive */
 .ecg-container {
@@ -248,8 +285,13 @@ h1, h2, h3, .cartoon-title {
 }
 
 @keyframes ecg-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 /* Crépitement du Feu de Camp */
@@ -262,6 +304,7 @@ h1, h2, h3, .cartoon-title {
     transform: translate(-50%, -50%) scale(0.98) rotate(-1deg);
     filter: drop-shadow(0 8px 15px rgba(245, 158, 11, 0.4));
   }
+
   100% {
     transform: translate(-50%, -50%) scale(1.03) rotate(1deg);
     filter: drop-shadow(0 10px 25px rgba(239, 68, 68, 0.6));
@@ -270,43 +313,107 @@ h1, h2, h3, .cartoon-title {
 
 /* Effet de Secousse d'Écran */
 .screen-shake {
-  animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+  animation: shake 0.3s cubic-bezier(.36, .07, .19, .97) both;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   perspective: 1000px;
 }
 
 @keyframes shake {
-  10%, 90% { transform: translate3d(-2px, 0, 0); }
-  20%, 80% { transform: translate3d(3px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
-  40%, 60% { transform: translate3d(5px, 0, 0); }
+
+  10%,
+  90% {
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  20%,
+  80% {
+    transform: translate3d(3px, 0, 0);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-5px, 0, 0);
+  }
+
+  40%,
+  60% {
+    transform: translate3d(5px, 0, 0);
+  }
 }
 
 /* Animations de Particules de Cookies */
 @keyframes cookie-fly-1 {
-  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
-  100% { transform: translate(-120px, -220px) rotate(360deg) scale(0.3); opacity: 0; }
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-120px, -220px) rotate(360deg) scale(0.3);
+    opacity: 0;
+  }
 }
+
 @keyframes cookie-fly-2 {
-  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
-  100% { transform: translate(120px, -240px) rotate(-360deg) scale(0.3); opacity: 0; }
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(120px, -240px) rotate(-360deg) scale(0.3);
+    opacity: 0;
+  }
 }
+
 @keyframes cookie-fly-3 {
-  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
-  100% { transform: translate(-60px, -270px) rotate(180deg) scale(0.3); opacity: 0; }
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-60px, -270px) rotate(180deg) scale(0.3);
+    opacity: 0;
+  }
 }
+
 @keyframes cookie-fly-4 {
-  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
-  100% { transform: translate(60px, -200px) rotate(-180deg) scale(0.3); opacity: 0; }
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(60px, -200px) rotate(-180deg) scale(0.3);
+    opacity: 0;
+  }
 }
+
 @keyframes cookie-fly-5 {
-  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
-  100% { transform: translate(-180px, -170px) rotate(450deg) scale(0.3); opacity: 0; }
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-180px, -170px) rotate(450deg) scale(0.3);
+    opacity: 0;
+  }
 }
+
 @keyframes cookie-fly-6 {
-  0% { transform: translate(0, 0) rotate(0deg) scale(1.2); opacity: 1; }
-  100% { transform: translate(180px, -180px) rotate(-450deg) scale(0.3); opacity: 0; }
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(180px, -180px) rotate(-450deg) scale(0.3);
+    opacity: 0;
+  }
 }
 
 .cookie-particle {
@@ -321,13 +428,23 @@ h1, h2, h3, .cartoon-title {
 }
 
 @keyframes radar-pulse-cyan {
-  0% { box-shadow: 0 0 0 0px rgba(34, 211, 238, 0.8); }
-  100% { box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); }
+  0% {
+    box-shadow: 0 0 0 0px rgba(34, 211, 238, 0.8);
+  }
+
+  100% {
+    box-shadow: 0 0 0 10px rgba(34, 211, 238, 0);
+  }
 }
 
 @keyframes radar-pulse-orange {
-  0% { box-shadow: 0 0 0 0px rgba(249, 115, 22, 0.8); }
-  100% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+  0% {
+    box-shadow: 0 0 0 0px rgba(249, 115, 22, 0.8);
+  }
+
+  100% {
+    box-shadow: 0 0 0 10px rgba(249, 115, 22, 0);
+  }
 }
 
 .radar-cyan {
@@ -343,16 +460,20 @@ h1, h2, h3, .cartoon-title {
   .ecg-line {
     animation: none !important;
   }
+
   .fire-camp {
     animation: none !important;
   }
+
   .prop-2d {
     transition: none !important;
   }
+
   .cookie-particle {
     animation: none !important;
     display: none !important;
   }
+
   .screen-shake {
     animation: none !important;
   }
@@ -380,8 +501,15 @@ h1, h2, h3, .cartoon-title {
 }
 
 @keyframes crosshair-pulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 .target-crosshair {
@@ -400,19 +528,34 @@ h1, h2, h3, .cartoon-title {
   z-index: 99;
   overflow: hidden;
 }
+
 .vhs-glitch-overlay::after {
   content: " ";
   display: block;
   position: absolute;
-  top: 0; left: 0; bottom: 0; right: 0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
   background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(168, 85, 247, 0.06), rgba(0, 255, 0, 0.01), rgba(34, 211, 238, 0.04));
   background-size: 100% 4px, 6px 100%;
 }
 
 @keyframes heartbeat-break {
-  0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.1; }
-  50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.5; }
-  100% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.1; }
+  0% {
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 0.1;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 0.1;
+  }
 }
 
 .giant-broken-heart {
@@ -428,9 +571,20 @@ h1, h2, h3, .cartoon-title {
 }
 
 @keyframes float-up-fade {
-  0% { transform: translate(-50%, -30%) scale(0.8); opacity: 0; }
-  20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-  100% { transform: translate(-50%, -90%) scale(1); opacity: 0; }
+  0% {
+    transform: translate(-50%, -30%) scale(0.8);
+    opacity: 0;
+  }
+
+  20% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -90%) scale(1);
+    opacity: 0;
+  }
 }
 
 .floating-score-animation {
@@ -533,7 +687,8 @@ h1, h2, h3, .cartoon-title {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: rgba(102, 102, 102, 0.815);
+  opacity: 0.3;
   backdrop-filter: blur(2px);
   z-index: 999;
   pointer-events: auto;
@@ -563,8 +718,15 @@ h1, h2, h3, .cartoon-title {
 }
 
 @keyframes pop-bounce {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Flottaison biscuit 🪙 */
@@ -580,8 +742,15 @@ h1, h2, h3, .cartoon-title {
 }
 
 @keyframes float-up-coin {
-  0% { transform: translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-80px) scale(1.2);
+    opacity: 0;
+  }
 }
 
 /* Masque de SCAN holographique */
@@ -598,9 +767,17 @@ h1, h2, h3, .cartoon-title {
 }
 
 @keyframes scan-move {
-  0% { top: 0%; }
-  50% { top: 100%; }
-  100% { top: 0%; }
+  0% {
+    top: 0%;
+  }
+
+  50% {
+    top: 100%;
+  }
+
+  100% {
+    top: 0%;
+  }
 }
 
 @keyframes fire-pulse {
@@ -608,11 +785,14 @@ h1, h2, h3, .cartoon-title {
     transform: translate(-50%, -50%) scale(0.9);
     opacity: 0.3;
   }
+
   50% {
     transform: translate(-50%, -50%) scale(1.1);
     opacity: 0.8;
-    border-color: rgba(249, 115, 22, 0.7); /* Orange */
+    border-color: rgba(249, 115, 22, 0.7);
+    /* Orange */
   }
+
   100% {
     transform: translate(-50%, -50%) scale(0.9);
     opacity: 0.3;
