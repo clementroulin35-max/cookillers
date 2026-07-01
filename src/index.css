@@ -687,8 +687,7 @@ h3,
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(102, 102, 102, 0.815);
-  opacity: 0.95;
+  background-color: rgba(190, 172, 255, 0.733);
   backdrop-filter: blur(2px);
   z-index: 999;
   pointer-events: auto;
@@ -696,7 +695,7 @@ h3,
 
 .tuto-spotlight {
   position: absolute;
-  opacity: 0.3;
+  opacity: 0.15;
   border-radius: 12px;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85);
   transition: all 0.3s ease-in-out;
