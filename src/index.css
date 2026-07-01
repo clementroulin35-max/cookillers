@@ -706,6 +706,7 @@ h3,
 
 .tuto-card {
   position: absolute;
+  opacity: 0.5;
   background-color: var(--bg-card);
   border: 3px solid #000;
   box-shadow: 5px 5px 0 #000;
