@@ -683,12 +683,12 @@ h3,
 /* Spotlights de tutoriel */
 .tuto-overlay {
   position: fixed;
+  opacity: 0.97;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(178, 175, 190, 0.733);
-  opacity: 0.5;
+  background-color: rgba(178, 175, 190, 0.39);
   backdrop-filter: blur(2px);
   z-index: 999;
   pointer-events: auto;
@@ -696,7 +696,7 @@ h3,
 
 .tuto-spotlight {
   position: absolute;
-  opacity: 0.90;
+  opacity: 0.97;
   border-radius: 12px;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85);
   transition: all 0.3s ease-in-out;
@@ -708,7 +708,6 @@ h3,
 .tuto-card {
   position: absolute;
   background-color: var(--bg-card);
-  opacity: 0.95 !important;
   border: 3px solid #000;
   box-shadow: 5px 5px 0 #000;
   border-radius: 16px;
