@@ -696,6 +696,7 @@ h3,
 
 .tuto-spotlight {
   position: absolute;
+  opacity: 0.3;
   border-radius: 12px;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85);
   transition: all 0.3s ease-in-out;
@@ -706,7 +707,6 @@ h3,
 
 .tuto-card {
   position: absolute;
-  opacity: 0.5;
   background-color: var(--bg-card);
   border: 3px solid #000;
   box-shadow: 5px 5px 0 #000;
