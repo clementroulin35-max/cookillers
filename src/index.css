@@ -688,7 +688,7 @@ h3,
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(178, 175, 190, 0.39);
+  background-color: transparent;
   backdrop-filter: blur(2px);
   z-index: 999;
   pointer-events: auto;
